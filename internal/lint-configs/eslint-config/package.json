@@ -1,0 +1,42 @@
+{
+  "name": "@niubu-internal/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./architecture": "./src/architecture.ts"
+  },
+  "dependencies": {
+    "@niubu-internal/node-utils": "workspace:*",
+    "@eslint/js": "catalog:",
+    "typescript-eslint": "catalog:",
+    "globals": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "10.12.0"
+  },
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "@niubu-internal/test-config": "workspace:*",
+    "vitest": "catalog:"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../../eslint.config.js",
+    "test": "vitest run"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "src/tests/**/*.test.ts"
+      ]
+    }
+  }
+}

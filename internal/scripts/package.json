@@ -1,0 +1,38 @@
+{
+  "name": "@niubu-internal/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./boundary-check": "./src/boundary-check.ts",
+    "./workspace-check": "./src/workspace-check.ts",
+    "./budget": "./src/budget.ts",
+    "./build-app": "./src/build-app.ts",
+    "./locale-check": "./src/locale-check.ts"
+  },
+  "dependencies": {
+    "@niubu-internal/node-utils": "workspace:*",
+    "vite": "catalog:"
+  },
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "vitest": "catalog:",
+    "@niubu-internal/test-config": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "test": "vitest run"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "src/**/*.{test,spec}.ts"
+      ]
+    }
+  }
+}

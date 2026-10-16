@@ -1,0 +1,87 @@
+{
+  "name": "niubu-web-template",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.16.0",
+    "pnpm": "11.25.0"
+  },
+  "scripts": {
+    "dev": "node internal/scripts/src/dev-app.ts dev",
+    "preview": "node internal/scripts/src/dev-app.ts preview",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project tests/integration/tsconfig.json && turbo run typecheck",
+    "lint": "eslint scripts tests \"*.config.{js,ts,mjs,cjs,mts,cts}\" .prettierrc.js && turbo run lint",
+    "test": "pnpm test:integration && turbo run test",
+    "build": "tsc --noEmit && turbo run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "workspace:check": "node scripts/check.ts --workspace-only",
+    "budget:check": "turbo run budget:check",
+    "check": "node scripts/check.ts",
+    "locale:check": "node internal/scripts/src/locale-check.ts",
+    "dev:playground": "pnpm --filter @niubu/playground dev",
+    "dev:backend-mock": "pnpm --filter @niubu/backend-mock dev",
+    "test:integration": "vitest run --config tests/integration/vitest.config.ts",
+    "hooks:install": "node scripts/git-hooks/install.ts",
+    "verify:playground": "node internal/scripts/src/playground-runtime.ts"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "tailwindcss": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "shadcn": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/node": "catalog:",
+    "@types/papaparse": "catalog:",
+    "eslint": "catalog:",
+    "@eslint/js": "catalog:",
+    "typescript-eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
+    "vitest": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "jsdom": "catalog:",
+    "@playwright/test": "catalog:",
+    "@axe-core/playwright": "catalog:",
+    "prettier": "catalog:",
+    "@niubu-internal/eslint-config": "workspace:*",
+    "@niubu-internal/prettier-config": "workspace:*",
+    "@niubu-internal/tsconfig": "workspace:*",
+    "@niubu-internal/vite-config": "workspace:*",
+    "@niubu-internal/test-config": "workspace:*",
+    "@niubu-internal/scripts": "workspace:*",
+    "turbo": "catalog:",
+    "papaparse": "catalog:",
+    "@niubu/request": "workspace:*",
+    "@niubu/stores": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:",
+    "@niubu/types": "workspace:*",
+    "@niubu/utils": "workspace:*",
+    "@commitlint/cli": "catalog:",
+    "@commitlint/config-conventional": "catalog:",
+    "simple-git-hooks": "catalog:"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "tests/integration/**/*.{test,spec}.{ts,tsx}"
+      ]
+    }
+  },
+  "simple-git-hooks": {
+    "preserveUnused": true,
+    "pre-commit": "node scripts/git-hooks/pre-commit.ts",
+    "commit-msg": "node scripts/git-hooks/commit-msg.ts \"$1\""
+  }
+}

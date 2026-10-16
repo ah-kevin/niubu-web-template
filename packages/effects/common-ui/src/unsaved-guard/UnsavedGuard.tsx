@@ -1,0 +1,58 @@
+import { useTranslation } from '@niubu/locales/react';
+import { useRef, type ReactNode } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@niubu/shadcn-ui/alert-dialog';
+
+type UnsavedGuardProps = {
+  open: boolean;
+  onStay: () => void;
+  onLeave: () => void;
+  preserveDraft?: boolean;
+  description?: ReactNode;
+};
+
+export function UnsavedGuard({ open, onStay, onLeave, preserveDraft = true, description }: UnsavedGuardProps) {
+  const { t } = useTranslation();
+  const previousFocus = useRef<HTMLElement | null>(null);
+  return (
+    <AlertDialog open={open}>
+      <AlertDialogContent
+        onOpenAutoFocus={() => {
+          previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={event => {
+          if (previousFocus.current?.isConnected) {
+            event.preventDefault();
+            previousFocus.current.focus();
+          }
+        }}
+        onEscapeKeyDown={event => {
+          event.preventDefault();
+          onStay();
+        }}
+      >
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('common:guard.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {description ??
+              (preserveDraft ? t('common:guard.preserveDescription') : t('common:guard.discardDescription'))}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onStay}>{t('common:guard.edit')}</AlertDialogCancel>
+          <AlertDialogAction onClick={onLeave}>
+            {preserveDraft ? t('common:guard.preserve') : t('common:guard.discard')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

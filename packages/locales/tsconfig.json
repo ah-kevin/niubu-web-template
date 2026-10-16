@@ -1,0 +1,7 @@
+{
+  "extends": "@niubu-internal/tsconfig/react.json",
+  "include": ["src", "vitest.config.ts"],
+  "compilerOptions": {
+    "types": ["vite/client", "node", "@testing-library/jest-dom"]
+  }
+}

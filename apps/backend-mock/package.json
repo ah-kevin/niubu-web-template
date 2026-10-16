@@ -1,0 +1,33 @@
+{
+  "name": "@niubu/backend-mock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nitro dev --host 127.0.0.1 --port 5320",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../eslint.config.js"
+  },
+  "dependencies": {
+    "nitropack": "catalog:",
+    "@niubu/request": "workspace:*",
+    "@niubu/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "eslint": "catalog:",
+    "vitest": "catalog:",
+    "@types/node": "catalog:",
+    "@niubu-internal/tsconfig": "workspace:*",
+    "@niubu-internal/test-config": "workspace:*"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "src/**/*.{test,spec}.ts"
+      ]
+    }
+  }
+}

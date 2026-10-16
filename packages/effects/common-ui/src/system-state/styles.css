@@ -1,0 +1,6 @@
+.system-state { max-width: 450px; }
+.state-symbol { display: inline-flex; align-items: center; justify-content: center; width: 62px; height: 62px; border: 1px solid var(--border); background: var(--secondary); color: var(--primary-text); border-radius: 17px; margin-bottom: 27px; }
+.system-state h1 { font-size: 27px; margin: 14px 0; }
+.system-state > p { font-size: 12px; line-height: 1.9; }
+.state-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 28px 0; }
+.state-actions [data-slot='button'] { font-size: 11px; }

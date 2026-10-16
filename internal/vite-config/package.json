@@ -1,0 +1,39 @@
+{
+  "name": "@niubu-internal/vite-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@niubu-internal/node-utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "vite": "8.3.4"
+  },
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@niubu-internal/test-config": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "test": "vitest run"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "src/**/*.test.ts"
+      ]
+    }
+  }
+}

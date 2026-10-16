@@ -1,0 +1,131 @@
+@import 'tailwindcss' source(none);
+@import '@niubu/styles/tokens.css';
+@import '@niubu/styles/base.css';
+@import '@niubu/common-ui/styles.css';
+@import '@niubu/common-ui/auth/styles.css';
+@import '@niubu/menu-ui/styles.css';
+@import '@niubu/layout-ui/styles.css';
+@import '@niubu/layouts/widgets/styles.css';
+@import '@niubu/layouts/routing/styles.css';
+
+@source '../app';
+@source '../auth';
+@source '../modules';
+@source '../../../../packages/effects/layouts/src/widgets';
+@source '../../../../packages/effects/layouts/src/routing';
+@source '../../../../packages/effects/common-ui/src/preferences';
+@source '../../../../packages/effects/common-ui/src/display-preferences';
+@source '../../../../packages/@core/ui-kit/shadcn-ui/src';
+@source '../../../../packages/@core/ui-kit/layout-ui/src';
+@source '../../../../packages/@core/ui-kit/menu-ui/src';
+@source not '../**/*.{test,spec}.{ts,tsx}';
+
+.playground-page {
+  padding: 1.5rem;
+  max-width: 64rem;
+}
+.playground-page h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.playground-page p {
+  margin-block: 0.75rem;
+}
+.playground-page form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 32rem;
+}
+.playground-page input,
+.playground-page button {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+}
+.playground-page button {
+  cursor: pointer;
+  width: fit-content;
+}
+.playground-page button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.playground-page pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 1rem;
+}
+
+.playground-frame {
+  width: 100%;
+  min-height: 24rem;
+  border: 1px solid var(--border);
+}
+
+@source '../system';
+
+@source '../../../../packages/effects/common-ui/src/form';
+
+@source '../../../../packages/effects/common-ui/src/form-frame';
+
+@source '../../../../packages/effects/common-ui/src/overlay';
+
+@source '../../../../packages/effects/common-ui/src/data-table';
+
+.system-resource-page {
+  max-width: 90rem;
+}
+.system-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.system-demo-notice {
+  max-width: 68ch;
+  color: var(--muted-foreground);
+}
+.system-resource-page form {
+  max-width: none;
+}
+.system-row-actions,
+.system-draft-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.system-draft-recovery p {
+  flex-basis: 100%;
+}
+.system-record-detail {
+  display: grid;
+  gap: 1rem;
+}
+.system-record-detail > div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) minmax(0, 3fr);
+  gap: 0.75rem;
+}
+.system-record-detail dt {
+  color: var(--muted-foreground);
+}
+.system-record-detail dd {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .system-record-detail > div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+.transfer-demo { margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border); }
+.transfer-demo h2 { font-size:1.15rem; font-weight:600; margin-bottom:.75rem; }
+.transfer-demo > p { max-width:68ch; color:var(--muted-foreground); }
+.transfer-demo input[type='file'] { max-width:100%; }
+.transfer-actions { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
+.transfer-progress { margin-top:1rem; }
+.transfer-progress progress { width:min(100%,32rem); accent-color:var(--primary); }
+.transfer-status[role='alert'] { color:var(--destructive); }

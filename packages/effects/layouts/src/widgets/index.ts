@@ -1,0 +1,26 @@
+import { lazy } from 'react';
+export { UserDropdown } from './UserDropdown';
+export type { ShellAction, UserDropdownProps } from './UserDropdown';
+export { ProfileSkeleton } from './ProfileSkeleton';
+export { CheckUpdates } from './CheckUpdates';
+export { LocalLockBoundary } from './LocalLockBoundary';
+export type { LockLabels } from './LocalLockBoundary';
+export type { UpdateLabels } from './CheckUpdates';
+export { FoundationTools } from './FoundationTools';
+export type { FoundationToolsProps } from './foundation-types';
+export { CommandSearch } from './CommandSearch';
+export type { CommandSearchProps } from './CommandSearch';
+export const CommandSearchDialog = /* @__PURE__ */ lazy(() => import('./CommandSearchDialog'));
+export { Notifications } from './Notifications';
+export type { NotificationsProps } from './Notifications';
+export const NotificationSheet = /* @__PURE__ */ lazy(() => import('./NotificationSheet'));
+export { DisplaySettings } from './DisplaySettings';
+export type { DisplaySettingsProps } from './DisplaySettings';
+export { Watermark } from './Watermark';
+export { Copyright } from './Copyright';
+export { resolveWidgetPlacement } from './widget-placement';
+export * from './types';
+export * from '../hooks';
+
+export { Breadcrumbs } from './Breadcrumbs';
+export type { BreadcrumbsProps, BreadcrumbItem } from './Breadcrumbs';

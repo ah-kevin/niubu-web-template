@@ -1,0 +1,4 @@
+{
+  "extends": "@niubu-internal/tsconfig/react.json",
+  "include": ["src"]
+}

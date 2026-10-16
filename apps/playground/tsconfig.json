@@ -1,0 +1,5 @@
+{
+  "extends": "@niubu-internal/tsconfig/app.json",
+  "include": ["src", "plugins", "*.config.ts"],
+  "exclude": ["../../tests/e2e*/**"]
+}

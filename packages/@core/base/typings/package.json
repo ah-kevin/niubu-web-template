@@ -1,0 +1,21 @@
+{
+  "name": "@niubu/core-typings",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "eslint": "catalog:"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../../../eslint.config.js"
+  }
+}

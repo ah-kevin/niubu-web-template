@@ -1,0 +1,37 @@
+{
+  "name": "@niubu/styles",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base.css": "./src/base.css",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "dependencies": {
+    "tw-animate-css": "catalog:"
+  },
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "eslint": "catalog:",
+    "tailwindcss": "catalog:",
+    "@niubu/core-design": "workspace:*"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "node check.mjs",
+    "typecheck": "tsc --noEmit && node check.mjs",
+    "lint": "eslint check.mjs scripts --config ../../eslint.config.js",
+    "tokens:generate": "node scripts/tokens.ts --write",
+    "test": "node --test scripts/tokens.test.ts"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "scripts/**/*.test.ts"
+      ]
+    }
+  }
+}

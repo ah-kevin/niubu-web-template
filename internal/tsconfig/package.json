@@ -1,0 +1,21 @@
+{
+  "name": "@niubu-internal/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./node.json": "./node.json",
+    "./react.json": "./react.json",
+    "./app.json": "./app.json"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "eslint": "catalog:"
+  },
+  "scripts": {
+    "build": "node check.mjs",
+    "typecheck": "node check.mjs",
+    "lint": "eslint check.mjs --config ../../eslint.config.js"
+  }
+}

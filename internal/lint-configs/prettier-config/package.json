@@ -1,0 +1,17 @@
+{
+  "name": "@niubu-internal/prettier-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.json"
+  },
+  "devDependencies": {
+    "prettier": "catalog:"
+  },
+  "scripts": {
+    "build": "prettier index.json --check",
+    "typecheck": "prettier index.json --check",
+    "lint": "prettier index.json --check"
+  }
+}

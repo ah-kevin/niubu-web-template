@@ -1,0 +1,42 @@
+.primary-navigation { flex: 1; overflow-y: auto; padding: 0 1px; scrollbar-width: thin; }
+.nav-group { margin-bottom: 19px; }
+.nav-group > p { font-size: 10px; color: var(--muted-foreground); padding: 0 13px; letter-spacing: 1px; margin-bottom: 7px; }
+.nav-link { display: flex; align-items: center; gap: 12px; min-height: var(--row-height); border-radius: 7px; padding: 8px 12px; color: var(--muted-foreground); font-size: 13px; margin: 2px 0; }
+.nav-link:hover { background: var(--muted); color: var(--foreground); }
+.nav-link.active { background: var(--nav-active); color: var(--primary-text); font-weight: 650; }
+.nav-indicator { width: 5px; height: 5px; background: var(--primary); border-radius: 50%; margin-left: auto; }
+.nav-badge { display: inline-block; padding: 0 5px; border-radius: var(--radius); background: var(--muted); color: var(--muted-foreground); font-size: .7rem; line-height: 1.4; vertical-align: middle; }
+
+.navigation-list { list-style: none; padding: 0; margin: 0; }
+.navigation-group { margin: 10px 0 14px; }
+.navigation-group-label { padding: 6px 12px; color: var(--muted-foreground); font-size: .7rem; }
+.navigation-branch { width: 100%; border: 0; background: none; text-align: left; font: inherit; }
+.navigation-chevron { display: inline-flex; align-items: center; flex: 0 0 auto; margin-left: auto; }
+/* Indent row content, keeping submenu backgrounds and active/hover rows full width. */
+.tree-navigation .nav-link { padding-inline-start: calc(12px + var(--navigation-indent, 0px)); }
+.tree-navigation .nav-link { font-size: .8125rem; border-radius: var(--radius); }
+.tree-navigation .active-parent { color: var(--foreground); }
+.tree-navigation[data-menu-style='plain'] .nav-link { border-radius: 0; }
+.tree-navigation[data-compact='true'][data-show-title='false'] > ul > .navigation-group > .navigation-group-label { display: none; }
+.tree-navigation[data-compact='true'][data-show-title='false'] .navigation-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.tree-navigation[data-compact='true'] .navigation-branch { justify-content: center; }
+.tree-navigation[data-compact='true'] .navigation-chevron { display: none; }
+.tree-navigation[data-orientation='horizontal'] { overflow: visible; overflow-x: visible; overflow-y: visible; }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list { display: flex; gap: 4px; width: 100%; min-width: 0; }
+.tree-navigation[data-orientation='horizontal'] .navigation-item { position: relative; }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list > .navigation-item > .navigation-children { position: absolute; top: 100%; left: 0; min-width: 224px; background: var(--sidebar-submenu); border: 1px solid var(--border); box-shadow: var(--shadow); z-index: 1; max-height: 70dvh; overflow-y: auto; padding: 6px; }
+
+.tree-navigation .navigation-children[data-theme-region='submenu'] { background: var(--sidebar-submenu); color: var(--foreground); border-radius: var(--radius); }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list > .navigation-item { flex: 1 1 0%; min-width: 0; width: 0; }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list > .navigation-item > .nav-link { min-width: 0; width: 100%; padding-inline: 8px; gap: 6px; }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list > .navigation-item > .nav-link .navigation-label { flex: 1 1 0%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list > .navigation-item > .nav-link .navigation-chevron { flex: 0 0 auto; margin-left: 0; }
+.tree-navigation[data-orientation='horizontal'] > .navigation-list > .navigation-item:last-child > .navigation-children { left: auto; right: 0; }
+
+/* A compact branch is an entry point; its descendants appear only after expansion. */
+.tree-navigation[data-compact='true'] .nav-link { justify-content: center; gap: 0; padding-inline: 6px; }
+.tree-navigation[data-compact='true'][data-show-title='true'] .nav-link { flex-direction: column; gap: 4px; font-size: .625rem; }
+.tree-navigation[data-compact='true'][data-show-title='true'] .navigation-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-navigation[data-compact='true'] .navigation-group { margin: 4px 0; }
+.tree-navigation[data-compact='true'] .navigation-group-label { display: none; }
+.tree-navigation .nav-link > svg { flex-shrink: 0; }

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.superpowers/
+playwright-report/
+test-results/
+.pnpm-store/
+.verification-private/
+**/.turbo/

@@ -1,0 +1,133 @@
+/* Semantic native Table renderer; display density stays with the global preference owner. */
+.native-data-table {
+  min-width: 0;
+  max-width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.native-data-table .native-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.native-data-table table {
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: start;
+}
+.native-data-table th {
+  position: relative;
+  height: var(--row-height);
+  background: var(--secondary);
+  font-size: var(--workspace-caption-font-size);
+  padding: 0 var(--workspace-card-padding);
+  text-align: start;
+}
+.native-data-table td {
+  font-size: var(--workspace-body-font-size);
+  padding: var(--workspace-heading-gap) var(--workspace-card-padding);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.native-data-table th,
+.native-data-table td {
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--border);
+}
+.native-data-table tr[tabindex] {
+  cursor: pointer;
+}
+.native-data-table tr:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.native-data-table button:focus-visible,
+.native-data-table input:focus-visible,
+.native-data-table select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.native-data-table .pattern-table-toolbar,
+.native-data-table .pattern-pagination,
+.native-data-table .pattern-selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--workspace-heading-gap);
+  flex-wrap: wrap;
+  padding: var(--workspace-heading-gap) var(--workspace-card-padding);
+  font-size: var(--workspace-body-font-size);
+}
+.native-data-table .pattern-table-settings {
+  position: relative;
+}
+.native-data-table .pattern-table-settings summary {
+  cursor: pointer;
+  min-height: 32px;
+}
+.native-data-table .pattern-column-settings {
+  position: absolute;
+  z-index: 10;
+  inset-inline-end: 0;
+  top: calc(100% + 8px);
+  width: min(360px, calc(100vw - 44px));
+  max-height: 60dvh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: var(--workspace-card-padding);
+  border-radius: var(--radius);
+}
+.native-data-table .pattern-column-settings fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid var(--border);
+}
+.native-data-table .pattern-column-settings label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.native-data-table input[type='number'] {
+  width: 65px;
+}
+.native-data-table input[type='checkbox'] {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--primary);
+}
+.native-data-table .pattern-column-resizer {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 0;
+  width: 24px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+.native-data-table .pattern-column-resizer::after {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 18px;
+  margin-inline-start: auto;
+  margin-inline-end: 4px;
+  background: var(--border);
+}
+.native-data-table [role='status'],
+.native-data-table [role='alert'] {
+  padding: 32px 18px;
+}
+:root[data-density='compact'] .native-data-table td {
+  padding: 7px 12px;
+}
+
+:root[data-density='compact'] .pattern-list-workspace .pattern-table-toolbar {
+  padding: var(--workspace-table-inset) 14px;
+}
+:root[data-density='compact'] .pattern-list-workspace .pattern-selection-bar {
+  padding-block: var(--workspace-table-inset);
+}

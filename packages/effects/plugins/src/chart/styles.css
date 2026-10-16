@@ -1,0 +1,6 @@
+.metric-chart { margin:8px 0 12px; width:100%; min-width:0; }
+.metric-chart figcaption { font-size:12px; font-weight:600; margin:0 0 4px; }
+.metric-chart figcaption span { color:var(--muted-foreground); font-weight:400; }
+.chart-container { height:210px; width:100%; min-width:0; }
+.chart-container .recharts-cartesian-axis-tick text { fill:var(--foreground); }
+@media(max-width:600px) { .chart-container { height:190px; } }

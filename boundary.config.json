@@ -1,0 +1,27 @@
+{
+  "scan": ["packages", "internal"],
+  "exclude": ["node_modules", ".turbo", "dist", "coverage"],
+  "words": [
+    "herd",
+    "herds",
+    "cattle",
+    "breeding",
+    "milk",
+    "calf",
+    "calves",
+    "feeding",
+    "farm",
+    "farms",
+    "ranch",
+    "barn",
+    "barns",
+    "cow",
+    "cows",
+    "heifer",
+    "heifers",
+    "dairy",
+    "beef"
+  ],
+  "literals": ["牧场", "牛", "奶", "犊", "饲", "NiuBu", "apps/web", "@niubu/web", "niubu-web", "niubu-saas"],
+  "allow": []
+}

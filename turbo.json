@@ -1,0 +1,70 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "agentGuidance": false,
+  "globalDependencies": [
+    "package.json",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "internal/*/package.json",
+    "internal/*/tsconfig.json",
+    "internal/*/vitest.config.ts",
+    "internal/*/src/**/*.ts",
+    "internal/tsconfig/*.json",
+    "internal/tsconfig/check.mjs",
+    "internal/lint-configs/*/package.json",
+    "internal/lint-configs/*/tsconfig.json",
+    "internal/lint-configs/*/src/**/*.ts",
+    "internal/lint-configs/prettier-config/index.json",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "eslint.config.js",
+    ".prettierrc.js",
+    ".prettierignore",
+    "!**/node_modules/**",
+    "!**/.turbo/**",
+    "!**/dist/**",
+    "!**/.pnpm-store/**",
+    "!**/.superpowers/**",
+    "!**/.verification-private/**",
+    "!**/playwright-report/**",
+    "!**/test-results/**",
+    ".env*",
+    "scripts/**",
+    "tools/**"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "env": ["VITE_*", "NODE_ENV"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "public/**", "scripts/**", "tools/**", ".env*", "!dist/**", "!.turbo/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "tests/**", "vitest.config.*", "package.json"],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "budget:check": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "@niubu/playground#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*", "NODE_ENV"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "public/**", "scripts/**", "tools/**", ".env*", "!dist/**", "!.turbo/**"]
+    }
+  }
+}

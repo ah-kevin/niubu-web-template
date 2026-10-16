@@ -1,0 +1,43 @@
+{
+  "name": "@niubu/preferences",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pure": "./src/pure.ts",
+    "./configuration": "./src/configuration.ts"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "@niubu-internal/test-config": "workspace:*",
+    "typescript": "catalog:",
+    "eslint": "catalog:",
+    "vitest": "catalog:",
+    "vite": "catalog:",
+    "@types/node": "catalog:",
+    "react": "catalog:",
+    "@types/react": "catalog:"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "src/**/*.{test,spec}.{ts,tsx}"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@niubu/core-preferences": "workspace:*",
+    "@niubu/hooks": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  }
+}

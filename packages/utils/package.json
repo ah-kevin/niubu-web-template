@@ -1,0 +1,36 @@
+{
+  "name": "@niubu/utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./runtime-config": "./src/runtime-config.ts"
+  },
+  "dependencies": {
+    "@niubu/core-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@niubu-internal/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "eslint": "catalog:",
+    "@niubu-internal/test-config": "workspace:*",
+    "vitest": "catalog:",
+    "@types/node": "catalog:",
+    "vite": "catalog:"
+  },
+  "sideEffects": false,
+  "niubu": {
+    "test": {
+      "include": [
+        "src/**/*.{test,spec}.{ts,tsx}"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --config ../../eslint.config.js",
+    "test": "vitest run"
+  }
+}
