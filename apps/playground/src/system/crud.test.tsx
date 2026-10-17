@@ -207,6 +207,38 @@ async function confirmSave() {
 }
 
 describe('system UI with controlled API ports (not backend persistence)', () => {
+  it.each(['查看', '编辑'] as const)(
+    'keeps the same %s row trigger during a pending read and restores its focus after closing',
+    async actionLabel => {
+      const f = await mount('roles');
+      let release!: (outcome: RequestOutcome<RecordByResource['roles']>) => void;
+      f.system.roles.get.mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            release = resolve;
+          }),
+      );
+      const trigger = await screen.findByRole('button', { name: `${actionLabel} Operator` });
+      await userEvent.click(trigger);
+      expect(f.system.roles.get).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `${actionLabel} Operator` })).toBe(trigger);
+      expect(trigger.isConnected).toBe(true);
+      expect(trigger).toHaveFocus();
+
+      await act(async () => release({ ok: true, data: rows.roles[0]! }));
+      const panel = await screen.findByRole('dialog');
+      if (actionLabel === '查看') expect(within(panel).getByText('Operator', { selector: 'dd' })).toBeVisible();
+      else expect(within(panel).getByRole('textbox', { name: '名称' })).toHaveValue('Operator');
+      expect(trigger.isConnected).toBe(true);
+
+      await userEvent.click(within(panel).getByRole('button', { name: '关闭' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(screen.getByRole('button', { name: `${actionLabel} Operator` })).toBe(trigger);
+      await waitFor(() => expect(trigger).toHaveFocus());
+    },
+  );
+
   it('fills the available desktop table width while preserving manual column widths after container resize', async () => {
     const OriginalResizeObserver = globalThis.ResizeObserver;
     const observers = new Set<ResizeObserverHarness>();

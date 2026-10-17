@@ -232,6 +232,11 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
       else setActionState({ requestKey: actionKey, error: systemErrorCopy(error, t) });
     }
   }
+  // Keep cell component types stable while events use the latest committed owner and leases.
+  const rowActions = useRef({ openRecord, remove });
+  useLayoutEffect(() => {
+    rowActions.current = { openRecord, remove };
+  });
   const tableContainer = useRef<HTMLDivElement>(null);
   const [tableWidth, setTableWidth] = useState(0);
   useLayoutEffect(() => {
@@ -250,87 +255,94 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
-  const tableFields = config.fields.filter(
-    name => !['description', 'href', 'pageId', 'openInNewWindow'].includes(name),
+  const tableFields = useMemo(
+    () => config.fields.filter(name => !['description', 'href', 'pageId', 'openInNewWindow'].includes(name)),
+    [config],
   );
   // Defaults fill the card; TanStack keeps explicit user sizing authoritative.
   const columnSize = Math.min(640, Math.max(180, (tableWidth - 2 - 256) / tableFields.length));
-  const headers = Object.fromEntries([...config.fields, 'actions'].map(name => [name, t(`system.field.${name}`)]));
-  const helper = createListColumnHelper<RecordByResource[K]>();
+  const headers = useMemo(
+    () => Object.fromEntries([...config.fields, 'actions'].map(name => [name, t(`system.field.${name}`)])),
+    [config, t],
+  );
   // One server model from useQueryDataTable owns all paging, metadata and sorting.
-  const columns: ListColumnDef<RecordByResource[K], unknown>[] = tableFields.map(name =>
-    helper.accessor((row): unknown => detailValue(name, row, lookup.lookups, t), {
-      id: name,
-      header: headers[name],
-      size: columnSize,
-      enableSorting: (config.sortable as readonly string[]).includes(name),
-      cell: info =>
-        name === 'enabled' ? (
-          <Badge
-            variant="secondary"
-            className={
-              info.row.original.enabled
-                ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
-                : 'border-border text-muted-foreground'
-            }
-          >
-            {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
-          </Badge>
-        ) : (
-          info.getValue()
-        ),
-    }),
-  );
-  columns.push(
-    helper.display({
-      id: 'actions',
-      header: headers.actions,
-      enableSorting: false,
-      size: 256,
-      minSize: 256,
-      cell: info => {
-        const record = info.row.original,
-          name = recordName(record);
-        return (
-          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-action=delete]]:text-destructive">
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              aria-label={t('system.viewAction', { name })}
-              onClick={() => void openRecord('detail', record.id)}
+  const columns = useMemo(() => {
+    const helper = createListColumnHelper<RecordByResource[K]>();
+    const result: ListColumnDef<RecordByResource[K], unknown>[] = tableFields.map(name =>
+      helper.accessor((row): unknown => detailValue(name, row, lookup.lookups, t), {
+        id: name,
+        header: headers[name],
+        size: columnSize,
+        enableSorting: (config.sortable as readonly string[]).includes(name),
+        cell: info =>
+          name === 'enabled' ? (
+            <Badge
+              variant="secondary"
+              className={
+                info.row.original.enabled
+                  ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
+                  : 'border-border text-muted-foreground'
+              }
             >
-              {t('system.view')}
-            </Button>
-            {writable && (
-              <>
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  aria-label={t('system.editAction', { name })}
-                  disabled={!lookup.ready}
-                  onClick={() => void openRecord('edit', record.id)}
-                >
-                  {t('system.edit')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  data-action="delete"
-                  aria-label={t('system.deleteAction', { name })}
-                  onClick={() => void remove(record)}
-                >
-                  {t('system.delete')}
-                </Button>
-              </>
-            )}
-          </div>
-        );
-      },
-    }),
-  );
+              {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
+            </Badge>
+          ) : (
+            info.getValue()
+          ),
+      }),
+    );
+    result.push(
+      helper.display({
+        id: 'actions',
+        header: headers.actions,
+        enableSorting: false,
+        size: 256,
+        minSize: 256,
+        cell: info => {
+          const record = info.row.original,
+            name = recordName(record);
+          return (
+            <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-action=delete]]:text-destructive">
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                aria-label={t('system.viewAction', { name })}
+                onClick={() => void rowActions.current.openRecord('detail', record.id)}
+              >
+                {t('system.view')}
+              </Button>
+              {writable && (
+                <>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    aria-label={t('system.editAction', { name })}
+                    disabled={!lookup.ready}
+                    onClick={() => void rowActions.current.openRecord('edit', record.id)}
+                  >
+                    {t('system.edit')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    data-action="delete"
+                    aria-label={t('system.deleteAction', { name })}
+                    onClick={() => void rowActions.current.remove(record)}
+                  >
+                    {t('system.delete')}
+                  </Button>
+                </>
+              )}
+            </div>
+          );
+        },
+      }),
+    );
+    return result;
+  }, [tableFields, headers, columnSize, config, lookup.lookups, lookup.ready, t, writable]);
   function closePanel(session: number) {
     if (panelRef.current?.session === session) setPanel(null);
   }
@@ -384,9 +396,16 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           </Button>
         </div>
       )}
-      {actionState?.requestKey === actionKey && actionState.pending && <p role="status">{t('pending')}</p>}
       {actionState?.requestKey === actionKey && actionState.error && <p role="alert">{actionState.error}</p>}
-      <div ref={tableContainer} className="min-w-0 max-w-full">
+      <div ref={tableContainer} className="relative min-w-0 max-w-full">
+        {actionState?.requestKey === actionKey && actionState.pending && (
+          <p
+            role="status"
+            className="pointer-events-none absolute start-4 top-3 z-10 text-[length:var(--workspace-caption-font-size)] text-muted-foreground"
+          >
+            {t('pending')}
+          </p>
+        )}
         <DataTable<RecordByResource[K]>
           profile="list"
           columns={columns}
