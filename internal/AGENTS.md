@@ -1,8 +1,9 @@
 # internal 区域规则
 
-继承[根规则](../AGENTS.md)；职责见[结构](../docs/guide/structure.md)，命令与产物契约见[工程指南](../docs/guide/engineering-deploy.md)。
+继承根规则。命令见[工作方式](../docs/guide/workflow.md)和[工程与部署](../docs/guide/engineering-deploy.md)。两个仓库的本文件逐字一致。
 
-- 只提供 Node 工具与构建/lint/test 配置，不引入产品运行时或对 app 的构建依赖；维护 source exports 与测试归属。
-- app 选择基于实际 workspace，拒绝未知与歧义；不能为模板 fixture 跳过当前 Root 或产品检查。
-- 保留 source/context/provenance、immutable seals 与 canonical 单文件 runtime-config 例外；缓存、部署不可重新封印篡改产物。
-- 不为方便检查另装解析器或绕过依赖包龄/trust 策略；新增依赖先按项目规范核验。标准使用方见 playground，不能把静态检查称作线上 CI 或镜像运行通过。
+- 只放 Node 工具，以及构建、lint、测试、TypeScript 的共享配置。不放产品运行时代码，也不依赖 app。
+- 测试共享配置在 `test-config`，测试进程数默认是核数的一半。
+- 修改 `turbo.json` 的缓存输入后，用 `turbo run <任务> --dry=json` 对比改动前后的任务哈希，确认该失效的任务确实会失效。
+- 构建产物的来源记录和首屏体积报告不能手工改写。体积超出预算就如实报告。
+- 不为了让检查通过而另装工具，或放宽依赖安全策略。

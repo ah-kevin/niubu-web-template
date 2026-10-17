@@ -1,12 +1,20 @@
 # 项目 Agent 规则
 
-这是唯一权威规则入口；`CLAUDE.md` 只引用本文件。先读[开发指南](docs/guide/README.md)，常用开发/按包/按范围/完整检查命令与提交规范见[工程与部署](docs/guide/engineering-deploy.md)。
+这是 Agent 的唯一规则入口，`CLAUDE.md` 只引用本文件。
 
-- 目录、依赖方向与模板名/产品名见[结构](docs/guide/structure.md)；产品配置留在 app，公共包不得反向依赖 app；本仓仅有 playground/backend-mock，包前缀沿用 `@niubu/*`。
-- 新页面按[模块登记](docs/guide/modules.md)，两层表单按[表单与 CRUD](docs/guide/forms-query-crud.md)，权限/菜单/请求按[鉴权指南](docs/guide/auth-request.md)。标准写法以 playground system 模块和系统 CRUD 为准。
-- 提交使用 Conventional Commits；hooks 显式安装，实际安装与 CI/Docker 运行须有对应证据。提交、安装、服务、发布等动作遵循用户当次授权。
-- 就近补充规则：[packages](packages/AGENTS.md)、[apps](apps/AGENTS.md)、[internal](internal/AGENTS.md)。不复制另一套政策，不因一般验证指令扩大测试授权。
-- 验证与交付记录不进本仓，`docs/verification/` 已忽略：过程证据放已忽略的 `.superpowers/`，结论写回任务卡；执行计划仍放 `docs/superpowers/plans/`。
+本仓库是 Web 模板仓库：React + shadcn + Tailwind 的 monorepo 基础，包含示范 app `apps/playground` 和开发用假后端 `apps/backend-mock`。规范、`packages/`、`internal/` 以本仓库为准，业务仓库从这里同步。
+
+## 必须遵守
+
+1. 动手前先读[开发标准](docs/guide/standards.md)和[工作方式](docs/guide/workflow.md)。写页面、表单、权限、请求之前，读[开发指南](docs/guide/README.md)里对应的专题。
+2. 公共包不依赖 app，不写产品专用内容；包之间只用对方声明的 exports。
+3. 新增或修改公共能力时，在 Playground 补上示例。Playground 是业务仓库参照的标准写法。
+4. 日常只跑改动涉及的检查；合并到 master 前跑一次 `pnpm format:check` 和 `pnpm check`。
+5. 新增第三方依赖、安装、启动服务、推送、发布，都按用户当次授权执行。
+6. 验证与交付记录不提交进本仓库，结论写回任务卡。
+7. E2E 默认不做，见下方授权规则。
+
+各目录的补充规则：[apps](apps/AGENTS.md)、[packages](packages/AGENTS.md)、[internal](internal/AGENTS.md)。
 
 ## E2E 测试授权
 

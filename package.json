@@ -20,6 +20,7 @@
     "workspace:check": "node scripts/check.ts --workspace-only",
     "budget:check": "turbo run budget:check",
     "check": "node scripts/check.ts",
+    "check:affected": "TURBO_SCM_BASE=master turbo run typecheck lint test --affected",
     "locale:check": "node internal/scripts/src/locale-check.ts",
     "dev:playground": "pnpm --filter @niubu/playground dev",
     "dev:backend-mock": "pnpm --filter @niubu/backend-mock dev",
