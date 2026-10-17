@@ -9,7 +9,7 @@ import { useFormsText } from './copy';
 import { ExampleFields } from './live-fields';
 import { useExampleForm } from './use-example-form';
 import { DocumentationLink } from '../DocumentationLink';
-import { PageHeader } from '@niubu/common-ui/page-header';
+import { ExamplePage, ExampleSection } from '../ExamplePage';
 
 type NameValues = { name: string };
 const cases = [
@@ -33,13 +33,11 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
   const active = cases.find(([id]) => id === selected) ?? cases[0];
   const Panel = active[2];
   return (
-    <div className="pattern-page grid min-w-0 gap-4">
-      <PageHeader
-        title={text('title')}
-        description={text('introduction')}
-        actions={<DocumentationLink kind="forms" />}
-      />
-      <nav aria-label={text('title')} className="flex min-w-0 flex-wrap items-center gap-x-1 border-b border-border">
+    <ExamplePage title={text('title')} description={text('introduction')} actions={<DocumentationLink kind="forms" />}>
+      <nav
+        aria-label={text('title')}
+        className="flex min-w-0 flex-wrap items-center gap-x-1 rounded-[var(--radius)] border border-border bg-card px-3"
+      >
         {cases.map(([id, label]) => (
           <Button
             key={id}
@@ -53,19 +51,15 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
           </Button>
         ))}
       </nav>
-      <section
-        className={[
-          'min-w-0 space-y-[var(--workspace-section-gap)] rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] sm:p-6',
-          active[0] === 'E44' || active[0] === 'E46' ? '' : 'w-full max-w-3xl [&_form]:max-w-xl',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-        aria-label={text(active[1])}
+      <ExampleSection
+        title={text(active[1])}
+        bodyClassName={
+          active[0] === 'E44' || active[0] === 'E46' ? 'sm:p-6' : 'sm:p-6 [&_form]:max-w-xl [&>div]:max-w-3xl'
+        }
       >
-        <h2 className="text-lg font-semibold">{text(active[1])}</h2>
         {active[0] === 'E43' ? <ApiPanel saveName={saveName} /> : <Panel key={active[0]} />}
-      </section>
-    </div>
+      </ExampleSection>
+    </ExamplePage>
   );
 }
 

@@ -8,6 +8,7 @@ import type { PlaygroundApi } from '../api';
 import { AccessControl } from '@niubu/access/react';
 import { RequestFailure } from './status';
 import { TransferDemo } from '../transfers/TransferDemo';
+import { ExamplePage, ExampleSection } from '../examples/ExamplePage';
 
 type EchoResult = Awaited<ReturnType<PlaygroundApi['echo']>>;
 export function RequestPage() {
@@ -42,23 +43,33 @@ export function RequestPage() {
     setPending(false);
   }
   return (
-    <section className="playground-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[1rem] [&>h1]:text-[1.5rem] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words">
-      <h1>{t('request')}</h1>
-      <form className="grid max-w-lg gap-3" onSubmit={event => void submit(event)}>
-        <Label htmlFor={id}>{t('value')}</Label>
-        <Input id={id} value={value} onChange={event => setValue(event.target.value)} />
-        <AccessControl codes={['demo:echo']} strategy="disable">
-          {({ disabled }) => (
-            <Button type="submit" disabled={pending || disabled}>
-              {t('send')}
-            </Button>
+    <ExamplePage title={t('request')} description={t('request.description')}>
+      <div className="grid min-w-0 items-start gap-[var(--workspace-section-gap)] xl:grid-cols-2">
+        <ExampleSection title={t('request.echo')} description={t('request.echoHelp')}>
+          <form className="grid min-w-0 gap-3" onSubmit={event => void submit(event)}>
+            <Label htmlFor={id}>{t('value')}</Label>
+            <Input id={id} value={value} onChange={event => setValue(event.target.value)} />
+            <AccessControl codes={['demo:echo']} strategy="disable">
+              {({ disabled }) => (
+                <Button className="justify-self-start" type="submit" disabled={pending || disabled}>
+                  {t('send')}
+                </Button>
+              )}
+            </AccessControl>
+          </form>
+          {pending && <p role="status">echo: {t('pending')}</p>}
+          {result?.ok && (
+            <pre
+              className="max-h-72 min-w-0 overflow-auto rounded-md border border-border bg-muted/30 p-3 text-xs leading-relaxed whitespace-pre-wrap break-words"
+              aria-label="echo result"
+            >
+              {JSON.stringify(result.data, null, 2)}
+            </pre>
           )}
-        </AccessControl>
-      </form>
-      {pending && <p role="status">echo: {t('pending')}</p>}
-      {result?.ok && <pre aria-label="echo result">{JSON.stringify(result.data, null, 2)}</pre>}
-      {result && !result.ok && <RequestFailure name="echo" error={result.error} />}
-      <TransferDemo />
-    </section>
+          {result && !result.ok && <RequestFailure name="echo" error={result.error} />}
+        </ExampleSection>
+        <TransferDemo />
+      </div>
+    </ExamplePage>
   );
 }

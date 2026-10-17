@@ -1,5 +1,6 @@
 import { useComponentsText } from './copy';
 import { useId, useState } from 'react';
+import { CircleHelp, ClipboardList, Menu, Settings2 } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@niubu/shadcn-ui/radio-group';
@@ -11,6 +12,7 @@ import {
   ContextMenuItem,
   Tooltip,
 } from '@niubu/shadcn-ui/preference-primitives';
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
 
 export function ComponentsPage() {
   const { t, localize } = useComponentsText();
@@ -25,112 +27,142 @@ export function ComponentsPage() {
     ? applied.channels.map(channel => t(channel === 'email' ? 'email' : 'sms')).join(', ')
     : t('noChannels');
   return (
-    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
-      <h1>{t('title')}</h1>
-      <p>{t('help')}</p>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('choices')}</h2>
-        <fieldset className="grid gap-3">
-          <legend className="mb-2 text-sm font-medium">{t('density')}</legend>
-          <RadioGroup
-            className="flex flex-wrap gap-x-6 gap-y-3"
-            aria-label={t('density')}
-            value={density}
-            onValueChange={setDensity}
-          >
-            {(['compact', 'comfortable'] as const).map(value => (
-              <label
-                className="inline-flex cursor-pointer items-center gap-2 text-sm"
-                key={value}
-                htmlFor={`${id}-${value}`}
-              >
-                <RadioGroupItem id={`${id}-${value}`} value={value} />
-                {value === 'compact' ? t('compact') : t('comfortable')}
-              </label>
-            ))}
-          </RadioGroup>
-        </fieldset>
-        <fieldset className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
-          <legend className="mb-2 text-sm font-medium">{t('channels')}</legend>
-          {(['email', 'sms'] as const).map(value => (
-            <label
-              className="inline-flex cursor-pointer items-center gap-2 text-sm"
-              key={value}
-              htmlFor={`${id}-${value}`}
-            >
-              <Checkbox
-                id={`${id}-${value}`}
-                checked={channels.includes(value)}
-                onCheckedChange={checked => {
-                  setChannels(current =>
-                    checked === true ? [...current, value] : current.filter(item => item !== value),
-                  );
+    <ExamplePage title={t('title')} description={t('pageDescription')}>
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-2">
+        <ExampleSection
+          title={t('choices')}
+          description={t('choicesHelp')}
+          className="lg:row-span-2"
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setDensity('compact');
+                  setChannels([]);
+                  setApplied(null);
                 }}
-              />
-              {value === 'email' ? t('email') : t('sms')}
-            </label>
-          ))}
-        </fieldset>
-        <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-          <Button type="button" onClick={() => setApplied({ density, channels })}>
-            {t('apply')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setDensity('compact');
-              setChannels([]);
-              setApplied(null);
-            }}
-          >
-            {t('reset')}
-          </Button>
-        </div>
-        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('applied')}>
-          {applied ? `${appliedDensity} · ${appliedChannels}` : t('noChoices')}
-        </output>
-      </section>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('menu')}</h2>
-        <label className="mb-3 inline-flex cursor-pointer items-center gap-2 text-sm" htmlFor={`${id}-archive`}>
-          <Checkbox
-            id={`${id}-archive`}
-            checked={allowArchive}
-            onCheckedChange={value => setAllowArchive(value === true)}
-          />
-          {t('allowArchive')}
-        </label>
-        <ContextMenu>
-          <ContextMenuTrigger asChild>
-            <div
-              tabIndex={0}
-              className="flex min-h-28 items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center text-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t('reset')}
+              </Button>
+              <Button type="button" onClick={() => setApplied({ density, channels })}>
+                {t('apply')}
+              </Button>
+            </>
+          }
+        >
+          <div className="flex items-center gap-3 rounded-[var(--radius)] border border-border p-4">
+            <Settings2 aria-hidden="true" className="size-5 shrink-0 text-primary" />
+            <p className="text-sm leading-relaxed text-muted-foreground">{t('selectionHelp')}</p>
+          </div>
+          <fieldset className="grid gap-3 border-b border-border pb-5">
+            <legend className="mb-3 text-sm font-medium">{t('density')}</legend>
+            <RadioGroup
+              className="grid gap-3 sm:grid-cols-2"
+              aria-label={t('density')}
+              value={density}
+              onValueChange={setDensity}
             >
-              {t('contextTrigger')}
+              {(['compact', 'comfortable'] as const).map(value => (
+                <label
+                  className="flex cursor-pointer items-center gap-3 rounded-[var(--radius)] border border-border px-4 py-3 text-sm has-[[data-state=checked]]:border-primary/50 has-[[data-state=checked]]:bg-primary/5"
+                  key={value}
+                  htmlFor={`${id}-${value}`}
+                >
+                  <RadioGroupItem id={`${id}-${value}`} value={value} />
+                  {value === 'compact' ? t('compact') : t('comfortable')}
+                </label>
+              ))}
+            </RadioGroup>
+          </fieldset>
+          <fieldset className="grid gap-3">
+            <legend className="mb-3 text-sm font-medium">{t('channels')}</legend>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {(['email', 'sms'] as const).map(value => (
+                <label
+                  className="inline-flex cursor-pointer items-center gap-2 text-sm"
+                  key={value}
+                  htmlFor={`${id}-${value}`}
+                >
+                  <Checkbox
+                    id={`${id}-${value}`}
+                    checked={channels.includes(value)}
+                    onCheckedChange={checked => {
+                      setChannels(current =>
+                        checked === true ? [...current, value] : current.filter(item => item !== value),
+                      );
+                    }}
+                  />
+                  {value === 'email' ? t('email') : t('sms')}
+                </label>
+              ))}
             </div>
-          </ContextMenuTrigger>
-          <ContextMenuPortal>
-            <ContextMenuContent>
-              <ContextMenuItem onSelect={() => setMenuResult('Inspected demo-7')}>{t('inspect')}</ContextMenuItem>
-              {allowArchive && (
-                <ContextMenuItem onSelect={() => setMenuResult('Archived demo-7')}>{t('archive')}</ContextMenuItem>
-              )}
-            </ContextMenuContent>
-          </ContextMenuPortal>
-        </ContextMenu>
-        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('menuResult')}>
-          {localize(menuResult)}
-        </output>
-      </section>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('tooltipTitle')}</h2>
-        <Tooltip content={t('tooltip')}>
-          <Button type="button" variant="outline">
-            {t('tooltipButton')}
-          </Button>
-        </Tooltip>
-      </section>
-    </main>
+          </fieldset>
+          <div className="mt-1 border-t border-border pt-4">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">{t('applied')}</p>
+            <output className="block break-words text-sm" aria-live="polite" aria-label={t('applied')}>
+              {applied ? `${appliedDensity} · ${appliedChannels}` : t('noChoices')}
+            </output>
+          </div>
+        </ExampleSection>
+        <ExampleSection title={t('menu')} description={t('menuHelp')}>
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              <div
+                tabIndex={0}
+                className="flex min-h-24 cursor-context-menu items-center gap-4 rounded-[var(--radius)] border border-dashed border-border px-5 py-4 outline-none transition-colors hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
+                  <ClipboardList aria-hidden="true" className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{t('sampleRecord')}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t('contextTrigger')}</p>
+                </div>
+                <Menu aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+              </div>
+            </ContextMenuTrigger>
+            <ContextMenuPortal>
+              <ContextMenuContent>
+                <ContextMenuItem onSelect={() => setMenuResult('Inspected demo-7')}>{t('inspect')}</ContextMenuItem>
+                {allowArchive && (
+                  <ContextMenuItem onSelect={() => setMenuResult('Archived demo-7')}>{t('archive')}</ContextMenuItem>
+                )}
+              </ContextMenuContent>
+            </ContextMenuPortal>
+          </ContextMenu>
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm" htmlFor={`${id}-archive`}>
+            <Checkbox
+              id={`${id}-archive`}
+              checked={allowArchive}
+              onCheckedChange={value => setAllowArchive(value === true)}
+            />
+            {t('allowArchive')}
+          </label>
+          <output
+            className="block break-words border-t border-border pt-3 text-sm text-muted-foreground"
+            aria-live="polite"
+            aria-label={t('menuResult')}
+          >
+            {localize(menuResult)}
+          </output>
+        </ExampleSection>
+        <ExampleSection title={t('tooltipTitle')} description={t('tooltipHelp')}>
+          <div className="flex flex-wrap items-center gap-3">
+            <Tooltip content={t('tooltip')}>
+              <Button type="button" variant="outline">
+                <CircleHelp aria-hidden="true" className="size-4" />
+                {t('tooltipButton')}
+              </Button>
+            </Tooltip>
+            <span className="text-sm text-muted-foreground">{t('tooltipInteraction')}</span>
+          </div>
+        </ExampleSection>
+      </div>
+      <ExampleDetails title={t('implementation')}>
+        <p>{t('help')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }

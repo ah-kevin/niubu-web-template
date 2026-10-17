@@ -2,6 +2,14 @@ import { useTranslation } from '@niubu/locales/react';
 import type { TranslationParams } from '@niubu/locales';
 
 const featuresCopy = {
+  implementation: '实现说明',
+  'browser.intro': '体验全屏、图标、配置复制和文本水印。',
+  'browser.fullscreenIntro': '进入全屏以获得更大的工作区域。',
+  'browser.watermarkIntro': '修改文字并开启水印，立即查看效果。',
+  'browser.iconsIntro': '按名称读取图标，并查看未登记图标的回退。',
+  'query.intro': '切换演示上下文，体验分页、重试、缓存与加载更多。',
+  'preferences.intro': '调整业务布局与摘要显示，实时预览偏好设置。',
+  'preferences.settingsIntro': '应用预设或调整摘要显示，右侧立即预览。',
   'query.contextTitle': '合成上下文',
   'preferences.preview': '业务布局预览',
   'preferences.previewItem': '演示项目 {{item}}',

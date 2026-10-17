@@ -1,4 +1,6 @@
 import { useApplicationText } from './copy';
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
+import { Badge } from '@niubu/shadcn-ui/badge';
 import { useState } from 'react';
 import { resolveAccess } from '@niubu/access';
 import { AccessControl, AccessProvider } from '@niubu/access/react';
@@ -39,54 +41,78 @@ export function AccessPage() {
   });
   const ready = scopeId === 'north';
   return (
-    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
-      <h1>{text('accessTitle')}</h1>
-      <p>{text('accessHelp')}</p>
-      <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-        <label>
-          {text('role')}
-          <Select
-            label={text('role')}
-            value={role}
-            onValueChange={setRole}
-            options={roles.map(value => ({ value, label: value }))}
-          />
-        </label>
-        <label>
-          {text('scope')}
-          <Select
-            label={text('scope')}
-            value={scopeId}
-            onValueChange={setScopeId}
-            options={['north', 'other'].map(value => ({ value, label: value }))}
-          />
-        </label>
-        <label>
-          <Checkbox checked={write} onCheckedChange={value => setWrite(value === true)} />
-          {text('write')}
-        </label>
+    <ExamplePage title={text('accessTitle')} description={text('accessIntro')}>
+      <div className="grid min-w-0 gap-[var(--workspace-section-gap)] xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <ExampleSection title={text('accessSettings')} description={text('accessSettingsIntro')}>
+          <label className="grid gap-2 text-sm">
+            {text('role')}
+            <Select
+              label={text('role')}
+              value={role}
+              onValueChange={setRole}
+              options={roles.map(value => ({ value, label: value }))}
+            />
+          </label>
+          <label className="grid gap-2 text-sm">
+            {text('scope')}
+            <Select
+              label={text('scope')}
+              value={scopeId}
+              onValueChange={setScopeId}
+              options={['north', 'other'].map(value => ({ value, label: value }))}
+            />
+          </label>
+          <label className="flex items-center gap-2 rounded-md border border-border px-3 py-3 text-sm">
+            <Checkbox checked={write} onCheckedChange={value => setWrite(value === true)} />
+            {text('write')}
+          </label>
+        </ExampleSection>
+        <ExampleSection title={text('accessPreview')} description={text('accessPreviewIntro')}>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {roles.map(r => {
+              const granted = access.grantedPageIds.includes(`example.${r}`);
+              return (
+                <p
+                  key={r}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-4 text-sm"
+                >
+                  <Badge variant={granted ? 'default' : 'secondary'}>
+                    {r} {text('page')}：{granted ? text('allowed') : text('denied')}
+                  </Badge>
+                </p>
+              );
+            })}
+          </div>
+          {!ready && (
+            <p
+              role="status"
+              className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-3 text-sm text-destructive"
+            >
+              {text('outsideScope')}
+            </p>
+          )}
+          <div className="flex min-h-20 flex-wrap items-center gap-3 rounded-md bg-muted/30 p-4">
+            <AccessProvider value={{ roles: [role], codes, ready }}>
+              <AccessControl codes={['example:read', 'example:write']} mode="any">
+                <p className="w-full text-sm text-muted-foreground">{text('any')}</p>
+              </AccessControl>
+              <AccessControl codes={['example:read', 'example:write']} mode="all">
+                <Button onClick={() => setWrite(false)}>{text('delete')}</Button>
+              </AccessControl>
+              <AccessControl roles={['admin', 'super']} strategy="disable">
+                {({ disabled }) => (
+                  <Button variant="outline" disabled={disabled}>
+                    {text('manage')}
+                  </Button>
+                )}
+              </AccessControl>
+            </AccessProvider>
+          </div>
+        </ExampleSection>
       </div>
-      <div className="my-5 grid gap-3 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] sm:grid-cols-3">
-        {roles.map(r => (
-          <p key={r}>
-            {r} {text('page')}：{access.grantedPageIds.includes(`example.${r}`) ? text('allowed') : text('denied')}
-          </p>
-        ))}
-      </div>
-      {!ready && <p role="status">{text('outsideScope')}</p>}
-      <div className="flex flex-wrap items-center gap-3">
-        <AccessProvider value={{ roles: [role], codes, ready }}>
-          <AccessControl codes={['example:read', 'example:write']} mode="any">
-            <p>{text('any')}</p>
-          </AccessControl>
-          <AccessControl codes={['example:read', 'example:write']} mode="all">
-            <Button onClick={() => setWrite(false)}>{text('delete')}</Button>
-          </AccessControl>
-          <AccessControl roles={['admin', 'super']} strategy="disable">
-            {({ disabled }) => <Button disabled={disabled}>{text('manage')}</Button>}
-          </AccessControl>
-        </AccessProvider>
-      </div>
-    </section>
+      <ExampleDetails title={text('implementation')}>
+        <p>{text('accessHelp')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }

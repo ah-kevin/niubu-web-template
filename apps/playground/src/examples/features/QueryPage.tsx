@@ -1,3 +1,4 @@
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Select } from '@niubu/shadcn-ui/select';
 import { useFeaturesText } from './copy';
@@ -36,8 +37,7 @@ function Pagination({ context, fixture }: SceneProps) {
   // The fulfilled page is derived from its rows so placeholder data never receives the new page label.
   const fulfilledPage = query.data ? Math.ceil(query.data.value[0]! / 2) : page;
   return (
-    <section aria-label={t('query.pagination')}>
-      <h2>{t('query.pagination')}</h2>
+    <ExampleSection title={t('query.pagination')}>
       <p>{t('query.page', { page })}</p>
       {query.isPlaceholderData && <p role="status">{t('query.previousData')}</p>}
       {query.isPending && <p role="status">{t('query.loadingPage')}</p>}
@@ -47,13 +47,20 @@ function Pagination({ context, fixture }: SceneProps) {
           <li key={id}>{t('query.pageRow', { context: contextLabel(context), page: fulfilledPage, id })}</li>
         ))}
       </ul>
-      <Button type="button" disabled={page === 1 || query.isFetching} onClick={() => setPage(value => value - 1)}>
-        {t('query.previous')}
-      </Button>
-      <Button type="button" disabled={page === 3 || query.isFetching} onClick={() => setPage(value => value + 1)}>
-        {t('query.next')}
-      </Button>
-    </section>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={page === 1 || query.isFetching}
+          onClick={() => setPage(value => value - 1)}
+        >
+          {t('query.previous')}
+        </Button>
+        <Button type="button" disabled={page === 3 || query.isFetching} onClick={() => setPage(value => value + 1)}>
+          {t('query.next')}
+        </Button>
+      </div>
+    </ExampleSection>
   );
 }
 
@@ -70,29 +77,31 @@ function Retry({ context, fixture }: SceneProps) {
     retryDelay: 40,
   });
   return (
-    <section aria-label={t('query.retry')}>
-      <h2>{t('query.retry')}</h2>
-      <p>{t('query.retryHelp')}</p>
-      <Button
-        type="button"
-        disabled={query.isFetching}
-        onClick={() => setScenario(value => ({ failure: 'once', run: value.run + 1 }))}
-      >
-        {t('query.retryOnce')}
-      </Button>
-      <Button
-        type="button"
-        disabled={query.isFetching}
-        onClick={() => setScenario(value => ({ failure: 'always', run: value.run + 1 }))}
-      >
-        {t('query.fail')}
-      </Button>
+    <ExampleSection title={t('query.retry')}>
+      <p className="text-sm text-muted-foreground">{t('query.retryHelp')}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          disabled={query.isFetching}
+          onClick={() => setScenario(value => ({ failure: 'once', run: value.run + 1 }))}
+        >
+          {t('query.retryOnce')}
+        </Button>
+        <Button
+          variant="outline"
+          type="button"
+          disabled={query.isFetching}
+          onClick={() => setScenario(value => ({ failure: 'always', run: value.run + 1 }))}
+        >
+          {t('query.fail')}
+        </Button>
+      </div>
       {query.isFetching && <p role="status">{t('query.runningGet')}</p>}
       {query.data && (
         <p role="status">{t('query.attempts', { value: query.data.value, attempts: query.data.attempts })}</p>
       )}
       {query.error && <p role="alert">{query.error.message}</p>}
-    </section>
+    </ExampleSection>
   );
 }
 
@@ -131,10 +140,10 @@ function Concurrency({ context, fixture }: SceneProps) {
     ? t('query.concurrentResult', { attempts: result[1]!, same: result[2] === '是' ? t('query.yes') : t('query.no') })
     : localize(output);
   return (
-    <section aria-label={t('query.concurrent')}>
-      <h2>{t('query.concurrent')}</h2>
-      <p>{t('query.concurrentHelp')}</p>
+    <ExampleSection title={t('query.concurrent')}>
+      <p className="text-sm text-muted-foreground">{t('query.concurrentHelp')}</p>
       <Button
+        className="justify-self-start"
         type="button"
         disabled={pending}
         onClick={() => {
@@ -143,8 +152,10 @@ function Concurrency({ context, fixture }: SceneProps) {
       >
         {t('query.concurrentRead')}
       </Button>
-      <p role="status">{pending ? t('query.concurrentPending') : outputText}</p>
-    </section>
+      <p role="status" className="rounded-md bg-muted/40 p-3 text-sm empty:hidden">
+        {pending ? t('query.concurrentPending') : outputText}
+      </p>
+    </ExampleSection>
   );
 }
 
@@ -162,8 +173,7 @@ function Infinite({ context, fixture }: SceneProps) {
     getNextPageParam: last => (last.page < 3 ? last.page + 1 : undefined),
   });
   return (
-    <section aria-label={t('query.more')}>
-      <h2>{t('query.more')}</h2>
+    <ExampleSection title={t('query.more')}>
       {query.isPending && <p role="status">{t('query.initialLoading')}</p>}
       {query.error && <p role="alert">{query.error.message}</p>}
       <ul className="my-4 grid gap-2 text-sm [&>li]:rounded-lg [&>li]:bg-muted/40 [&>li]:px-3 [&>li]:py-2">
@@ -172,6 +182,7 @@ function Infinite({ context, fixture }: SceneProps) {
         )}
       </ul>
       <Button
+        className="justify-self-start"
         type="button"
         disabled={!query.hasNextPage || query.isFetching}
         onClick={() => {
@@ -180,7 +191,7 @@ function Infinite({ context, fixture }: SceneProps) {
       >
         {query.isSuccess && !query.hasNextPage ? t('query.exhausted') : t('query.more')}
       </Button>
-    </section>
+    </ExampleSection>
   );
 }
 
@@ -227,12 +238,9 @@ export function QueryPage(): React.JSX.Element {
     [owner],
   );
   return (
-    <div className="playground-page example-page feature-example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold grid gap-[var(--workspace-section-gap)] [&>section]:min-w-0 [&>section]:rounded-[var(--radius)] [&>section]:border [&>section]:border-border [&>section]:bg-card [&>section]:p-[var(--workspace-card-padding)] [&_section>h2]:mb-3 [&_section>h2]:text-base [&_section>h2]:font-semibold [&_section>[data-slot=button]]:me-2 [&_section>[data-slot=button]]:mt-3">
-      <h1>{t('query.title')}</h1>
-      <p>{t('query.help')}</p>
-      <section aria-label={t('query.contextTitle')}>
-        <h2>{t('query.contextTitle')}</h2>
-        <div className="flex flex-wrap items-end gap-4">
+    <ExamplePage title={t('query.title')} description={t('query.intro')}>
+      <ExampleSection title={t('query.contextTitle')}>
+        <div className="grid min-w-0 items-end gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <label className="grid gap-2 text-sm">
             {t('query.identity')}
             <Select
@@ -262,10 +270,15 @@ export function QueryPage(): React.JSX.Element {
         <p className="mt-4 break-words rounded-lg bg-muted/40 px-3 py-2 text-sm" role="status">
           {t('query.context', { context: contextLabel(context) })}
         </p>
-      </section>
+      </ExampleSection>
       <QueryClientProvider client={owner.client}>
-        <Scenarios key={JSON.stringify(syntheticKey(context))} context={context} fixture={owner.fixture} />
+        <div className="grid min-w-0 items-start gap-[var(--workspace-section-gap)] xl:grid-cols-2">
+          <Scenarios key={JSON.stringify(syntheticKey(context))} context={context} fixture={owner.fixture} />
+        </div>
       </QueryClientProvider>
-    </div>
+      <ExampleDetails title={t('implementation')}>
+        <p>{t('query.help')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }

@@ -1,4 +1,5 @@
 import { DocumentationLink } from '../DocumentationLink';
+import { ExampleDetails, ExamplePage } from '../ExamplePage';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   DataTable,
@@ -113,14 +114,8 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
     };
   }, [preferences]);
   return (
-    <section className="mx-auto w-full max-w-[82rem] min-w-0 space-y-[var(--workspace-section-gap)]">
-      <header className="space-y-[var(--workspace-heading-gap)]">
-        <h1 className="text-[length:var(--workspace-title-font-size)] font-[650]">{t('examples.tables.title')}</h1>
-        <DocumentationLink kind="tables" />
-        <p className="max-w-[90ch] text-sm leading-relaxed text-muted-foreground">{t('examples.tables.synthetic')}</p>
-        <p className="max-w-[90ch] text-sm leading-relaxed text-muted-foreground">{t('examples.tables.boundary')}</p>
-      </header>
-      <label className="grid w-fit max-w-full gap-2 text-sm font-medium">
+    <ExamplePage title={t('examples.tables.title')} actions={<DocumentationLink kind="tables" />}>
+      <label className="flex w-fit max-w-full flex-wrap items-center gap-3 text-sm font-medium">
         {t('examples.tables.scope')}
         <Select
           label={t('examples.tables.scope')}
@@ -138,15 +133,21 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
           <ServerExample scope={scope} load={load} t={t} />
         </div>
       </PreferenceProvider>
-    </section>
+      <ExampleDetails title={t('examples.ui.details')}>
+        <p>{t('examples.tables.synthetic')}</p>
+        <p>{t('examples.tables.boundary')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }
 
 function ExampleGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="w-full max-w-[40rem] min-w-0 space-y-3 [&_caption]:sr-only">
-      <h2 className="text-base font-semibold">{title}</h2>
-      {children}
+    <div className="min-w-0 rounded-[var(--radius)] border border-border bg-card [&_caption]:sr-only">
+      <header className="flex min-h-14 items-center border-b border-border px-[var(--workspace-card-padding)] py-3">
+        <h2 className="text-base font-semibold">{title}</h2>
+      </header>
+      <div className="min-w-0 [&>.native-data-table]:rounded-none [&>.native-data-table]:border-0">{children}</div>
     </div>
   );
 }

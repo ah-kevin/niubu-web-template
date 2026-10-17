@@ -9,7 +9,7 @@ import {
   type QueryRequest,
 } from '@niubu/common-ui/data-table';
 import { Modal, Drawer, useOverlay } from '@niubu/common-ui/overlay';
-import { PageHeader } from '@niubu/common-ui/page-header';
+import { ExamplePage } from '../examples/ExamplePage';
 import { Plus } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Badge } from '@niubu/shadcn-ui/badge';
@@ -232,33 +232,55 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
       else setActionState({ requestKey: actionKey, error: systemErrorCopy(error, t) });
     }
   }
+  const tableContainer = useRef<HTMLDivElement>(null);
+  const [tableWidth, setTableWidth] = useState(0);
+  useLayoutEffect(() => {
+    const container = tableContainer.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+    const measure = (width: number) => {
+      if (!Number.isFinite(width) || width <= 0) return;
+      const next = Math.floor(width);
+      setTableWidth(current => (current === next ? current : next));
+    };
+    measure(container.getBoundingClientRect().width);
+    const observer = new ResizeObserver(entries => {
+      const entry = entries.find(value => value.target === container);
+      if (entry) measure(entry.contentRect.width);
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+  const tableFields = config.fields.filter(
+    name => !['description', 'href', 'pageId', 'openInNewWindow'].includes(name),
+  );
+  // Defaults fill the card; TanStack keeps explicit user sizing authoritative.
+  const columnSize = Math.min(640, Math.max(180, (tableWidth - 2 - 256) / tableFields.length));
   const headers = Object.fromEntries([...config.fields, 'actions'].map(name => [name, t(`system.field.${name}`)]));
   const helper = createListColumnHelper<RecordByResource[K]>();
   // One server model from useQueryDataTable owns all paging, metadata and sorting.
-  const columns: ListColumnDef<RecordByResource[K], unknown>[] = config.fields
-    .filter(name => !['description', 'href', 'pageId', 'openInNewWindow'].includes(name))
-    .map(name =>
-      helper.accessor((row): unknown => detailValue(name, row, lookup.lookups, t), {
-        id: name,
-        header: headers[name],
-        enableSorting: (config.sortable as readonly string[]).includes(name),
-        cell: info =>
-          name === 'enabled' ? (
-            <Badge
-              variant="secondary"
-              className={
-                info.row.original.enabled
-                  ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
-                  : 'border-border text-muted-foreground'
-              }
-            >
-              {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
-            </Badge>
-          ) : (
-            info.getValue()
-          ),
-      }),
-    );
+  const columns: ListColumnDef<RecordByResource[K], unknown>[] = tableFields.map(name =>
+    helper.accessor((row): unknown => detailValue(name, row, lookup.lookups, t), {
+      id: name,
+      header: headers[name],
+      size: columnSize,
+      enableSorting: (config.sortable as readonly string[]).includes(name),
+      cell: info =>
+        name === 'enabled' ? (
+          <Badge
+            variant="secondary"
+            className={
+              info.row.original.enabled
+                ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
+                : 'border-border text-muted-foreground'
+            }
+          >
+            {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
+          </Badge>
+        ) : (
+          info.getValue()
+        ),
+    }),
+  );
   columns.push(
     helper.display({
       id: 'actions',
@@ -327,20 +349,20 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const shown = panel?.ownerKey === ownerKey ? panel : null;
   const Overlay = shown?.mode === 'create' ? Modal : Drawer;
   return (
-    <section className="playground-page system-resource-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[1rem] [&>h1]:text-[1.5rem] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_form]:max-w-none">
-      <PageHeader
-        title={t(config.titleKey)}
-        description={t('system.demoNotice')}
-        actions={
-          writable && (
-            <Button type="button" disabled={!lookup.ready} onClick={create}>
-              <Plus aria-hidden="true" />
-              {t('system.create')}
-            </Button>
-          )
-        }
-      />
-      <div className="system-query-card mb-[var(--workspace-section-gap)] rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
+    <ExamplePage
+      className="system-resource-page [&_form]:max-w-none"
+      title={t(config.titleKey)}
+      description={t('system.demoNotice')}
+      actions={
+        writable && (
+          <Button type="button" disabled={!lookup.ready} onClick={create}>
+            <Plus aria-hidden="true" />
+            {t('system.create')}
+          </Button>
+        )
+      }
+    >
+      <div className="system-query-card rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
         <table.queryForm.Form
           className="system-query-form grid min-w-0 gap-[var(--workspace-section-gap)] xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
           showActions={false}
@@ -364,14 +386,16 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
       )}
       {actionState?.requestKey === actionKey && actionState.pending && <p role="status">{t('pending')}</p>}
       {actionState?.requestKey === actionKey && actionState.error && <p role="alert">{actionState.error}</p>}
-      <DataTable<RecordByResource[K]>
-        profile="list"
-        columns={columns}
-        getRowId={row => row.id}
-        caption={t(config.titleKey)}
-        labels={createDataTableLabels(t, headers)}
-        {...table.tableState}
-      />
+      <div ref={tableContainer} className="min-w-0 max-w-full">
+        <DataTable<RecordByResource[K]>
+          profile="list"
+          columns={columns}
+          getRowId={row => row.id}
+          caption={t(config.titleKey)}
+          labels={createDataTableLabels(t, headers)}
+          {...table.tableState}
+        />
+      </div>
       {table.tableState.readState === 'error' && (
         <Button type="button" variant="outline" onClick={() => void table.reload()}>
           {t('retry')}
@@ -418,6 +442,6 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           )}
         </Overlay>
       )}
-    </section>
+    </ExamplePage>
   );
 }

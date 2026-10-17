@@ -1,4 +1,5 @@
 import { useApplicationText } from './copy';
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
 import { Input } from '@niubu/shadcn-ui/input';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
@@ -14,17 +15,19 @@ function TabActions() {
   const stores = useAppStores();
   const active = tabs.snapshot.activeKey;
   return (
-    <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button disabled={!active} onClick={() => active && tabs.request({ type: 'refresh', key: active })}>
         {text('refresh')}
       </Button>
       <Button
+        variant="outline"
         disabled={!active || active === tabs.snapshot.homeKey}
         onClick={() => active && tabs.request({ type: 'close', key: active })}
       >
         {text('close')}
       </Button>
       <Button
+        variant="outline"
         disabled={!active || active === tabs.snapshot.homeKey}
         onClick={() => {
           const tab = tabs.snapshot.tabs.find(t => t.key === active);
@@ -33,7 +36,7 @@ function TabActions() {
       >
         {text('pin')}
       </Button>
-      <p>
+      <p className="w-full rounded-md bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
         {text('opened')} {tabs.snapshot.tabs.length} {text('tabsCount')}{' '}
         {tabs.snapshot.tabs.find(t => t.key === active)?.refreshNonce ?? 0}
       </p>
@@ -44,13 +47,17 @@ function DetailLinks() {
   const text = useApplicationText();
   const { scope } = useAuthSnapshot();
   return (
-    <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {['A', 'B'].map(id => (
-        <Link key={id} to={`/examples/tabs/${id}${withScope('', scope)}`}>
-          {text('openDetail')} {id}
-        </Link>
+        <Button key={id} variant={id === 'A' ? 'default' : 'outline'} asChild>
+          <Link to={`/examples/tabs/${id}${withScope('', scope)}`}>
+            {text('openDetail')} {id}
+          </Link>
+        </Button>
       ))}
-      <Link to={`/examples/tabs${withScope('', scope)}`}>{text('backTabs')}</Link>
+      <Button variant="outline" asChild>
+        <Link to={`/examples/tabs${withScope('', scope)}`}>{text('backTabs')}</Link>
+      </Button>
     </div>
   );
 }
@@ -78,10 +85,9 @@ export function CapacityExample() {
       });
   }, [store]);
   return (
-    <div className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-      <h2>{text('capacityTitle')}</h2>
-      <p>{text('capacityHelp')}</p>
+    <ExampleSection title={text('capacityTitle')} description={text('capacityIntro')}>
       <Button
+        className="justify-self-start"
         onClick={() => {
           store.open(capacityTab(String(next)), 'ui');
           setNext(n => n + 1);
@@ -90,26 +96,34 @@ export function CapacityExample() {
         {text('capacityNext')}
       </Button>
       <output
-        className="mt-4 block rounded-lg bg-muted/40 px-3 py-2 text-sm"
+        className="block break-words rounded-md border border-dashed border-border bg-muted/30 px-3 py-3 font-mono text-sm"
         aria-live="polite"
         aria-label={text('capacityOutput')}
       >
         {snapshot.tabs.map(t => t.key).join(', ')}
       </output>
-    </div>
+    </ExampleSection>
   );
 }
 export function TabsPage() {
   const text = useApplicationText();
   usePageTabs();
   return (
-    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
-      <h1>{text('tabsTitle')}</h1>
-      <p>{text('tabsHelp')}</p>
-      <DetailLinks />
-      <TabActions />
-      <CapacityExample />
-    </section>
+    <ExamplePage title={text('tabsTitle')} description={text('tabsIntro')}>
+      <div className="grid min-w-0 gap-[var(--workspace-section-gap)] xl:grid-cols-2">
+        <ExampleSection title={text('detailTitle')} description={text('detailIntro')}>
+          <DetailLinks />
+        </ExampleSection>
+        <ExampleSection title={text('currentTab')} description={text('currentTabIntro')}>
+          <TabActions />
+        </ExampleSection>
+        <CapacityExample />
+      </div>
+      <ExampleDetails title={text('implementation')}>
+        <p>{text('tabsHelp')}</p>
+        <p>{text('capacityHelp')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }
 export function TabDetailPage() {
@@ -118,22 +132,25 @@ export function TabDetailPage() {
   const location = useLocation();
   const [value, setValue] = useState('');
   return (
-    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
-      <h1>
-        {text('detailTitle')} {id}
-      </h1>
-      <p>
-        {text('routeIdentity')}
-        {location.pathname}
-        {text('routeHelp')}
-      </p>
-      <DetailLinks />
-      <TabActions />
-      <label className="my-4 grid max-w-lg gap-2 text-sm">
-        {text('temporary')}
-        <Input value={value} onChange={e => setValue(e.target.value)} />
-      </label>
-      <p>{text('temporaryHelp')}</p>
-    </section>
+    <ExamplePage title={`${text('detailTitle')} ${id}`} description={text('detailIntro')} actions={<DetailLinks />}>
+      <div className="grid min-w-0 gap-[var(--workspace-section-gap)] xl:grid-cols-2">
+        <ExampleSection title={text('temporary')} description={text('temporaryHelp')}>
+          <label className="grid gap-2 text-sm">
+            {text('temporary')}
+            <Input value={value} onChange={e => setValue(e.target.value)} />
+          </label>
+        </ExampleSection>
+        <ExampleSection title={text('currentTab')}>
+          <TabActions />
+        </ExampleSection>
+      </div>
+      <ExampleDetails title={text('implementation')}>
+        <p>
+          {text('routeIdentity')}
+          {location.pathname}
+          {text('routeHelp')}
+        </p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }

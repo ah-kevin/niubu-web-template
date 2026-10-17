@@ -1,3 +1,4 @@
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
 import { Link } from 'react-router-dom';
 import { useAuthSnapshot } from '../../auth/context';
 import { useOptionalPageTabs, usePageTabs } from '@niubu/layouts/routing';
@@ -85,94 +86,107 @@ export function NavigationPage({
       ]
     : pageItems;
   return (
-    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
-      <h1>{text('navigationTitle')}</h1>
-      <p>{text('navigationHelp')}</p>
-      <div className="example-columns grid grid-cols-[minmax(12rem,1fr)_minmax(0,3fr)] gap-6 [@media(max-width:700px)]:grid-cols-1">
-        <TreeNavigation
-          nodes={projectMenu(access.menu, path, scope, key => key)}
-          label={text('menu')}
-          expandedIds={expanded}
-          onExpand={(id, open) => setExpanded(v => (open ? [...v, id] : v.filter(x => x !== id)))}
-          renderLink={({ external, ...props }) => (
-            <a
-              {...props}
-              href={
-                !external && props.target === '_blank' && liveScope !== undefined
-                  ? (() => {
-                      const url = new URL(props.href, window.location.origin);
-                      return url.pathname + withScope(url.search, liveScope) + url.hash;
-                    })()
-                  : props.href
-              }
-              onClick={e => {
-                if (!external && props.target !== '_blank') {
-                  e.preventDefault();
-                  setPath(new URL(props.href, window.location.origin).pathname);
-                }
-              }}
-            />
-          )}
-        />
-        <div className="min-w-0 space-y-4 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
-          <Breadcrumbs
-            items={items}
-            value={{ ...corePreferenceDefaults.breadcrumb, showHome: true }}
-            renderIcon={() => null}
-            renderLink={(item, children) => (
+    <ExamplePage title={text('navigationTitle')} description={text('navigationIntro')}>
+      <div className="grid min-w-0 items-start gap-[var(--workspace-section-gap)] lg:grid-cols-[minmax(14rem,1fr)_minmax(0,3fr)]">
+        <ExampleSection title={text('menu')} bodyClassName="p-2">
+          <TreeNavigation
+            nodes={projectMenu(access.menu, path, scope, key => key)}
+            label={text('menu')}
+            expandedIds={expanded}
+            onExpand={(id, open) => setExpanded(v => (open ? [...v, id] : v.filter(x => x !== id)))}
+            renderLink={({ external, ...props }) => (
               <a
-                href={item.href}
+                {...props}
+                href={
+                  !external && props.target === '_blank' && liveScope !== undefined
+                    ? (() => {
+                        const url = new URL(props.href, window.location.origin);
+                        return url.pathname + withScope(url.search, liveScope) + url.hash;
+                      })()
+                    : props.href
+                }
                 onClick={e => {
-                  e.preventDefault();
-                  setPath(new URL(item.href!, window.location.origin).pathname);
+                  if (!external && props.target !== '_blank') {
+                    e.preventDefault();
+                    setPath(new URL(props.href, window.location.origin).pathname);
+                  }
                 }}
-              >
-                {children}
-              </a>
+              />
             )}
           />
-          <p role="status">
-            {selectedFrame ? text('frame') : current.id === 'nav.4' ? text('direct') : names[routes.indexOf(current)]}
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button size="sm" onClick={() => setPath(paths[4]!)}>
-              {text('openHidden')}
-            </Button>
-            {controller && (
-              <>
-                <Link to={`/examples/navigation/detail${withScope('', liveScope === undefined ? scope : liveScope)}`}>
-                  {text('routedDetail')}
-                </Link>
-                <NavigationCloseButton />
-              </>
-            )}
-            {current.id === 'nav.4' && (
-              <Button size="sm" variant="outline" onClick={() => setPath(paths[0]!)}>
-                {text('back')}
-              </Button>
-            )}
-          </div>
-          <p>{text('frameHelp')}</p>
-          {embedded && (
-            <iframe
-              title={text('frame')}
-              src="/frame-demo.html"
-              sandbox="allow-scripts allow-forms"
-              referrerPolicy="no-referrer"
-              className="playground-frame min-h-96 w-full border border-border"
+        </ExampleSection>
+        <div className="grid min-w-0 gap-[var(--workspace-section-gap)]">
+          <ExampleSection title={text('navigationPreview')}>
+            <Breadcrumbs
+              items={items}
+              value={{ ...corePreferenceDefaults.breadcrumb, showHome: true }}
+              renderIcon={() => null}
+              renderLink={(item, children) => (
+                <a
+                  href={item.href}
+                  onClick={e => {
+                    e.preventDefault();
+                    setPath(new URL(item.href!, window.location.origin).pathname);
+                  }}
+                >
+                  {children}
+                </a>
+              )}
             />
-          )}
-          <Button
-            onClick={() => {
-              if (selectedFrame) setPath(paths[0]!);
-              setEmbedded(v => !v);
-            }}
-          >
-            {embedded ? text('revokeFrame') : text('restoreFrame')}
-          </Button>
+            <p role="status" className="rounded-md bg-muted/40 px-3 py-3 text-sm">
+              {selectedFrame ? text('frame') : current.id === 'nav.4' ? text('direct') : names[routes.indexOf(current)]}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button size="sm" onClick={() => setPath(paths[4]!)}>
+                {text('openHidden')}
+              </Button>
+              {controller && (
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      to={`/examples/navigation/detail${withScope('', liveScope === undefined ? scope : liveScope)}`}
+                    >
+                      {text('routedDetail')}
+                    </Link>
+                  </Button>
+                  <NavigationCloseButton />
+                </>
+              )}
+              {current.id === 'nav.4' && (
+                <Button size="sm" variant="outline" onClick={() => setPath(paths[0]!)}>
+                  {text('back')}
+                </Button>
+              )}
+            </div>
+          </ExampleSection>
+          <ExampleSection title={text('frame')} description={text('frameIntro')}>
+            {embedded && (
+              <iframe
+                title={text('frame')}
+                src="/frame-demo.html"
+                sandbox="allow-scripts allow-forms"
+                referrerPolicy="no-referrer"
+                className="playground-frame min-h-64 w-full rounded-md border border-border bg-muted/20"
+              />
+            )}
+            <Button
+              variant="outline"
+              className="justify-self-start"
+              onClick={() => {
+                if (selectedFrame) setPath(paths[0]!);
+                setEmbedded(v => !v);
+              }}
+            >
+              {embedded ? text('revokeFrame') : text('restoreFrame')}
+            </Button>
+          </ExampleSection>
         </div>
       </div>
-    </section>
+      <ExampleDetails title={text('implementation')}>
+        <p>{text('navigationHelp')}</p>
+        <p>{text('frameHelp')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }
 
@@ -202,6 +216,8 @@ function NavigationCloseButton() {
   const key = tabs.snapshot.activeKey;
   return (
     <Button
+      variant="outline"
+      size="sm"
       disabled={!key || key === tabs.snapshot.homeKey}
       onClick={() => key && tabs.request({ type: 'close', key })}
     >

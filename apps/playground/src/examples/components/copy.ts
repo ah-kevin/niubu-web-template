@@ -2,6 +2,15 @@ import { useTranslation } from '@niubu/locales/react';
 import type { TranslationParams } from '@niubu/locales';
 
 const componentsCopy = {
+  pageDescription: 'Explore selection controls, context menus and tooltips.',
+  choicesHelp: 'Choose the display density and notification channels, then apply your changes.',
+  selectionHelp: 'A single selection sets density; multiple channels can be enabled together.',
+  menuHelp: 'Open the sample menu and try its conditional actions.',
+  sampleRecord: 'Sample record · demo-7',
+  tooltipHelp: 'Show a short explanation without leaving the current view.',
+  tooltipInteraction: 'Hover or focus the button to view the tooltip.',
+  implementation: 'Implementation notes',
+
   title: 'Basic controls',
   help: 'Synthetic examples of the existing public components.',
   choices: 'Buttons and single / multiple choices',
@@ -48,9 +57,14 @@ export function useComponentsText() {
 }
 
 const feedbackCopy = {
+  pageDescription: 'Try modal forms, confirmation queues and common page states.',
+  overlaysHelp: 'Edit the same record in a modal or drawer and save your changes.',
+  queueHelp: 'Complete a confirmation, followed by an alert, in sequence.',
+  implementation: 'Implementation notes',
+
   title: 'Feedback and state examples',
   help: 'Isolated synthetic records and static state illustrations.',
-  overlays: 'Controlled overlays and typed form composition',
+  overlays: 'Modal and drawer',
   open: 'Open {{kind}}',
   savedRecord: 'Saved record',
   nothingSaved: 'Nothing saved',
@@ -90,7 +104,7 @@ const feedbackCopy = {
   showPending: 'Show route pending',
   hidePending: 'Hide route pending',
   pendingExample: 'Route pending example',
-  states: 'System states and route error presentation',
+  states: 'System states',
   showState: 'Show {{state}}',
   offline: 'Offline',
   boundaryHelp: 'RouteErrorBoundary supplies presentation and title ownership; it does not catch thrown errors.',

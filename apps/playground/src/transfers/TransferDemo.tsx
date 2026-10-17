@@ -1,4 +1,6 @@
 import { Button } from '@niubu/shadcn-ui/button';
+import { Input } from '@niubu/shadcn-ui/input';
+import { ExampleSection } from '../examples/ExamplePage';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import type { AuthContext } from '@niubu/types';
@@ -229,16 +231,17 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
     progress &&
     t('transfer.acknowledged', { acknowledgedBytes: progress.acknowledgedBytes, totalBytes: progress.totalBytes });
   return (
-    <section
-      className="transfer-demo mt-8 border-t border-border pt-6 [&>h2]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>p]:max-w-[68ch] [&>p]:text-muted-foreground [&_input[type=file]]:max-w-full"
-      aria-labelledby={`${id}-title`}
+    <ExampleSection
+      title={t('transfer.title')}
+      description={t('transfer.description')}
+      className="transfer-demo"
+      bodyClassName="text-sm"
     >
-      <h2 id={`${id}-title`}>{t('transfer.title')}</h2>
-      <p>{t('transfer.description')}</p>
       <label htmlFor={id}>{t('transfer.file')}</label>
-      <input
+      <Input
         id={id}
         type="file"
+        className="h-auto min-h-[var(--workspace-control-height)] max-w-full min-w-0 py-2 file:me-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-sm file:text-foreground"
         disabled={!permitted || Boolean(visible?.busy)}
         onChange={event => {
           retire();
@@ -246,7 +249,7 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
           setView(null);
         }}
       />
-      <div className="transfer-actions mt-4 flex flex-wrap gap-3">
+      <div className="transfer-actions flex flex-wrap gap-2">
         <Button
           type="button"
           disabled={!permitted || !selected || tooLarge || Boolean(visible?.busy)}
@@ -255,12 +258,13 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
           {t('transfer.upload')}
         </Button>
         {visible?.busy === 'upload' && (
-          <Button type="button" onClick={cancel}>
+          <Button type="button" variant="outline" onClick={cancel}>
             {t('transfer.cancel')}
           </Button>
         )}
         <Button
           type="button"
+          variant="outline"
           disabled={!permitted || !visible?.file || Boolean(visible.busy)}
           onClick={() => void download()}
         >
@@ -287,6 +291,6 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
           {t(visible.message)}
         </p>
       )}
-    </section>
+    </ExampleSection>
   );
 }

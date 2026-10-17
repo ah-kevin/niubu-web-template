@@ -19,6 +19,7 @@ it('copies the validated synthetic configuration via the existing clipboard API'
   await screen.findByText('配置已复制');
   const configuration = JSON.parse(writeText.mock.calls[0]![0]);
   expect(configuration).toMatchObject({ schemaVersion: 1, extensions: {}, core: { general: { watermark: false, watermarkText: '合成数据 · Playground' } } });
+  fireEvent.click(screen.getByText('可手动复制的配置'));
   expect(screen.getByRole('textbox', { name: '可手动复制的配置' })).toHaveValue(writeText.mock.calls[0]![0]);
 });
 

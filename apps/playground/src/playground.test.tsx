@@ -107,6 +107,13 @@ describe('playground public consumer', () => {
     expect(screen.queryByText('health: ok')).not.toBeInTheDocument();
   });
 
+  it('uses backend page grants for home shortcuts even when action codes remain', async () => {
+    await mount('/home', async () => wire({ status: 'ok' }), true);
+    expect(await screen.findByRole('heading', { name: '公共首页' })).toBeVisible();
+    expect(await screen.findByText('health: ok')).toBeVisible();
+    expect(screen.queryAllByRole('link', { name: '进入示例' })).toHaveLength(0);
+  });
+
   it('sends an explicit JSON echo and shows the decoded result', async () => {
     const seen: RequestInit[] = [];
     await mount('/request', async (input, init) => {

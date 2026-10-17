@@ -1,3 +1,4 @@
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { Input } from '@niubu/shadcn-ui/input';
@@ -23,9 +24,9 @@ function RootFullscreen() {
   const { t } = useFeaturesText();
   const { snapshot, toggle } = useFullscreen();
   return (
-    <section aria-label={t('browser.fullscreen')}>
-      <h2>{t('browser.fullscreen')}</h2>
+    <ExampleSection title={t('browser.fullscreen')} description={t('browser.fullscreenIntro')}>
       <Button
+        className="justify-self-start"
         type="button"
         disabled={snapshot.status === 'unsupported' || snapshot.status === 'pending'}
         onClick={() => {
@@ -34,14 +35,13 @@ function RootFullscreen() {
       >
         {t('browser.toggleFullscreen')}
       </Button>
-      <p role="status">
+      <p role="status" className="rounded-md bg-muted/40 px-3 py-2 text-sm">
         {t('browser.fullscreenStatus', {
           status: snapshot.status === 'idle' && snapshot.active ? 'active' : snapshot.status,
         })}
       </p>
       {snapshot.error && <p role="alert">{snapshot.error}</p>}
-      <p>{t('browser.fullscreenHelp')}</p>
-    </section>
+    </ExampleSection>
   );
 }
 
@@ -51,6 +51,7 @@ function ConfigurationAndWatermark() {
   const { core } = usePreferenceSnapshot();
   const text = buildEffectiveConfiguration(core, []);
   const [copyStatus, setCopyStatus] = useState('');
+  const [showConfiguration, setShowConfiguration] = useState(false);
   const live = useRef(false);
   useEffect(() => {
     live.current = true;
@@ -60,13 +61,16 @@ function ConfigurationAndWatermark() {
   }, []);
   async function copy() {
     const result = await copyEffectiveConfiguration(text, navigator.clipboard);
-    if (live.current) setCopyStatus(result.ok ? '配置已复制' : '复制不可用，请手动复制下方配置');
+    if (live.current) {
+      setCopyStatus(result.ok ? '配置已复制' : '复制不可用，请手动复制下方配置');
+      if (!result.ok) setShowConfiguration(true);
+    }
   }
   return (
     <>
-      <section aria-label={t('browser.configuration')}>
-        <h2>{t('browser.configuration')}</h2>
+      <ExampleSection title={t('browser.configuration')} description={t('browser.copyHelp')}>
         <Button
+          className="justify-self-start"
           type="button"
           onClick={() => {
             void copy();
@@ -74,18 +78,27 @@ function ConfigurationAndWatermark() {
         >
           {t('browser.copy')}
         </Button>
-        <p role="status">{localize(copyStatus)}</p>
-        <Textarea
-          className="mt-3 font-mono text-xs leading-relaxed"
-          aria-label={t('browser.manualCopy')}
-          readOnly
-          value={text}
-          rows={8}
-        />
-        <p>{t('browser.copyHelp')}</p>
-      </section>
-      <section aria-label={t('browser.watermark')}>
-        <h2>{t('browser.watermark')}</h2>
+        <p role="status" className="text-sm text-muted-foreground empty:hidden">
+          {localize(copyStatus)}
+        </p>
+        <details
+          open={showConfiguration}
+          onToggle={event => setShowConfiguration(event.currentTarget.open)}
+          className="min-w-0 rounded-md border border-border"
+        >
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-ring">
+            {t('browser.manualCopy')}
+          </summary>
+          <Textarea
+            className="rounded-t-none border-x-0 border-b-0 font-mono text-xs leading-relaxed"
+            aria-label={t('browser.manualCopy')}
+            readOnly
+            value={text}
+            rows={8}
+          />
+        </details>
+      </ExampleSection>
+      <ExampleSection title={t('browser.watermark')} description={t('browser.watermarkIntro')}>
         <label className="my-3 inline-flex items-center gap-2 text-sm">
           <Checkbox
             checked={core.general.watermark}
@@ -93,7 +106,7 @@ function ConfigurationAndWatermark() {
           />
           {t('browser.showWatermark')}
         </label>
-        <p className="mb-4 text-sm text-muted-foreground">{t('browser.watermarkHelp')}</p>
+
         <label className="grid max-w-xl gap-2 text-sm">
           {t('browser.watermarkText')}
           <Input
@@ -102,7 +115,7 @@ function ConfigurationAndWatermark() {
           />
         </label>
         <Watermark />
-      </section>
+      </ExampleSection>
     </>
   );
 }
@@ -110,36 +123,45 @@ function ConfigurationAndWatermark() {
 export function BrowserFeaturesPage(): React.JSX.Element {
   const { t } = useFeaturesText();
   return (
-    <div className="playground-page example-page feature-example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold grid gap-[var(--workspace-section-gap)] [&>section]:min-w-0 [&>section]:rounded-[var(--radius)] [&>section]:border [&>section]:border-border [&>section]:bg-card [&>section]:p-[var(--workspace-card-padding)] [&_section>h2]:mb-3 [&_section>h2]:text-base [&_section>h2]:font-semibold [&_section>[data-slot=button]]:me-2 [&_section>[data-slot=button]]:mt-3">
-      <h1>{t('browser.title')}</h1>
-      <p>{t('browser.help')}</p>
-      <RootFullscreen />
-      <section aria-label={t('browser.icons')}>
-        <h2>{t('browser.icons')}</h2>
-        {['database', 'settings', 'unknown'].map(name => {
-          const Icon = registry.resolve(name);
-          return (
-            <div key={name} className="my-3 flex items-center gap-3 text-sm">
-              {Icon ? (
-                <>
-                  <Icon
-                    width={20}
-                    height={20}
-                    className="shrink-0 text-muted-foreground"
-                    aria-label={t('browser.iconLabel', { name })}
-                  />
-                  <span>{t('browser.iconRegistered', { name })}</span>
-                </>
-              ) : (
-                <span>{t('browser.iconMissing', { name })}</span>
-              )}
-            </div>
-          );
-        })}
-      </section>
-      <SyntheticPreferences>
-        <ConfigurationAndWatermark />
-      </SyntheticPreferences>
-    </div>
+    <ExamplePage title={t('browser.title')} description={t('browser.intro')}>
+      <div className="grid min-w-0 items-start gap-[var(--workspace-section-gap)] xl:grid-cols-2">
+        <RootFullscreen />
+        <ExampleSection title={t('browser.icons')} description={t('browser.iconsIntro')}>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {['database', 'settings', 'unknown'].map(name => {
+              const Icon = registry.resolve(name);
+              return (
+                <div
+                  key={name}
+                  className="flex min-w-0 items-center gap-3 rounded-md border border-border px-3 py-4 text-sm"
+                >
+                  {Icon ? (
+                    <>
+                      <Icon
+                        width={20}
+                        height={20}
+                        className="shrink-0 text-muted-foreground"
+                        aria-label={t('browser.iconLabel', { name })}
+                      />
+                      <span>{t('browser.iconRegistered', { name })}</span>
+                    </>
+                  ) : (
+                    <span>{t('browser.iconMissing', { name })}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </ExampleSection>
+        <SyntheticPreferences>
+          <ConfigurationAndWatermark />
+        </SyntheticPreferences>
+      </div>
+      <ExampleDetails title={t('implementation')}>
+        <p>{t('browser.help')}</p>
+        <p>{t('browser.fullscreenHelp')}</p>
+        <p>{t('browser.watermarkHelp')}</p>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }

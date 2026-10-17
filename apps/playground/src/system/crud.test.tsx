@@ -207,6 +207,95 @@ async function confirmSave() {
 }
 
 describe('system UI with controlled API ports (not backend persistence)', () => {
+  it('fills the available desktop table width while preserving manual column widths after container resize', async () => {
+    const OriginalResizeObserver = globalThis.ResizeObserver;
+    const observers = new Set<ResizeObserverHarness>();
+    class ResizeObserverHarness implements ResizeObserver {
+      readonly targets = new Set<Element>();
+      readonly callback: ResizeObserverCallback;
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+        observers.add(this);
+      }
+      observe(target: Element) {
+        this.targets.add(target);
+      }
+      unobserve(target: Element) {
+        this.targets.delete(target);
+      }
+      disconnect() {
+        this.targets.clear();
+        observers.delete(this);
+      }
+    }
+    vi.stubGlobal('ResizeObserver', ResizeObserverHarness);
+    try {
+      const fixture = await mount('roles');
+      let table = await screen.findByRole('table', { name: '角色管理' });
+      const resize = (width: number) =>
+        act(() => {
+          for (const observer of observers) {
+            for (const target of observer.targets) {
+              if (!target.contains(table)) continue;
+              const size = [{ inlineSize: width, blockSize: 500 }];
+              observer.callback(
+                [
+                  {
+                    target,
+                    contentRect: new DOMRect(0, 0, width, 500),
+                    contentBoxSize: size,
+                    borderBoxSize: size,
+                    devicePixelContentBoxSize: size,
+                  },
+                ],
+                observer,
+              );
+            }
+          }
+        });
+      expect(table).toHaveStyle({ width: '796px' });
+      resize(1206);
+      expect(table).toHaveStyle({ width: '1204px' });
+      expect(screen.getByRole('columnheader', { name: '操作' })).toHaveStyle({ width: '256px' });
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '316px' });
+      resize(600);
+      expect(table).toHaveStyle({ width: '796px' });
+      resize(3000);
+      expect(table).toHaveStyle({ width: '2176px' });
+      resize(1206);
+      fireEvent.keyDown(screen.getByRole('button', { name: '调整 名称 列宽' }), { key: 'ArrowRight' });
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '326px' });
+      fireEvent.click(screen.getByRole('button', { name: '排序 名称' }));
+      await waitFor(() =>
+        expect(fixture.system.roles.list).toHaveBeenLastCalledWith(
+          expect.anything(),
+          expect.objectContaining({ sortBy: 'name', sortOrder: 'asc' }),
+          expect.any(AbortSignal),
+        ),
+      );
+      table = await screen.findByRole('table', { name: '角色管理' });
+      resize(1506);
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '326px' });
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveAttribute('aria-sort', 'ascending');
+      expect(screen.getByRole('columnheader', { name: /编码/ })).toHaveStyle({ width: '416px' });
+      expect(table).toHaveStyle({ width: '1414px' });
+      resize(0);
+      expect(table).toHaveStyle({ width: '1414px' });
+      for (let index = 0; index < 30; index++) {
+        fireEvent.keyDown(screen.getByRole('button', { name: '调整 名称 列宽' }), { key: 'ArrowLeft' });
+      }
+      resize(1206);
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '80px' });
+      const measuredTargets = [...observers]
+        .flatMap(observer => [...observer.targets])
+        .filter(target => target.contains(table));
+      fixture.view.unmount();
+      expect([...observers].some(observer => measuredTargets.some(target => observer.targets.has(target)))).toBe(false);
+    } finally {
+      vi.stubGlobal('ResizeObserver', OriginalResizeObserver);
+    }
+  });
+
   it.each(kinds)(
     '%s queries, resets, creates, reads detail, edits and confirms delete through the shared owners',
     async kind => {

@@ -8,7 +8,8 @@ import { ReadState } from '@niubu/common-ui/read-state';
 import { SystemStatePage } from '@niubu/common-ui/system-state';
 import { RouteErrorBoundary, RoutePending } from '@niubu/layouts/routing';
 import { Button } from '@niubu/shadcn-ui/button';
-import { CircleAlert } from '@niubu/icons';
+import { CircleAlert, ClipboardList, ListChecks, Maximize } from '@niubu/icons';
+import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
 
 export type ExampleRecord = { id: string; name: string };
 export type FeedbackPageProps = {
@@ -109,11 +110,23 @@ function RecordEditor({
         void submit();
       }}
     >
-      <p>{record.id}</p>
-      <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-        <Button type="button" variant="outline" onClick={() => setFullscreen(value => !value)}>
-          {t('fullscreen')}
+      <div className="mb-5 flex items-center gap-3 rounded-[var(--radius)] border border-border p-4">
+        <ClipboardList aria-hidden="true" className="size-5 shrink-0 text-primary" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{record.name}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{record.id}</p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={t('fullscreen')}
+          onClick={() => setFullscreen(value => !value)}
+        >
+          <Maximize aria-hidden="true" className="size-4" />
         </Button>
+      </div>
+      <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
         <Button
           type="button"
           variant="outline"
@@ -134,8 +147,8 @@ function RecordEditor({
           void submit();
         }}
       >
-        <fieldset className="mb-4 grid gap-3" disabled={pending}>
-          <legend>{t('record')}</legend>
+        <fieldset className="mb-4 grid gap-4" disabled={pending}>
+          <legend className="mb-3 text-sm font-medium">{t('record')}</legend>
           <ControlledField
             control={schema.form.control}
             name="name"
@@ -149,7 +162,14 @@ function RecordEditor({
           {t('submit')}
         </Button>
       </form>
-      {failed && <p role="alert">{t('saveFailed')}</p>}
+      {failed && (
+        <p
+          className="mt-4 rounded-[var(--radius)] border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+          role="alert"
+        >
+          {t('saveFailed')}
+        </p>
+      )}
       <details className="mt-4 rounded-lg border border-border p-3 [&_p]:py-2 [&_summary]:cursor-pointer [&_summary]:font-medium">
         <summary>{t('scroll')}</summary>
         {Array.from({ length: 24 }, (_, index) => (
@@ -211,132 +231,171 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
     if (!signal.aborted) setQueueResult(`${confirmed ? 'Confirmed' : 'Cancelled'} · alert completed`);
   }
   return (
-    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
-      <h1>{t('title')}</h1>
-      <DocumentationLink kind="overlay" />
-      <p>{t('help')}</p>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('overlays')}</h2>
-        <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-          {(['Modal', 'Drawer'] as const).map(value => (
-            <Button key={value} type="button" onClick={() => setKind(value)}>
-              {t('open', { kind: value })}
-            </Button>
-          ))}
-        </div>
-        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('savedRecord')}>
-          {saved ? `${saved.id} · ${saved.name}` : t('nothingSaved')}
-        </output>
-        {kind && (
-          <RecordEditor
-            kind={kind}
-            record={record}
-            onRecordChange={setRecord}
-            saveRecord={saveRecord}
-            onClose={() => setKind(null)}
-            onSaved={value => {
-              setSaved(value);
-              setRecord(value);
-              setKind(null);
-            }}
-          />
-        )}
-      </section>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('queue')}</h2>
-        <Button
-          type="button"
-          onClick={() => {
-            void queue();
-          }}
+    <ExamplePage title={t('title')} description={t('pageDescription')} actions={<DocumentationLink kind="overlay" />}>
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-2">
+        <ExampleSection
+          title={t('overlays')}
+          description={t('overlaysHelp')}
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={() => setKind('Drawer')}>
+                {t('open', { kind: 'Drawer' })}
+              </Button>
+              <Button type="button" onClick={() => setKind('Modal')}>
+                {t('open', { kind: 'Modal' })}
+              </Button>
+            </>
+          }
         >
-          {t('queueButton')}
-        </Button>
-        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('queueResult')}>
-          {localize(queueResult)}
-        </output>
-      </section>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('reading')}</h2>
-        <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-          <Button
-            type="button"
-            variant={readStatus === 'loading' ? 'secondary' : 'outline'}
-            aria-pressed={readStatus === 'loading'}
-            onClick={() => setReadStatus('loading')}
-          >
-            {t('showLoading')}
-          </Button>
-          <Button
-            type="button"
-            variant={readStatus === 'error' ? 'secondary' : 'outline'}
-            aria-pressed={readStatus === 'error'}
-            onClick={() => setReadStatus('error')}
-          >
-            {t('showError')}
-          </Button>
-          <Button
-            type="button"
-            variant={readStatus === 'empty' ? 'secondary' : 'outline'}
-            aria-pressed={readStatus === 'empty'}
-            onClick={() => setReadStatus('empty')}
-          >
-            {t('showEmpty')}
-          </Button>
-        </div>
-        <div aria-label={t('readExample')}>
-          <ReadState
-            status={readStatus}
-            onRetry={() => {
-              setReadAction('Retried');
-              setReadStatus('loading');
-            }}
-            onReset={() => {
-              setReadAction('Filters reset');
-              setReadStatus('loading');
-            }}
-            onNavigate={() => setReadAction('Returned to sample')}
-          />
-        </div>
-        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('readAction')}>
-          {localize(readAction)}
-        </output>
-        <Button type="button" variant="outline" onClick={() => setPendingRoute(value => !value)}>
-          {pendingRoute ? t('hidePending') : t('showPending')}
-        </Button>
-        <div aria-label={t('pendingExample')}>{pendingRoute && <RoutePending />}</div>
-      </section>
-      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
-        <h2>{t('states')}</h2>
-        <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-          {(Object.keys(states) as (keyof typeof states)[]).map(value => (
+          <div className="flex min-h-20 items-center gap-4">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
+              <ClipboardList aria-hidden="true" className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{record.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{record.id}</p>
+            </div>
+          </div>
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">{t('savedRecord')}</p>
+            <output className="block break-words text-sm" aria-live="polite" aria-label={t('savedRecord')}>
+              {saved ? `${saved.id} · ${saved.name}` : t('nothingSaved')}
+            </output>
+          </div>
+          {kind && (
+            <RecordEditor
+              kind={kind}
+              record={record}
+              onRecordChange={setRecord}
+              saveRecord={saveRecord}
+              onClose={() => setKind(null)}
+              onSaved={value => {
+                setSaved(value);
+                setRecord(value);
+                setKind(null);
+              }}
+            />
+          )}
+        </ExampleSection>
+        <ExampleSection
+          title={t('queue')}
+          description={t('queueHelp')}
+          footer={
             <Button
-              key={value}
               type="button"
-              variant={state === value ? 'secondary' : 'outline'}
-              aria-pressed={state === value}
-              onClick={() => setState(value)}
+              onClick={() => {
+                void queue();
+              }}
             >
-              {t('showState', { state: value === 'Offline' ? t('offline') : value })}
+              {t('queueButton')}
             </Button>
-          ))}
-        </div>
+          }
+        >
+          <div className="flex min-h-20 items-center gap-4">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
+              <ListChecks aria-hidden="true" className="size-5" />
+            </span>
+            <div className="min-w-0 text-sm">
+              <p className="font-medium">{t('confirmTitle')}</p>
+              <p className="mt-1 text-muted-foreground">{t('alertTitle')}</p>
+            </div>
+          </div>
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">{t('queueResult')}</p>
+            <output className="block break-words text-sm" aria-live="polite" aria-label={t('queueResult')}>
+              {localize(queueResult)}
+            </output>
+          </div>
+        </ExampleSection>
+        <ExampleSection title={t('reading')}>
+          <div className="flex flex-wrap gap-2">
+            {(['loading', 'error', 'empty'] as const).map(value => (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={readStatus === value ? 'secondary' : 'outline'}
+                aria-pressed={readStatus === value}
+                onClick={() => setReadStatus(value)}
+              >
+                {t(value === 'loading' ? 'showLoading' : value === 'error' ? 'showError' : 'showEmpty')}
+              </Button>
+            ))}
+          </div>
+          <div
+            className="flex min-h-80 items-center justify-center rounded-[var(--radius)] border border-border"
+            aria-label={t('readExample')}
+          >
+            <ReadState
+              status={readStatus}
+              onRetry={() => {
+                setReadAction('Retried');
+                setReadStatus('loading');
+              }}
+              onReset={() => {
+                setReadAction('Filters reset');
+                setReadStatus('loading');
+              }}
+              onNavigate={() => setReadAction('Returned to sample')}
+            />
+          </div>
+          <output
+            className="block break-words text-sm text-muted-foreground"
+            aria-live="polite"
+            aria-label={t('readAction')}
+          >
+            {localize(readAction)}
+          </output>
+          <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+            <Button type="button" size="sm" variant="outline" onClick={() => setPendingRoute(value => !value)}>
+              {pendingRoute ? t('hidePending') : t('showPending')}
+            </Button>
+            <div className="min-h-6" aria-label={t('pendingExample')}>
+              {pendingRoute && <RoutePending />}
+            </div>
+          </div>
+        </ExampleSection>
+        <ExampleSection title={t('states')}>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(states) as (keyof typeof states)[]).map(value => (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={state === value ? 'secondary' : 'outline'}
+                aria-pressed={state === value}
+                onClick={() => setState(value)}
+              >
+                {t('showState', { state: value === 'Offline' ? t('offline') : value })}
+              </Button>
+            ))}
+          </div>
+          <div className="flex min-h-80 items-center justify-center rounded-[var(--radius)] border border-border px-6 py-5">
+            <RouteErrorBoundary title={t('stateTitle')} appTitle={t('appTitle')}>
+              <SystemStatePage
+                code={state}
+                heading={localize(states[state].heading)}
+                description={localize(states[state].description)}
+                icon={<CircleAlert aria-hidden="true" />}
+                footer={t('footer')}
+                actions={[{ id: 'return', label: t('return'), onClick: () => setStateAction('Returned to sample') }]}
+              />
+            </RouteErrorBoundary>
+          </div>
+          <output
+            className="block break-words text-sm text-muted-foreground"
+            aria-live="polite"
+            aria-label={t('stateAction')}
+          >
+            {localize(stateAction)}
+          </output>
+        </ExampleSection>
+      </div>
+      <ExampleDetails title={t('implementation')}>
+        <p>{t('help')}</p>
         <p>{t('boundaryHelp')}</p>
-        <RouteErrorBoundary title={t('stateTitle')} appTitle={t('appTitle')}>
-          <SystemStatePage
-            code={state}
-            heading={localize(states[state].heading)}
-            description={localize(states[state].description)}
-            icon={<CircleAlert aria-hidden="true" />}
-            footer={t('footer')}
-            actions={[{ id: 'return', label: t('return'), onClick: () => setStateAction('Returned to sample') }]}
-          />
-        </RouteErrorBoundary>
-        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('stateAction')}>
-          {localize(stateAction)}
-        </output>
-      </section>
-    </main>
+      </ExampleDetails>
+    </ExamplePage>
   );
 }
 
