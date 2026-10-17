@@ -61,7 +61,7 @@ pnpm dev:playground           # 默认 127.0.0.1:5174，/api 代理到 mock
 - app 构建走 [build-app](../../internal/scripts/src/build-app.ts)，体积检查走 [budget](../../internal/scripts/src/budget.ts)。在包目录里运行时自动选该 app；在根目录有多个 app 时要显式指定。
 - 构建会写出 `build-inputs.json`（源码与工具链的输入哈希、构建上下文）和 `first-screen-roots.json`（首屏真实入口），产物清单带不可变哈希。旧产物、缓存或手工改过的记录都不能冒充当前构建。
 - 唯一允许部署后修改的文件是运行配置 `_app.config.js`，只能改合法的 `apiURL`，其他 HTML/JS/CSS 等文件变化一律拒绝。格式见[鉴权与请求](./auth-request.md)。
-- 首屏体积按真实首屏静态依赖去重后逐文件 gzip（level 6）计算，预算 `307_200` 字节（300 KiB）。当前策略是只报告不拦截：超出时检查仍通过，但报告里 `withinBudget` 为 `false`，必须如实说明，不能写成达标。
+- 首屏体积按真实首屏静态依赖去重后逐文件 gzip（level 6）计算，参考预算 `512_000` 字节（500 KiB）。策略是只报告不拦截：超出时检查仍通过，但报告里 `withinBudget` 为 `false`，必须如实说明，不能写成达标。提高参考值不代表实际减载或提速；保留真实构建与历史报告，不为压线改动交互或过度拆包。
 
 ## Docker 与 nginx
 

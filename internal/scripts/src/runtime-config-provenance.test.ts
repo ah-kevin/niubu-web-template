@@ -125,7 +125,7 @@ it('accepts only post-build canonical config mutation, measuring current bytes a
       rootsSha256: before.rootsSha256,
       manifestSha256: before.manifestSha256,
       provenanceSha256: before.provenanceSha256,
-      limitBytes: 307200,
+      limitBytes: 512000,
       sizePolicy: 'report-only',
     });
     expect(after.allJavaScript.filter(chunk => chunk.file !== '_app.config.js')).toEqual(

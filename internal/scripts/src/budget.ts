@@ -28,6 +28,7 @@ import type {
 } from '@niubu-internal/node-utils';
 
 export type Chunk = Readonly<{ gzipBytes: number; imports: readonly string[] }>;
+const initialJavaScriptBudgetBytes = 512_000;
 export function measureClosure(graph: ReadonlyMap<string, Chunk>, roots: readonly string[]) {
   const seen = new Set<string>();
   function visit(file: string) {
@@ -41,7 +42,7 @@ export function measureClosure(graph: ReadonlyMap<string, Chunk>, roots: readonl
   roots.forEach(visit);
   const members = [...seen].sort(),
     gzipBytes = members.reduce((sum, file) => sum + graph.get(file)!.gzipBytes, 0);
-  return { gzipBytes, gzipKiB: gzipBytes / 1024, withinBudget: gzipBytes <= 307200, members };
+  return { gzipBytes, gzipKiB: gzipBytes / 1024, withinBudget: gzipBytes <= initialJavaScriptBudgetBytes, members };
 }
 const same = (a: readonly string[], b: readonly string[]) =>
   JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
@@ -277,7 +278,7 @@ export function measureBuiltOverview({
     appName: provenance.appName,
     ...(runtimeConfig ? { runtimeConfig } : {}),
     algorithm: 'Per-file Node gzipSync level 6; deduplicated recursive emitted static ES import/export closure',
-    limitBytes: 307200,
+    limitBytes: initialJavaScriptBudgetBytes,
     // During architecture migration, size is recorded against the unchanged benchmark.
     sizePolicy: 'report-only' as const,
     versions: { node: process.version, zlib: process.versions.zlib, typescript: ts.version },

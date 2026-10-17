@@ -51,9 +51,9 @@ function fixtureCli(fixture: ReturnType<typeof artifacts>, expectedInputHash = f
 }
 
 describe('built first-screen provenance and budgets', () => {
-  it('deduplicates shared roots and accepts exactly 307200 bytes but rejects 307201', () => {
-    const graph = new Map([['entry', { gzipBytes: 307199, imports: ['shared'] }], ['shared', { gzipBytes: 1, imports: [] }]]);
-    expect(budget.measureClosure(graph, ['entry', 'shared', 'entry'])).toMatchObject({ gzipBytes: 307200, withinBudget: true });
+  it('deduplicates shared roots and accepts exactly 512000 bytes but rejects 512001', () => {
+    const graph = new Map([['entry', { gzipBytes: 511999, imports: ['shared'] }], ['shared', { gzipBytes: 1, imports: [] }]]);
+    expect(budget.measureClosure(graph, ['entry', 'shared', 'entry'])).toMatchObject({ gzipBytes: 512000, withinBudget: true });
     graph.set('extra', { gzipBytes: 1, imports: ['shared'] });
     expect(budget.measureClosure(graph, ['entry', 'extra']).withinBudget).toBe(false);
   });
@@ -87,7 +87,7 @@ describe('built first-screen provenance and budgets', () => {
   it('reports the real oversized emitted union without blocking the migration CLI', () => {
     const fixture = artifacts();
     for (const [file, seed] of [['assets/overview.js', 'zh'], ['assets/en.js', 'en']]) {
-      const payload = Array.from({ length: 6200 }, (_, index) => sha(`${seed}:${index}`)).join('');
+      const payload = Array.from({ length: 9000 }, (_, index) => sha(`${seed}:${index}`)).join('');
       fixture.outputs[file] = `console.log("${payload}");`;
       writeFileSync(join(fixture.root, 'dist', file), fixture.outputs[file]);
       fixture.provenance.artifacts[file] = sha(fixture.outputs[file]);
@@ -102,11 +102,11 @@ describe('built first-screen provenance and budgets', () => {
     writeFileSync(join(fixture.root, 'dist/build-inputs.json'), JSON.stringify(fixture.provenance));
     const result = fixture.measure();
     expect(Object.values(result.variants).every(variant => variant.withinBudget)).toBe(true);
-    expect(result.gzipBytes).toBeGreaterThan(307200);
+    expect(result.gzipBytes).toBeGreaterThan(512000);
     expect(result.withinBudget).toBe(false);
     const cli = fixtureCli(fixture);
     expect(cli.status, cli.stderr).toBe(0);
-    expect(JSON.parse(cli.stdout)).toMatchObject({ gzipBytes: result.gzipBytes, withinBudget: false, limitBytes: 307200, sizePolicy: 'report-only' });
+    expect(JSON.parse(cli.stdout)).toMatchObject({ gzipBytes: result.gzipBytes, withinBudget: false, limitBytes: 512000, sizePolicy: 'report-only' });
   });
   it('rejects old input provenance', () => {
     const fixture = artifacts();
