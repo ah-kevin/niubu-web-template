@@ -1,0 +1,187 @@
+import { Link } from 'react-router-dom';
+import { useAuthSnapshot } from '../../auth/context';
+import { useOptionalPageTabs, usePageTabs } from '@niubu/layouts/routing';
+import { withScope } from '../../auth/scope';
+import { useApplicationText } from './copy';
+import { useState } from 'react';
+import { resolveAccess, projectBreadcrumbs, type NavigationRoute } from '@niubu/access';
+import { TreeNavigation } from '@niubu/menu-ui';
+import { Breadcrumbs } from '@niubu/layouts/widgets';
+import { corePreferenceDefaults } from '@niubu/core-preferences';
+import { Button } from '@niubu/shadcn-ui/button';
+import type { ScopeRef, BackendMenuItem } from '@niubu/types';
+import { projectMenu } from '../../auth/navigation';
+const names = ['Menu 1', 'Menu 2-1', 'Menu 3-1', 'Menu 3-2-1', '隐藏详情'];
+const paths = [
+  '/examples/navigation',
+  '/examples/navigation/second',
+  '/examples/navigation/third',
+  '/examples/navigation/third/deep',
+  '/examples/navigation/detail',
+];
+const routes = names.map((_, i) => ({
+  id: `nav.${i}`,
+  path: paths[i]!,
+  titleKey: `app:examples.navigationLabels.${i}`,
+  iconToken: 'home',
+  order: i,
+  navigation: true,
+  scope: 'workspace',
+  capability: null,
+  domain: 'demo',
+  groupKey: 'demo',
+  hideInMenu: i === 4,
+  openInNewWindow: i === 1,
+  badge: i === 0 ? 'New' : i === 2 ? 3 : undefined,
+})) satisfies NavigationRoute[];
+const page = (i: number): BackendMenuItem => ({ kind: 'page', id: `nav.${i}`, pageId: `nav.${i}`, title: names[i] });
+const menu: readonly BackendMenuItem[] = [
+  page(0),
+  page(1),
+  {
+    kind: 'group',
+    id: 'level2',
+    title: 'Level 2',
+    children: [page(2), { kind: 'group', id: 'level3', title: 'Level 3', children: [page(3)] }],
+  },
+  page(4),
+  { kind: 'external', id: 'vite', title: 'Vite', href: 'https://vite.dev', openInNewWindow: true },
+  { kind: 'external', id: 'vueuse', title: 'VueUse', href: 'https://vueuse.org', openInNewWindow: true },
+  { kind: 'iframe', id: 'local', title: '本地嵌入示例', src: '/frame-demo.html' },
+];
+export function NavigationPage({
+  initialPath = paths[0]!,
+  liveScope,
+}: { initialPath?: string; liveScope?: ScopeRef | null } = {}) {
+  const text = useApplicationText();
+  const controller = useOptionalPageTabs();
+  const [path, setPath] = useState(initialPath);
+  const [expanded, setExpanded] = useState<readonly string[]>(['level2', 'level3']);
+  const [embedded, setEmbedded] = useState(true);
+  const scope = { kind: 'workspace', id: 'north' };
+  const access = resolveAccess({
+    mode: 'backend',
+    routes,
+    backendMenu: embedded ? menu : menu.filter(n => n.id !== 'local'),
+    access: { scopes: [scope], capabilities: [] },
+    roles: [],
+    codes: [],
+    scope,
+    authenticated: true,
+    baseURL: window.location.origin,
+  });
+  const current = routes.find(r => r.path === path) ?? routes[0]!;
+  const items = projectBreadcrumbs(
+    current,
+    scope,
+    routes.filter(r => !r.hideInMenu),
+    { homePath: paths[0]!, domainLabels: { demo: 'app:examples.navigation' } },
+  );
+  return (
+    <section className="playground-page example-page">
+      <h1>{text('navigationTitle')}</h1>
+      <p>{text('navigationHelp')}</p>
+      <div className="example-columns">
+        <TreeNavigation
+          nodes={projectMenu(access.menu, path, scope, key => key)}
+          label={text('menu')}
+          expandedIds={expanded}
+          onExpand={(id, open) => setExpanded(v => (open ? [...v, id] : v.filter(x => x !== id)))}
+          renderLink={({ external, ...props }) => (
+            <a
+              {...props}
+              href={
+                !external && props.target === '_blank' && liveScope !== undefined
+                  ? (() => {
+                      const url = new URL(props.href, window.location.origin);
+                      return url.pathname + withScope(url.search, liveScope) + url.hash;
+                    })()
+                  : props.href
+              }
+              onClick={e => {
+                if (!external && props.target !== '_blank') {
+                  e.preventDefault();
+                  setPath(new URL(props.href, window.location.origin).pathname);
+                }
+              }}
+            />
+          )}
+        />
+        <div>
+          <Breadcrumbs
+            items={items}
+            value={{ ...corePreferenceDefaults.breadcrumb, showHome: true }}
+            renderIcon={() => null}
+            renderLink={(item, children) => (
+              <a
+                href={item.href}
+                onClick={e => {
+                  e.preventDefault();
+                  setPath(new URL(item.href!, window.location.origin).pathname);
+                }}
+              >
+                {children}
+              </a>
+            )}
+          />
+          <p role="status">{current.id === 'nav.4' ? text('direct') : names[routes.indexOf(current)]}</p>
+          <Button onClick={() => setPath(paths[4]!)}>{text('openHidden')}</Button>
+          {controller && (
+            <>
+              <Link to={`/examples/navigation/detail${withScope('', liveScope === undefined ? scope : liveScope)}`}>
+                {text('routedDetail')}
+              </Link>
+              <NavigationCloseButton />
+            </>
+          )}
+          {current.id === 'nav.4' && <Button onClick={() => setPath(paths[0]!)}>{text('back')}</Button>}
+          <p>{text('frameHelp')}</p>
+          {embedded && (
+            <iframe
+              title={text('frame')}
+              src="/frame-demo.html"
+              sandbox="allow-scripts allow-forms"
+              referrerPolicy="no-referrer"
+              className="playground-frame"
+            />
+          )}
+          <Button onClick={() => setEmbedded(v => !v)}>{embedded ? text('revokeFrame') : text('restoreFrame')}</Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RegisteredNavigation({ initialPath }: { initialPath?: string } = {}) {
+  const { scope } = useAuthSnapshot();
+  return <NavigationPage initialPath={initialPath} liveScope={scope} />;
+}
+export function NavigationRoutePage() {
+  return <RegisteredNavigation />;
+}
+export function NavigationSecondPage() {
+  return <RegisteredNavigation initialPath="/examples/navigation/second" />;
+}
+export function NavigationThirdPage() {
+  return <RegisteredNavigation initialPath="/examples/navigation/third" />;
+}
+export function NavigationDeepPage() {
+  return <RegisteredNavigation initialPath="/examples/navigation/third/deep" />;
+}
+export function NavigationDetailPage() {
+  return <RegisteredNavigation initialPath="/examples/navigation/detail" />;
+}
+
+function NavigationCloseButton() {
+  const tabs = usePageTabs();
+  const text = useApplicationText();
+  const key = tabs.snapshot.activeKey;
+  return (
+    <Button
+      disabled={!key || key === tabs.snapshot.homeKey}
+      onClick={() => key && tabs.request({ type: 'close', key })}
+    >
+      {text('close')}
+    </Button>
+  );
+}

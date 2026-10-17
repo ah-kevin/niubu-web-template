@@ -17,3 +17,5 @@ Agent 从[根规则](../../AGENTS.md)进入；[packages](../../packages/AGENTS.m
 源码是接口依据，优先从 [playground 模块](../../apps/playground/src/modules/system.tsx)、[系统 CRUD](../../apps/playground/src/system/ResourcePage.tsx)、[显式启动入口](../../apps/playground/src/main.tsx) 查起。公开演示账户说明见 [backend-mock README](../../apps/backend-mock/README.md)，这里不复制登录信息。
 
 启动、hooks、CI 与 Docker 的使用方法见[工程与部署](./engineering-deploy.md)。mock 独立启动、接入和扩展方式见 [backend-mock README](../../apps/backend-mock/README.md)。
+
+已确认的组件/功能示例范围和入口见 [Vben 能力对照与示例索引](./vben-examples-comparison.md)。

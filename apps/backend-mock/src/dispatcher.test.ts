@@ -5,6 +5,25 @@ import { createMockBackend } from './dispatcher';
 import type { MockRequest, MockResponse } from './dispatcher';
 
 type Tokens = { accessToken: string; refreshToken: string; tokenType: string; expiresIn: number };
+const expectedExamplesMenu = {kind:'group',id:'playground-examples',title:'Playground Examples',order:16,children:[
+  {kind:'page',id:'example-forms',pageId:'playground.examples.forms'},
+  {kind:'page',id:'example-tables',pageId:'playground.examples.tables'},
+  {kind:'page',id:'example-components',pageId:'playground.examples.components'},
+  {kind:'page',id:'example-feedback',pageId:'playground.examples.feedback'},
+  {kind:'page',id:'example-access',pageId:'playground.examples.access'},
+  {kind:'page',id:'example-navigation',pageId:'playground.examples.navigation'},
+  {kind:'page',id:'example-browser',pageId:'playground.examples.browser'},
+  {kind:'page',id:'example-requests',pageId:'playground.examples.requests'},
+  {kind:'page',id:'example-query',pageId:'playground.examples.query'},
+  {kind:'page',id:'example-preferences',pageId:'playground.examples.preferences'},
+  {kind:'page',id:'example-tabs',pageId:'playground.examples.tabs'},
+  {kind:'page',id:'example-tab-detail',pageId:'playground.examples.tab-detail',hidden:true},
+  {kind:'page',id:'example-navigation-second',pageId:'playground.examples.navigation-second',hidden:true},
+  {kind:'page',id:'example-navigation-third',pageId:'playground.examples.navigation-third',hidden:true},
+  {kind:'page',id:'example-navigation-deep',pageId:'playground.examples.navigation-deep',hidden:true},
+  {kind:'page',id:'example-navigation-detail',pageId:'playground.examples.navigation-detail',hidden:true},
+]} as const;
+
 const loginRequest: MockRequest = {
   method: 'POST',
   path: '/api/auth/login',
@@ -205,6 +224,7 @@ describe('mock sessions and scope', () => {
               { kind: 'page', id: 'system-departments', pageId: 'playground.system.departments' },
             ],
           },
+          expectedExamplesMenu,
           {
             kind: 'external',
             id: 'documentation',
@@ -239,7 +259,7 @@ describe('mock sessions and scope', () => {
           'system:departments:write',
         ],
       ],
-      ['south', [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },{kind:'page',id:'profile',pageId:'playground.profile',hidden:true}], ['demo:read']],
+      ['south', [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },expectedExamplesMenu,{kind:'page',id:'profile',pageId:'playground.profile',hidden:true}], ['demo:read']],
     ] as const) {
       const request = { method: 'GET', query: { scopeKind: 'workspace', scopeId: id }, headers: auth(accessToken) };
       expect(jsonBody((await backend.dispatch({ ...request, path: '/api/menu' }))).data).toEqual(pages);
@@ -289,9 +309,10 @@ describe('mock sessions and scope', () => {
                   { kind: 'page', id: 'system-departments', pageId: 'playground.system.departments' },
                 ],
               },
+              expectedExamplesMenu,
               {kind:'page',id:'profile',pageId:'playground.profile',hidden:true},
             ]
-          : [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },{kind:'page',id:'profile',pageId:'playground.profile',hidden:true}],
+          : [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },expectedExamplesMenu,{kind:'page',id:'profile',pageId:'playground.profile',hidden:true}],
       );
     }
     expect(

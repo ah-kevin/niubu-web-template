@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from '@niubu/locales/react';
 import { flattenNavigation } from '@niubu/access';
 import { BusinessShell } from '@niubu/layouts';
-import { NavigationGuard } from '@niubu/layouts/routing';
+import { NavigationGuard, PageTabsBinding, PageTabsView } from '@niubu/layouts/routing';
+import { usePlaygroundRouting } from './page-routing';
 import { FoundationTools, Copyright } from '@niubu/layouts/widgets';
 import { ManagedPreferenceDrawer } from '@niubu/common-ui/preferences';
 import { useAppStoreSnapshot } from '@niubu/stores/react';
@@ -40,6 +41,7 @@ export function BodyApp({ children }: { children: ReactNode }) {
     location = useLocation(),
     navigate = useNavigate();
   const api = usePlaygroundApi();
+  const pageRuntime = usePlaygroundRouting();
   const shell = usePlaygroundShell(),
     lock = usePlaygroundLockSnapshot();
   const publicMenu = useQuery({
@@ -122,12 +124,17 @@ export function BodyApp({ children }: { children: ReactNode }) {
           <RequestFailure name="menu" error={publicMenu.data.error} />
         )}
         {!state.user && publicMenu.isError && <p role="alert">menu: transport</p>}
+        {core.tabbar.enabled && <PageTabsView />}
         {children}
       </BusinessShell>
       {!shell && <ExpiredLogin />}
     </>
   );
   return (
-    <ShellBoundary runtime={shell}>{shell ? <OverlayProvider>{content}</OverlayProvider> : content}</ShellBoundary>
+    <ShellBoundary runtime={shell}>
+      <PageTabsBinding runtime={pageRuntime}>
+        {shell ? <OverlayProvider>{content}</OverlayProvider> : content}
+      </PageTabsBinding>
+    </ShellBoundary>
   );
 }

@@ -129,3 +129,14 @@
 .transfer-progress { margin-top:1rem; }
 .transfer-progress progress { width:min(100%,32rem); accent-color:var(--primary); }
 .transfer-status[role='alert'] { color:var(--destructive); }
+
+@source '../examples';
+.example-page { max-width: 90rem; }
+.example-page h2 { font-size: 1.15rem; font-weight: 600; margin-block: .5rem 1rem; }
+.example-card { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); padding: 1.25rem; margin-block: 1rem; min-width: 0; }
+.example-toolbar { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; margin-block: .75rem; }
+.example-toolbar label { display: flex; gap: .5rem; align-items: center; }
+.example-columns { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(0, 3fr); gap: 1.5rem; }
+.example-page select { border: 1px solid var(--border); border-radius: var(--radius); padding: .4rem; background: var(--background); color: var(--foreground); }
+.example-page output { display: block; white-space: pre-wrap; overflow-wrap: anywhere; margin-block: .75rem; }
+@media (max-width: 700px) { .example-columns { grid-template-columns: 1fr; } }

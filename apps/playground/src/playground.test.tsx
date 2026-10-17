@@ -84,7 +84,7 @@ describe('playground public consumer', () => {
     ).toEqual([
       ['playground.home', '/home'],
           ]);
-    expect(registry.routes.map(route => route.path)).toEqual(['/home','/request','/system/users','/system/roles','/system/menus','/system/departments','/login','/embedded/:menuId','/profile']);
+    expect(registry.routes.map(route => route.path)).toEqual(['/home','/request','/system/users','/system/roles','/system/menus','/system/departments','/examples/forms','/examples/tables','/examples/components','/examples/feedback','/examples/access','/examples/navigation','/examples/browser','/examples/requests','/examples/query','/examples/preferences','/examples/tabs','/examples/tabs/:id','/examples/navigation/second','/examples/navigation/third','/examples/navigation/third/deep','/examples/navigation/detail','/login','/embedded/:menuId','/profile']);
   });
 
   it('renders home health and the usable menu despite unknown backend ids', async () => {

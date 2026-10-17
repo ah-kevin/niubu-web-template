@@ -67,5 +67,22 @@ export function createWorkspaceSeed(workspace: WorkspaceId): WorkspaceSeed {
 export const navigablePageIds = [
   'playground.home',
   'playground.request',
+  'playground.examples.forms',
+  'playground.examples.tables',
+  'playground.examples.components',
+  'playground.examples.feedback',
+  'playground.examples.access',
+  'playground.examples.navigation',
+  'playground.examples.browser',
+  'playground.examples.requests',
+  'playground.examples.query',
+  'playground.examples.preferences',
+  'playground.examples.tabs',
+  'playground.examples.tab-detail',
+  'playground.examples.navigation-second',
+  'playground.examples.navigation-third',
+  'playground.examples.navigation-deep',
+  'playground.examples.navigation-detail',
+
   ...systemResources.map(resource => `playground.system.${resource}`),
 ] as const;

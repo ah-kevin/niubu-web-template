@@ -55,6 +55,30 @@ export const systemWriteCodes = [
   'system:menus:write',
   'system:departments:write',
 ] as const;
+export const examplesMenu = {
+  kind: 'group',
+  id: 'playground-examples',
+  title: 'Playground Examples',
+  order: 16,
+  children: [
+    { kind: 'page', id: 'example-forms', pageId: 'playground.examples.forms' },
+    { kind: 'page', id: 'example-tables', pageId: 'playground.examples.tables' },
+    { kind: 'page', id: 'example-components', pageId: 'playground.examples.components' },
+    { kind: 'page', id: 'example-feedback', pageId: 'playground.examples.feedback' },
+    { kind: 'page', id: 'example-access', pageId: 'playground.examples.access' },
+    { kind: 'page', id: 'example-navigation', pageId: 'playground.examples.navigation' },
+    { kind: 'page', id: 'example-browser', pageId: 'playground.examples.browser' },
+    { kind: 'page', id: 'example-requests', pageId: 'playground.examples.requests' },
+    { kind: 'page', id: 'example-query', pageId: 'playground.examples.query' },
+    { kind: 'page', id: 'example-preferences', pageId: 'playground.examples.preferences' },
+    { kind: 'page', id: 'example-tabs', pageId: 'playground.examples.tabs' },
+    { kind: 'page', id: 'example-tab-detail', pageId: 'playground.examples.tab-detail', hidden: true },
+    { kind: 'page', id: 'example-navigation-second', pageId: 'playground.examples.navigation-second', hidden: true },
+    { kind: 'page', id: 'example-navigation-third', pageId: 'playground.examples.navigation-third', hidden: true },
+    { kind: 'page', id: 'example-navigation-deep', pageId: 'playground.examples.navigation-deep', hidden: true },
+    { kind: 'page', id: 'example-navigation-detail', pageId: 'playground.examples.navigation-detail', hidden: true },
+  ],
+} as const satisfies BackendMenuItem;
 export const scopedFixtures = {
   north: {
     menu: [
@@ -69,6 +93,7 @@ export const scopedFixtures = {
         ],
       },
       systemMenu,
+      examplesMenu,
       {
         kind: 'external',
         id: 'documentation',
@@ -85,7 +110,7 @@ export const scopedFixtures = {
     ],
     codes: ['demo:read', 'demo:echo', 'demo:transfer', ...systemReadCodes, ...systemWriteCodes],
   },
-  south: { menu: [...publicMenu, profile], codes: ['demo:read'] },
+  south: { menu: [...publicMenu, examplesMenu, profile], codes: ['demo:read'] },
 } as const satisfies Record<string, { menu: readonly BackendMenuItem[]; codes: readonly string[] }>;
 
 const secondScopedFixtures = {
@@ -93,11 +118,12 @@ const secondScopedFixtures = {
     menu: [
       { kind: 'group', id: 'workspace-pages', title: 'Workspace', order: 10, children: [home] },
       systemMenu,
+      examplesMenu,
       profile,
     ],
     codes: ['demo:read', ...systemReadCodes],
   },
-  south: { menu: [...publicMenu, profile], codes: ['demo:read'] },
+  south: { menu: [...publicMenu, examplesMenu, profile], codes: ['demo:read'] },
 } as const satisfies Record<string, { menu: readonly BackendMenuItem[]; codes: readonly string[] }>;
 
 export const syntheticAccounts = [

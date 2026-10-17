@@ -1,0 +1,127 @@
+import { useTranslation } from '@niubu/locales/react';
+import type { TranslationParams } from '@niubu/locales';
+
+const componentsCopy = {
+  title: 'Basic controls',
+  help: 'Synthetic examples of the existing public components.',
+  choices: 'Buttons and single / multiple choices',
+  density: 'Density',
+  compact: 'Compact',
+  comfortable: 'Comfortable',
+  channels: 'Channels',
+  email: 'Email',
+  sms: 'SMS',
+  apply: 'Apply choices',
+  reset: 'Reset choices',
+  applied: 'Applied choices',
+  noChoices: 'No choices applied',
+  menu: 'Conditional context menu',
+  allowArchive: 'Allow archive action',
+  contextTrigger: 'Right-click this sample',
+  inspect: 'Inspect sample',
+  archive: 'Archive sample',
+  menuResult: 'Menu result',
+  noMenuAction: 'No menu action',
+  inspected: 'Inspected demo-7',
+  archived: 'Archived demo-7',
+  tooltipTitle: 'String tooltip',
+  tooltip: 'A plain string tooltip',
+  tooltipButton: 'Tooltip example',
+} as const;
+const componentsFallback = Object.fromEntries(
+  Object.entries(componentsCopy).map(([key, value]) => [`examples.components.${key}`, value]),
+);
+const componentsKeys: ReadonlyMap<string, string> = new Map(
+  Object.entries(componentsCopy).map(([key, value]) => [value, `examples.components.${key}`]),
+);
+
+export function useComponentsText() {
+  const { t } = useTranslation('app', componentsFallback);
+  return {
+    t: (key: keyof typeof componentsCopy, params?: TranslationParams) => t(`examples.components.${key}`, params),
+    localize: (value: string) => {
+      const key = componentsKeys.get(value);
+      return key ? t(key) : value;
+    },
+  };
+}
+
+const feedbackCopy = {
+  title: 'Feedback and state examples',
+  help: 'Isolated synthetic records and static state illustrations.',
+  overlays: 'Controlled overlays and typed form composition',
+  open: 'Open {{kind}}',
+  savedRecord: 'Saved record',
+  nothingSaved: 'Nothing saved',
+  editorTitle: '{{kind}}: {{name}}',
+  editorHelp: 'Synthetic typed record; closing discards this form.',
+  name: 'Name',
+  nameError: 'Enter a name',
+  save: 'Save example',
+  cancel: 'Cancel example',
+  fullscreen: 'Toggle fullscreen',
+  shared: 'Update shared record',
+  record: 'Typed record',
+  submit: 'Submit from content',
+  saveFailed: 'Simulated save failed. Edit and try again.',
+  scroll: 'Scrollable content sample',
+  contentRow: 'Synthetic content row {{row}}',
+  queue: 'Confirm and alert queue',
+  queueButton: 'Queue confirmation and alert',
+  queueResult: 'Queue result',
+  noQueueResult: 'No queue result',
+  confirmTitle: 'Confirm sample',
+  confirmHelp: 'Synthetic confirmation queued before an alert.',
+  alertTitle: 'Queued alert',
+  alertHelp: 'Second item in the local queue.',
+  confirmed: 'Confirmed · alert completed',
+  cancelled: 'Cancelled · alert completed',
+  reading: 'Reading and route pending',
+  showLoading: 'Show read loading',
+  showError: 'Show read error',
+  showEmpty: 'Show empty result',
+  readExample: 'Read-state example',
+  readAction: 'Read-state action',
+  noReadAction: 'No read action',
+  retried: 'Retried',
+  reset: 'Filters reset',
+  returned: 'Returned to sample',
+  showPending: 'Show route pending',
+  hidePending: 'Hide route pending',
+  pendingExample: 'Route pending example',
+  states: 'System states and route error presentation',
+  showState: 'Show {{state}}',
+  offline: 'Offline',
+  boundaryHelp: 'RouteErrorBoundary supplies presentation and title ownership; it does not catch thrown errors.',
+  stateTitle: 'State example',
+  appTitle: 'Template Playground',
+  denied: 'Access denied',
+  deniedHelp: 'Static forbidden-page example.',
+  notFound: 'Page not found',
+  notFoundHelp: 'Static missing-page example.',
+  error: 'Server error',
+  errorHelp: 'Static error presentation; no exception is thrown.',
+  offlineTitle: 'Offline example',
+  offlineHelp: 'Static illustration only; no network detection.',
+  footer: 'Static demonstration',
+  return: 'Return to sample',
+  stateAction: 'State action',
+  noStateAction: 'No state action',
+} as const;
+const feedbackFallback = Object.fromEntries(
+  Object.entries(feedbackCopy).map(([key, value]) => [`examples.feedback.${key}`, value]),
+);
+const feedbackKeys: ReadonlyMap<string, string> = new Map(
+  Object.entries(feedbackCopy).map(([key, value]) => [value, `examples.feedback.${key}`]),
+);
+
+export function useFeedbackText() {
+  const { t } = useTranslation('app', feedbackFallback);
+  return {
+    t: (key: keyof typeof feedbackCopy, params?: TranslationParams) => t(`examples.feedback.${key}`, params),
+    localize: (value: string) => {
+      const key = feedbackKeys.get(value);
+      return key ? t(key) : value;
+    },
+  };
+}
