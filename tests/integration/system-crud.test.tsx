@@ -172,6 +172,8 @@ async function confirmSave() {
   fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '确认保存' }));
 }
 async function query(keyword: string) {
+  if (!screen.queryByRole('textbox', { name: '关键词' }))
+    fireEvent.click(screen.getByRole('button', { name: '搜索' }));
   await act(async () => {
     fireEvent.change(screen.getByRole('textbox', { name: '关键词' }), { target: { value: keyword } });
     fireEvent.click(screen.getByRole('button', { name: '查询' }));
@@ -182,8 +184,10 @@ it.each(['users', 'roles', 'menus', 'departments'] as const)(
   async resource => {
     const f = await fixture(resource);
     expect(await screen.findByRole('heading', { name: titles[resource] })).toBeVisible();
-    await waitFor(() => expect(screen.getByRole('button', { name: '新增' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    const createLabel = { users: '新增用户', roles: '新增角色', menus: '新增菜单', departments: '新增部门' }[resource];
+    const toolbar = within(screen.getByRole('toolbar', { name: titles[resource] }));
+    await waitFor(() => expect(toolbar.getByRole('button', { name: createLabel })).toBeEnabled());
+    fireEvent.click(toolbar.getByRole('button', { name: createLabel }));
     await fill(resource, 'Created example');
     await confirmSave();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -221,7 +225,7 @@ it.each(['users', 'roles', 'menus', 'departments'] as const)(
 it('renders the actual second users page and enforces viewer actions', async () => {
   const f = await fixture('users', true);
   expect(await screen.findByRole('cell', { name: 'Example avery' })).toBeVisible();
-  expect(screen.queryByRole('button', { name: '新增' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '新增用户' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /编辑 Example/ })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: '下一页' }));
   expect(await screen.findByRole('cell', { name: 'Example kai' })).toBeVisible();
@@ -229,7 +233,7 @@ it('renders the actual second users page and enforces viewer actions', async () 
 });
 it('preserves the exact editor and dirty input on cancelled scope navigation and same-person login', async () => {
   const f = await fixture('roles');
-  fireEvent.click(await screen.findByRole('button', { name: '新增' }));
+  fireEvent.click(await screen.findByRole('button', { name: '新增角色' }));
   await fill('roles', 'Preserved input');
   const input = screen.getByRole('textbox', { name: '名称' }),
     router = f.runtime.router;
@@ -257,7 +261,7 @@ it('preserves the exact editor and dirty input on cancelled scope navigation and
 });
 it('recovers an expired write once through GET and requires explicit confirmation before sending again', async () => {
   const f = await fixture('roles');
-  fireEvent.click(await screen.findByRole('button', { name: '新增' }));
+  fireEvent.click(await screen.findByRole('button', { name: '新增角色' }));
   await fill('roles', 'Reconfirmed input');
   f.expire();
   await confirmSave();

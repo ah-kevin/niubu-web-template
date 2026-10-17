@@ -36,7 +36,7 @@ export type QueryCriteria = {
   kind?: 'group' | 'page' | 'external';
   parentId?: string | null;
 };
-const queryLayout = { columns: 2, labelWidth: 'auto' };
+const queryLayout = { columns: 3, labelWidth: '100px' };
 export function editorDefaults<K extends ResourceKind>(resource: K, record?: RecordByResource[K]): EditorValues {
   const defaults: EditorValues = {
     name: '',

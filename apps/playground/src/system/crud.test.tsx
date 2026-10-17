@@ -19,6 +19,8 @@ import { ownerScopeKey, resourceDraftKey } from './resource-config';
 const north = { kind: 'workspace', id: 'north' } as const;
 const kinds = ['users', 'roles', 'menus', 'departments'] as const;
 const titles = { users: '用户管理', roles: '角色管理', menus: '菜单管理', departments: '部门管理' };
+const createLabels = { users: '新增用户', roles: '新增角色', menus: '新增菜单', departments: '新增部门' };
+const listTitles = { users: '用户列表', roles: '角色列表', menus: null, departments: '部门列表' };
 const rows: { [K in ResourceKind]: RecordByResource[K][] } = {
   users: Array.from({ length: 12 }, (_, i) => ({
     id: `users-${i + 1}`,
@@ -257,6 +259,75 @@ async function confirmSave() {
 }
 
 describe('system UI with controlled API ports (not backend persistence)', () => {
+  it.each(kinds)('%s places its resource actions in the table toolbar and retains the accessible page name', async kind => {
+    await mount(kind);
+    const toolbar = within(screen.getByRole('toolbar', { name: titles[kind] }));
+    expect(screen.getByRole('heading', { level: 1, name: titles[kind] })).toBeInTheDocument();
+    expect(toolbar.getByRole('button', { name: createLabels[kind] })).toBeInTheDocument();
+    if (listTitles[kind]) expect(toolbar.getByText(listTitles[kind]!)).toBeInTheDocument();
+    else expect(toolbar.queryByText(titles[kind])).not.toBeInTheDocument();
+    expect(toolbar.getByRole('button', { name: '刷新' })).toBeInTheDocument();
+    expect(toolbar.getByRole('button', { name: '全屏' })).toBeInTheDocument();
+    const visible = kind === 'users' || kind === 'roles';
+    expect(toolbar.getByRole('button', { name: '搜索', pressed: visible })).toBeInTheDocument();
+    const keyword = screen.getByLabelText('关键词');
+    expect(screen.queryByRole('textbox', { name: '关键词' })).toBe(visible ? keyword : null);
+    if (!visible) await userEvent.click(toolbar.getByRole('button', { name: '搜索' }));
+    const buttons = within(keyword.closest('form')!).getAllByRole('button');
+    expect(buttons.map(button => button.textContent)).toEqual(['重置', '查询']);
+  });
+
+  it('keeps a hidden query draft in the same form while toolbar refresh reloads the applied criteria', async () => {
+    const f = await mount('roles');
+    const toolbar = within(screen.getByRole('toolbar', { name: '角色管理' }));
+    const keyword = screen.getByRole('textbox', { name: '关键词' });
+    await userEvent.type(keyword, 'Operator');
+    await userEvent.click(screen.getByRole('button', { name: '查询' }));
+    await waitFor(() => expect(f.system.roles.list).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ keyword: 'Operator' }), expect.any(AbortSignal)));
+    await userEvent.clear(keyword);
+    await userEvent.type(keyword, 'Unapplied draft');
+    await userEvent.click(toolbar.getByRole('button', { name: '搜索', pressed: true }));
+    expect(screen.queryByRole('textbox', { name: '关键词' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('关键词')).toBe(keyword);
+    expect(keyword).toHaveValue('Unapplied draft');
+    let release!: (outcome: Awaited<ReturnType<typeof f.system.roles.list>>) => void;
+    f.system.roles.list.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const refresh = toolbar.getByRole('button', { name: '刷新' });
+    const beforeRefresh = f.system.roles.list.mock.calls.length;
+    await userEvent.click(refresh);
+    await waitFor(() => expect(f.system.roles.list).toHaveBeenCalledTimes(beforeRefresh + 1));
+    expect(refresh).toHaveAttribute('aria-busy', 'true');
+    expect(refresh).toHaveAttribute('aria-disabled', 'true');
+    expect(refresh).toBeEnabled();
+    expect(refresh).toHaveFocus();
+    await userEvent.click(refresh);
+    expect(f.system.roles.list).toHaveBeenCalledTimes(beforeRefresh + 1);
+    await act(async () => release({ ok: true, data: { rows: rows.roles, rowCount: 1 } }));
+    await waitFor(() => expect(refresh).not.toHaveAttribute('aria-busy', 'true'));
+    expect(toolbar.getByRole('button', { name: '刷新' })).toBe(refresh);
+    expect(refresh).toHaveFocus();
+    await waitFor(() => expect(f.system.roles.list).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ keyword: 'Operator', pageIndex: 0, pageSize: 10 }), expect.any(AbortSignal)));
+    await userEvent.click(toolbar.getByRole('button', { name: '搜索', pressed: false }));
+    expect(screen.getByRole('textbox', { name: '关键词' })).toBe(keyword);
+    expect(keyword).toHaveValue('Unapplied draft');
+  });
+
+  it.each(kinds)('%s keeps refresh available to readonly users while omitting create', async kind => {
+    const f = await mount(kind, false);
+    const toolbar = within(screen.getByRole('toolbar', { name: titles[kind] }));
+    expect(screen.queryByRole('button', { name: createLabels[kind] })).not.toBeInTheDocument();
+    const before = f.system[kind].list.mock.calls.length;
+    await userEvent.click(toolbar.getByRole('button', { name: '刷新' }));
+    await waitFor(() => expect(f.system[kind].list).toHaveBeenCalledTimes(before + 1));
+    expect(f.system[kind].list).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ pageIndex: 0, pageSize: 10 }), expect.any(AbortSignal));
+  });
+
+  it('shows the existing role description as a real table column', async () => {
+    await mount('roles');
+    expect(screen.getByRole('columnheader', { name: /说明/ })).toBeInTheDocument();
+    expect(await screen.findByRole('cell', { name: 'Example role' })).toBeInTheDocument();
+  });
+
   it.each(['查看', '编辑'] as const)(
     'keeps the same %s row trigger during a pending read and restores its focus after closing',
     async actionLabel => {
@@ -412,7 +483,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       await userEvent.click(trigger);
       const dialog = await screen.findByRole('dialog');
       observer.resize(table, 375);
-      expect(table).toHaveStyle({ width: '796px' });
+      expect(table).toHaveStyle({ width: '976px' });
       await userEvent.click(within(dialog).getByRole('button', { name: '关闭' }));
       const restored = screen.getByRole('button', { name: '查看 Operator' });
       await waitFor(() => expect(restored).toHaveFocus());
@@ -428,18 +499,18 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       const fixture = await mount('roles');
       let table = await screen.findByRole('table', { name: '角色管理' });
       const resize = (width: number) => observer.resize(table, width);
-      expect(table).toHaveStyle({ width: '796px' });
+      expect(table).toHaveStyle({ width: '976px' });
       resize(1206);
       expect(table).toHaveStyle({ width: '1204px' });
       expect(screen.getByRole('columnheader', { name: '操作' })).toHaveStyle({ width: '256px' });
-      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '316px' });
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '237px' });
       resize(600);
-      expect(table).toHaveStyle({ width: '796px' });
+      expect(table).toHaveStyle({ width: '976px' });
       resize(3000);
-      expect(table).toHaveStyle({ width: '2176px' });
+      expect(table).toHaveStyle({ width: '2816px' });
       resize(1206);
       fireEvent.keyDown(screen.getByRole('button', { name: '调整 名称 列宽' }), { key: 'ArrowRight' });
-      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '326px' });
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '247px' });
       fireEvent.click(screen.getByRole('button', { name: '排序 名称' }));
       await waitFor(() =>
         expect(fixture.system.roles.list).toHaveBeenLastCalledWith(
@@ -450,12 +521,12 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       );
       table = await screen.findByRole('table', { name: '角色管理' });
       resize(1506);
-      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '326px' });
+      expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '247px' });
       expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveAttribute('aria-sort', 'ascending');
-      expect(screen.getByRole('columnheader', { name: /编码/ })).toHaveStyle({ width: '416px' });
-      expect(table).toHaveStyle({ width: '1414px' });
+      expect(screen.getByRole('columnheader', { name: /编码/ })).toHaveStyle({ width: '312px' });
+      expect(table).toHaveStyle({ width: '1439px' });
       resize(0);
-      expect(table).toHaveStyle({ width: '1414px' });
+      expect(table).toHaveStyle({ width: '1439px' });
       for (let index = 0; index < 30; index++) {
         fireEvent.keyDown(screen.getByRole('button', { name: '调整 名称 列宽' }), { key: 'ArrowLeft' });
       }
@@ -475,6 +546,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       const f = await mount(kind);
       const port = f.system[kind];
       expect(screen.getByText(/重启/)).toHaveTextContent(/固定.*登录/);
+      if (kind === 'menus' || kind === 'departments') await userEvent.click(screen.getByRole('button', { name: '搜索', pressed: false }));
       fireEvent.change(screen.getByRole('textbox', { name: '关键词' }), { target: { value: 'missing' } });
       fireEvent.click(screen.getByRole('button', { name: '查询' }));
       await waitFor(() =>
@@ -489,7 +561,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       await screen.findByRole('button', {
         name: `查看 ${kind === 'users' ? 'User 1' : kind === 'roles' ? 'Operator' : kind === 'menus' ? 'Group' : 'Head office'}`,
       });
-      fireEvent.click(screen.getByRole('button', { name: '新增' }));
+      fireEvent.click(screen.getByRole('button', { name: createLabels[kind] }));
       await fill(kind);
       await confirmSave();
       await waitFor(() => expect(port.create).toHaveBeenCalledTimes(1));
@@ -529,7 +601,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
   it('users loads second page; viewer has no write actions', async () => {
     const f = await mount('users', false);
     await screen.findByRole('cell', { name: 'User 1' });
-    expect(screen.queryByRole('button', { name: '新增' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: createLabels.users })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /编辑 User/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '下一页' }));
     await screen.findByRole('cell', { name: 'User 11' });
@@ -542,7 +614,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
   it('save errors keep review and input; only an explicit second confirmation resends', async () => {
     const f = await mount('roles');
     f.system.roles.create.mockResolvedValueOnce({ ok: false, error: { kind: 'http', status: 409, code: 'CONFLICT' } });
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles');
     await confirmSave();
     await screen.findByRole('alert');
@@ -562,7 +634,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       ok: false,
       error: { kind: 'http', status: 401, code: 'ACCESS_EXPIRED' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles');
     await confirmSave();
     await waitFor(() =>
@@ -579,12 +651,12 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
   });
   it('outer close preserves dirty draft and offers explicit recovery against the real baseline', async () => {
     const f = await mount('roles');
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles', 'Draft name');
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
     fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '保留草稿并离开' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     expect(await screen.findByRole('button', { name: '恢复草稿' })).toBeVisible();
     expect(screen.queryByRole('textbox', { name: '名称' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '恢复草稿' }));
@@ -600,7 +672,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
           release = resolve;
         }),
     );
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles');
     await confirmSave();
     await waitFor(() => expect(f.system.roles.create).toHaveBeenCalledTimes(1));
@@ -608,7 +680,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
     fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '保留草稿并离开' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     fireEvent.click(await screen.findByRole('button', { name: '丢弃草稿' }));
     await fill('roles', 'Current input');
     await act(async () =>
@@ -622,7 +694,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
   });
   it('same-user expiry keeps the same form DOM and dirty input, then submits with a fresh generation', async () => {
     const f = await mount('roles');
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles', 'Retained input');
     const input = screen.getByRole('textbox', { name: '名称' });
     const initialGeneration = f.auth.getSnapshot().generation;
@@ -655,7 +727,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
           release = resolve;
         }),
     );
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles');
     await confirmSave();
     const input = document.querySelector<HTMLInputElement>('input[name="name"]')!;
@@ -681,7 +753,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
   });
   it('menu dependencies keep raw hidden values but project only the chosen kind and reject blank numeric order', async () => {
     const f = await mount('menus');
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.menus }));
     await fill('menus');
     await choose('类型', '外部链接');
     fireEvent.change(screen.getByRole('textbox', { name: '链接地址' }), {
@@ -713,7 +785,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       f.auth.markLoginExpired();
       return { ok: false, error: { kind: 'aborted' } };
     });
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.roles }));
     await fill('roles');
     await confirmSave();
     await waitFor(() => expect(f.auth.getSnapshot().loginExpired).toBe(true));
@@ -730,13 +802,13 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       enabled: true,
     }));
     const f = await mount('users', true, { roles });
-    await waitFor(() => expect(screen.getByRole('button', { name: '新增' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: createLabels.users })).toBeEnabled());
     expect(f.system.roles.list).toHaveBeenCalledWith(
       expect.anything(),
       { pageIndex: 1, pageSize: 100 },
       expect.any(AbortSignal),
     );
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    fireEvent.click(screen.getByRole('button', { name: createLabels.users }));
     expect(screen.getByRole('combobox', { name: '角色' })).toHaveTextContent('请选择');
     await choose('角色', 'Role 105');
     expect(screen.getByRole('combobox', { name: '角色' })).toHaveTextContent('Role 105');
@@ -879,8 +951,8 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       parentId: '',
       enabled: true,
     });
-    await waitFor(() => expect(screen.getByRole('button', { name: '新增' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: createLabels.menus })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: createLabels.menus }));
     fireEvent.click(await screen.findByRole('button', { name: '恢复草稿' }));
     fireEvent.click(screen.getByRole('button', { name: '保存' }));
     await screen.findByText('请填写有效内容。');
@@ -922,13 +994,16 @@ describe('compiled system page composition', () => {
     const { compilePlaygroundStyles, readCompiledRules } = await import('../tests/compiled-styles');
     rules = readCompiledRules(await compilePlaygroundStyles());
   });
-  it('uses the shared workspace heading scale and spacing on the resource page', async () => {
+  it('keeps the accessible page heading and moves demo guidance into a collapsed disclosure', async () => {
     await mount('users');
-    const { matchingRules } = await import('../tests/compiled-styles');
-    const heading = screen.getByRole('heading', { name: '用户管理' });
-    expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === 'var(--workspace-title-font-size)')).toBe(true);
-    expect(matchingRules(rules, heading, 'margin-bottom').some(rule => rule.style.getPropertyValue('margin-bottom') === 'var(--workspace-heading-gap)')).toBe(true);
-    expect(matchingRules(rules, heading, 'font-weight').some(rule => rule.style.getPropertyValue('font-weight') === '650')).toBe(true);
+    const heading = screen.getByRole('heading', { level: 1, name: '用户管理' });
+    expect(heading).toBeInTheDocument();
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    const notes = screen.getByText('演示说明').closest('details')!;
+    expect(notes).not.toHaveAttribute('open');
+    await userEvent.click(within(notes).getByText('演示说明'));
+    expect(notes).toHaveAttribute('open');
+    expect(within(notes).getByText(/重启/)).toHaveTextContent(/固定.*登录/);
   });
   it.each(['standard', 'compact'])('composes query actions independently of the public form footer in %s density', async density => {
     await mount('users');

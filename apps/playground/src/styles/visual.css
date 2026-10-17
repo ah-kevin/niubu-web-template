@@ -15,11 +15,10 @@
   .template-workspace .template-scope-selector [role='combobox'] { font-size: 0.75rem; }
 }
 
-/* A query row adapts to available space instead of inheriting the editor's
-   fixed schema column count. Other form owners keep their configured grid. */
+/* Query fields share the app's flex row. Match the public unlayered fallback
+   here so editor and other form owners retain their configured grids. */
 .system-query-fields .pattern-field-grid.pattern-schema-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  margin-top: 0;
+  display: contents;
 }
 
 /* Match the unlayered public fallback without changing other form owners. */

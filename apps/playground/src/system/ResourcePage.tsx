@@ -9,7 +9,7 @@ import {
   type QueryRequest,
 } from '@niubu/common-ui/data-table';
 import { Modal, Drawer, useOverlay } from '@niubu/common-ui/overlay';
-import { ExamplePage } from '../examples/ExamplePage';
+import { ExampleDetails } from '../examples/ExamplePage';
 import { Eye, LoaderCircle, Pencil, Plus, Trash2 } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Badge } from '@niubu/shadcn-ui/badge';
@@ -153,6 +153,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const sessionSignal = auth.requestContext().signal;
   const lookup = useResourceLookups(api, resource, context, sessionSignal, readable);
   const queryOptions = useMemo(() => createQueryOptions(resource, t, lookup.lookups), [resource, t, lookup.lookups]);
+  const [queryVisible, setQueryVisible] = useState(resource === 'users' || resource === 'roles');
   async function load({ query, pagination, sorting, signal: wrapperSignal }: QueryRequest<QueryCriteria>) {
     const captured = api.getContext();
     if (!captured || ownerScopeKey(captured.identityKey, captured.scope) !== ownerKey) throw cancelled();
@@ -327,7 +328,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     return () => observer.disconnect();
   }, []);
   const tableFields = useMemo(
-    () => config.fields.filter(name => !['description', 'href', 'pageId', 'openInNewWindow'].includes(name)),
+    () => config.fields.filter(name => !['href', 'pageId', 'openInNewWindow'].includes(name)),
     [config],
   );
   // Defaults fill the card; TanStack keeps explicit user sizing authoritative.
@@ -426,30 +427,22 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const shown = panel?.ownerKey === ownerKey ? panel : null;
   const Overlay = shown?.mode === 'create' ? Modal : Drawer;
   return (
-    <ExamplePage
-      className="system-resource-page [&_form]:max-w-none"
-      title={t(config.titleKey)}
-      description={t('system.demoNotice')}
-      actions={
-        writable && (
-          <Button type="button" disabled={!lookup.ready} onClick={create}>
-            <Plus aria-hidden="true" />
-            {t('system.create')}
-          </Button>
-        )
-      }
-    >
-      <div className="system-query-card rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
+    <section className="system-resource-page grid min-w-0 gap-3 p-4 [margin:calc(-1*max(var(--workspace-card-padding),var(--layout-content-padding,0px)))] [&_form]:max-w-none">
+      <h1 className="sr-only">{t(config.titleKey)}</h1>
+      <div
+        hidden={!queryVisible}
+        className="system-query-card rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]"
+      >
         <table.queryForm.Form
-          className="system-query-form grid min-w-0 gap-[var(--workspace-section-gap)] xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
+          className="system-query-form flex min-w-0 flex-wrap items-start gap-3"
           showActions={false}
         >
-          <table.queryForm.Fields className="system-query-fields min-w-0" />
-          <div className="system-query-actions flex items-center justify-end gap-2">
-            <Button type="submit">{t('common:search')}</Button>
+          <table.queryForm.Fields className="system-query-fields contents [&_.pattern-schema-cell]:min-w-0 [&_.pattern-schema-cell]:flex-[0_0_100%] md:[&_.pattern-schema-cell]:basis-[calc((100%-0.75rem)/2)] xl:[&_.pattern-schema-cell]:basis-[calc((100%-1.5rem)/3)] [@media(min-width:701px)]:[&_.schema-field]:gap-x-0 [@media(min-width:701px)]:[&_.schema-field-heading]:justify-end [@media(min-width:701px)]:[&_.schema-field-heading]:pe-3" />
+          <div className="system-query-actions flex min-w-max flex-[1_0_100%] items-center justify-end gap-2 md:basis-[calc((100%-0.75rem)/2)] xl:basis-[calc((100%-1.5rem)/3)]">
             <Button type="reset" variant="outline">
               {t('common:reset')}
             </Button>
+            <Button type="submit">{t('common:search')}</Button>
           </div>
         </table.queryForm.Form>
       </div>
@@ -487,6 +480,21 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
             caption={t(config.titleKey)}
             labels={createDataTableLabels(t, headers)}
             {...table.tableState}
+            columnPinning={{ kind: 'internal', initial: { start: [], end: ['actions'] } }}
+            toolbar={{
+              title: config.listTitleKey ? t(config.listTitleKey) : null,
+              actions: writable ? (
+                <Button type="button" disabled={!lookup.ready} onClick={create}>
+                  <Plus aria-hidden="true" />
+                  {t(config.createKey)}
+                </Button>
+              ) : undefined,
+              search: { visible: queryVisible, onVisibleChange: setQueryVisible },
+              onRefresh: () => {
+                void table.reload();
+              },
+              allowMaximize: true,
+            }}
           />
         </RowActionContext.Provider>
       </div>
@@ -536,6 +544,9 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           )}
         </Overlay>
       )}
-    </ExamplePage>
+      <ExampleDetails title={t('system.demoExplanation')}>
+        <p>{t('system.demoNotice')}</p>
+      </ExampleDetails>
+    </section>
   );
 }

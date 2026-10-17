@@ -517,5 +517,13 @@
   "examples.feedback.draftName": "Draft name",
   "examples.feedback.previewTitle": "Action preview",
   "examples.feedback.previewHelp": "Review a synthetic action without sending a service request.",
-  "examples.feedback.previewOpen": "Open action preview"
+  "examples.feedback.previewOpen": "Open action preview",
+  "system.list.users": "User list",
+  "system.list.roles": "Role list",
+  "system.list.departments": "Department list",
+  "system.create.users": "Create user",
+  "system.create.roles": "Create role",
+  "system.create.menus": "Create menu",
+  "system.create.departments": "Create department",
+  "system.demoExplanation": "Demo notes"
 }

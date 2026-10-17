@@ -11,6 +11,8 @@ export const emptyLookups: Lookups = { roles: [], departments: [], menus: [] };
 export const resourceConfig = {
   users: {
     titleKey: 'system.users',
+    listTitleKey: 'system.list.users',
+    createKey: 'system.create.users',
     icon: 'users',
     fields: ['name', 'email', 'roleId', 'departmentId', 'enabled'],
     sortable: ['name', 'email'],
@@ -18,6 +20,8 @@ export const resourceConfig = {
   },
   roles: {
     titleKey: 'system.roles',
+    listTitleKey: 'system.list.roles',
+    createKey: 'system.create.roles',
     icon: 'shield-check',
     fields: ['name', 'code', 'description', 'enabled'],
     sortable: ['name', 'code'],
@@ -25,6 +29,8 @@ export const resourceConfig = {
   },
   menus: {
     titleKey: 'system.menus',
+    listTitleKey: null,
+    createKey: 'system.create.menus',
     icon: 'menu',
     fields: ['title', 'kind', 'parentId', 'order', 'pageId', 'href', 'openInNewWindow', 'enabled'],
     sortable: ['title', 'order'],
@@ -32,6 +38,8 @@ export const resourceConfig = {
   },
   departments: {
     titleKey: 'system.departments',
+    listTitleKey: 'system.list.departments',
+    createKey: 'system.create.departments',
     icon: 'building-2',
     fields: ['name', 'code', 'parentId', 'enabled'],
     sortable: ['name', 'code'],

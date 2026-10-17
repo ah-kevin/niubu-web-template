@@ -70,7 +70,7 @@ it('locks through the actual user menu, rejects a wrong password and keeps it ou
 });
 it('preserves the same dirty form and owner through lock, same-person reauthentication and unlock',async()=>{
  const f=await mountPlayground({entry:'/system/roles?scopeKind=workspace&scopeId=north',startup:{lockCrypto}});fixtures.push(f);
- fireEvent.click(await screen.findByRole('button',{name:'新增'}));
+ fireEvent.click(await screen.findByRole('button',{name:'新增角色'}));
  const input=await screen.findByRole('textbox',{name:'名称'});
  fireEvent.change(input,{target:{value:'Locked draft'}});fireEvent.change(screen.getByRole('textbox',{name:'编码'}),{target:{value:'locked-draft'}});
  const owner=f.runtime.lock;await act(async()=>{expect(await owner!.lock('local-example',new AbortController().signal)).toBe(true);});

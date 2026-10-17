@@ -517,5 +517,13 @@
   "examples.feedback.draftName": "草稿名称",
   "examples.feedback.previewTitle": "操作预览",
   "examples.feedback.previewHelp": "查看合成操作内容，不发送服务请求。",
-  "examples.feedback.previewOpen": "打开操作预览"
+  "examples.feedback.previewOpen": "打开操作预览",
+  "system.list.users": "用户列表",
+  "system.list.roles": "角色列表",
+  "system.list.departments": "部门列表",
+  "system.create.users": "新增用户",
+  "system.create.roles": "新增角色",
+  "system.create.menus": "新增菜单",
+  "system.create.departments": "新增部门",
+  "system.demoExplanation": "演示说明"
 }

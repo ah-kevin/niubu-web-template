@@ -9,6 +9,13 @@ import { TablesPage, type SyntheticRow, type SyntheticTableLoader } from './Tabl
 const region = (name: string) => within(screen.getByRole('region', { name }));
 const client = () => region('客户端可选列表');
 const remote = () => region('合成服务器列表');
+const settings = () => within(screen.getByRole('dialog', { name: '显示设置' }));
+async function openSettings(advanced = false) {
+  await userEvent.click(client().getByRole('button', { name: '显示设置' }));
+  await screen.findByRole('dialog', { name: '显示设置' });
+  if (advanced) fireEvent.click(settings().getByRole('button', { name: '更多列设置' }));
+}
+
 const ids = (area: ReturnType<typeof within>) => area.queryAllByRole('row').slice(1).map((row: HTMLElement) => row.getAttribute('data-row-id'));
 function deferredServer() {
   const calls: { request: QueryRequest<{ term: string }>; scope: string; resolve: (page: QueryPage<SyntheticRow>) => void; reject: (error: Error) => void }[] = [];
@@ -53,31 +60,37 @@ describe('DataTable existing-capability examples', () => {
 
   it('controls visibility, width and logical pinning through isolated scoped preferences and resets them', async () => {
     render(<TablesPage />);
-    fireEvent.click(client().getByText('显示设置'));
-    fireEvent.click(client().getByRole('checkbox', { name: '显示 分数' }));
+    await openSettings();
+    fireEvent.click(settings().getByRole('checkbox', { name: '显示 分数' }));
     expect(client().queryByRole('columnheader', { name: /分数/ })).not.toBeInTheDocument();
-    await selectOption(client().getByRole('combobox', { name: '固定 名称' }), '固定到开头');
-    const width = client().getByRole('spinbutton', { name: '名称 列宽' });
+    fireEvent.click(settings().getByRole('button', { name: '更多列设置' }));
+    await selectOption(settings().getByRole('combobox', { name: '固定 名称' }), '固定到开头');
+    const width = settings().getByRole('spinbutton', { name: '名称 列宽' });
     fireEvent.change(width, { target: { value: '240' } });
     fireEvent.blur(width);
     expect(client().getByRole('columnheader', { name: /名称/ })).toHaveStyle({ position: 'sticky', width: '240px', insetInlineStart: '0px' });
-    await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'South（合成）');
-    expect(client().getByRole('checkbox', { name: '显示 分数' })).toBeChecked();
-    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('取消固定');
-    await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'North（合成）');
-    expect(client().getByRole('checkbox', { name: '显示 分数' })).not.toBeChecked();
-    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('固定到开头');
-    fireEvent.click(client().getByRole('button', { name: '恢复默认列' }));
-    expect(client().getByRole('checkbox', { name: '显示 分数' })).toBeChecked();
-    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('取消固定');
+    const scope = screen.getByRole('combobox', { name: '演示作用域' });
+    await selectOption(scope, 'South（合成）');
+    await waitFor(() => expect(scope).toHaveFocus());
+    await openSettings(true);
+    expect(settings().getByRole('checkbox', { name: '显示 分数' })).toBeChecked();
+    expect(settings().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('取消固定');
+    await selectOption(scope, 'North（合成）');
+    await waitFor(() => expect(scope).toHaveFocus());
+    await openSettings(true);
+    expect(settings().getByRole('checkbox', { name: '显示 分数' })).not.toBeChecked();
+    expect(settings().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('固定到开头');
+    fireEvent.click(settings().getByRole('button', { name: '恢复默认列' }));
+    expect(settings().getByRole('checkbox', { name: '显示 分数' })).toBeChecked();
+    expect(settings().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('取消固定');
     await screen.findByText('North · Cedar');
   });
 
   it('keeps preference interactions live after StrictMode effect replay and starts fresh on a real remount', async () => {
     const view = render(<StrictMode><TablesPage /></StrictMode>);
     await screen.findByText('North · Cedar');
-    fireEvent.click(client().getByText('显示设置'));
-    fireEvent.click(client().getByRole('checkbox', { name: '显示 分数' }));
+    await openSettings();
+    fireEvent.click(settings().getByRole('checkbox', { name: '显示 分数' }));
     expect(client().queryByRole('columnheader', { name: /分数/ })).not.toBeInTheDocument();
     view.unmount();
     await act(async () => {});
