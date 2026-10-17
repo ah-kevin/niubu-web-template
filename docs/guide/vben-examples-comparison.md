@@ -169,7 +169,7 @@ Human confirmed 2026-10-17: existing capabilities and explicitly available parti
 
 ## 实施索引
 
-所有入口位于已登录 north/south 工作空间的 `Playground Examples` 菜单，权限沿用 `demo:read`；标签详情由 A/B 链接进入；导航的4个隐藏示例也有真实静态loader，新窗口和隐藏详情可直接访问并通过现有标签controller关闭。角色/请求/表格/Query/偏好使用明确合成fixture，独立于当前账号与业务数据。
+所有入口位于已登录 north/south 工作空间的“组件示例”和“功能演示”菜单，权限沿用 `demo:read`；标签详情由 A/B 链接进入；导航的4个隐藏示例也有真实静态loader，新窗口和隐藏详情可直接访问并通过现有标签controller关闭。角色/请求/表格/Query/偏好使用明确合成fixture，独立于当前账号与业务数据。
 
 | 页面 | 确认项 / 场景 | 源码 |
 | --- | --- | --- |
