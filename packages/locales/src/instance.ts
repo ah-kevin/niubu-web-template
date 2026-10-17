@@ -7,7 +7,9 @@ import {
   type Resource,
 } from '@niubu/hooks';
 import { fallbackResources, publicNamespaces, type TranslationParams } from './fallback';
+import { createLanguageMessages, type AppMessagesLoader } from './language-messages';
 export type { TranslationParams } from './fallback';
+export type { AppMessages, AppMessagesLoader } from './language-messages';
 export type AppLoaders = Readonly<
   Record<
     string,
@@ -23,6 +25,13 @@ export type AppI18n = LocaleRuntime & {
   readonly requiredNamespaces: readonly string[];
   t(key: string, params?: TranslationParams): string;
 };
+export type CreateI18nOptions = {
+  defaultLocale: Locale;
+  domTarget?: LocaleDomTarget;
+} & (
+  | { appLoaders: AppLoaders; appNamespaces?: never; loadMessages?: never }
+  | { appLoaders?: never; appNamespaces: readonly string[]; loadMessages: AppMessagesLoader }
+);
 const publicLoaders = {
   'en-US': {
     common: () => import('./resources/en-US/common.json'),
@@ -30,20 +39,22 @@ const publicLoaders = {
     shell: () => import('./resources/en-US/shell.json'),
   },
 };
-export function createI18n(options: {
-  appLoaders: AppLoaders;
-  defaultLocale: Locale;
-  domTarget?: LocaleDomTarget;
-}): AppI18n {
+export function createI18n(options: CreateI18nOptions): AppI18n {
+  if (options.appLoaders !== undefined && (options.appNamespaces !== undefined || options.loadMessages !== undefined))
+    throw Error('App loaders and whole-language messages are mutually exclusive');
+  const languageMessages = options.appNamespaces
+    ? createLanguageMessages(options.appNamespaces, options.loadMessages)
+    : undefined;
+  const appLoaders = options.appLoaders ?? {};
   const fallback: Record<string, Resource> = Object.fromEntries(
     Object.entries(fallbackResources).map(([namespace, resource]) => [namespace, { ...resource }]),
   );
-  for (const [namespace, loader] of Object.entries(options.appLoaders)) {
+  for (const [namespace, loader] of Object.entries(appLoaders)) {
     if ((publicNamespaces as readonly string[]).includes(namespace))
       throw Error(`App cannot override public namespace: ${namespace}`);
     fallback[namespace] = { ...loader.fallback };
   }
-  const namespaces = Object.keys(fallback);
+  const namespaces = [...Object.keys(fallback), ...(languageMessages?.namespaces ?? [])];
   // No initReactI18next plugin: it registers a process-wide default instance.
   const owned = createInstance();
   void owned.init({
@@ -62,7 +73,8 @@ export function createI18n(options: {
     fallbackResources: fallback,
     domTarget: options.domTarget,
     async loadResource(locale, namespace, signal) {
-      const app = options.appLoaders[namespace];
+      if (languageMessages?.namespaces.includes(namespace)) return languageMessages.load(locale, namespace, signal);
+      const app = appLoaders[namespace];
       if (app) return app.load(locale, signal);
       if (!(publicNamespaces as readonly string[]).includes(namespace))
         throw Error(`Unknown locale namespace: ${namespace}`);
@@ -98,6 +110,7 @@ export function createI18n(options: {
     dispose() {
       unsubscribe();
       runtime.dispose();
+      languageMessages?.dispose();
     },
   };
 }
