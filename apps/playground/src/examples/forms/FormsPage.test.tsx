@@ -20,8 +20,8 @@ afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-async function scenario(id: string) {
-  await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${id} ·`) }));
+async function scenario(label: string) {
+  await userEvent.click(screen.getByRole('button', { name: label }));
 }
 function output(label: string) {
   return screen.getByLabelText(label);
@@ -30,7 +30,7 @@ function output(label: string) {
 describe('FormsPage existing form capabilities', () => {
   it('shows an empty query state and restores results through reset', async () => {
     render(<FormsPage />);
-    await scenario('E51');
+    await scenario('Query and collapse');
     await waitFor(() => expect(screen.getByRole('list', { name: 'Query results' }).children).toHaveLength(3));
     await userEvent.type(screen.getByRole('textbox', { name: 'Keyword' }), 'no-such-name');
     await userEvent.click(screen.getByRole('button', { name: 'Apply query' }));
@@ -41,16 +41,16 @@ describe('FormsPage existing form capabilities', () => {
   });
   it('switches among all nine scenarios without keeping the previous form owner', async () => {
     render(<FormsPage />);
-    for (const id of ['E43', 'E44', 'E46', 'E47', 'E48', 'E51', 'E52', 'E53', 'E54']) {
-      await scenario(id);
-      expect(screen.getByRole('button', { name: new RegExp(`^${id} ·`) })).toHaveAttribute('aria-pressed', 'true');
+    for (const label of ['Public API', '11 builtin fields', 'Columns and JSX', 'Custom renderer', 'Pure field derivation', 'Query and collapse', 'Synchronous validation', 'Focus on submit error', 'Raw values and DTO']) {
+      await scenario(label);
+      expect(screen.getByRole('button', { name: label })).toHaveAttribute('aria-pressed', 'true');
       expect(document.querySelectorAll('form')).toHaveLength(1);
     }
   });
 
   it('uses get/set/reset, validation and patch on the actual form owner', async () => {
     render(<FormsPage />);
-    await scenario('E43');
+    await scenario('Public API');
     await userEvent.click(screen.getByRole('button', { name: 'Set example values' }));
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Grace');
     await userEvent.click(screen.getByRole('button', { name: 'Read current name' }));
@@ -65,7 +65,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('cancels an in-flight save and drops its late completion, then allows a fresh save', async () => {
     render(<FormsPage />);
-    await scenario('E43');
+    await scenario('Public API');
     await userEvent.click(screen.getByRole('button', { name: 'Submit values' }));
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
     await userEvent.click(screen.getByRole('button', { name: 'Cancel submit' }));
@@ -82,7 +82,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it.each(['Reset values', 'Set example values', 'Patch existing field'])('retires a pending save on %s', async action => {
     render(<FormsPage />);
-    await scenario('E43');
+    await scenario('Public API');
     await userEvent.click(screen.getByRole('button', { name: 'Submit values' }));
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
     await userEvent.click(screen.getByRole('button', { name: action }));
@@ -93,11 +93,11 @@ describe('FormsPage existing form capabilities', () => {
 
   it('unmounts pending owners on scenario change and starts with fresh local state', async () => {
     render(<FormsPage />);
-    await scenario('E43');
+    await scenario('Public API');
     await userEvent.click(screen.getByRole('button', { name: 'Submit values' }));
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
-    await scenario('E44');
-    await scenario('E43');
+    await scenario('11 builtin fields');
+    await scenario('Public API');
     expect(output('Operation status')).toHaveTextContent('Idle');
     expect(output('Submitted name')).toHaveTextContent('—');
     expect(screen.queryByRole('button', { name: 'Complete synthetic save' })).not.toBeInTheDocument();
@@ -105,7 +105,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('binds all eleven builtin kinds and excludes the synthetic password from public preview', async () => {
     render(<FormsPage />);
-    await scenario('E44');
+    await scenario('11 builtin fields');
     await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada');
     await userEvent.type(screen.getByRole('textbox', { name: 'Notes' }), 'Demo note');
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity' }), { target: { value: '4' } });
@@ -131,7 +131,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('composes one form with columns, a spanning field and named JSX sections', async () => {
     render(<FormsPage />);
-    await scenario('E46');
+    await scenario('Columns and JSX');
     const primary = screen.getByRole('region', { name: 'Primary fields' });
     const details = screen.getByRole('region', { name: 'Details' });
     await userEvent.type(within(primary).getByRole('textbox', { name: 'Name' }), 'Ada');
@@ -144,7 +144,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('binds a typed custom renderer including ref, error accessibility and focus', async () => {
     render(<FormsPage />);
-    await scenario('E47');
+    await scenario('Custom renderer');
     const code = screen.getByRole('textbox', { name: 'Code' });
     await userEvent.clear(code);
     await userEvent.type(code, 'bad');
@@ -161,7 +161,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('derives visibility, required validation and disabled state without losing hidden raw values', async () => {
     render(<FormsPage />);
-    await scenario('E48');
+    await scenario('Pure field derivation');
     expect(screen.queryByRole('textbox', { name: 'Company' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Business account' }));
     const company = screen.getByRole('textbox', { name: 'Company' });
@@ -182,7 +182,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('collapses query rows while keeping a single owner, applies a trimmed DTO and resets results', async () => {
     render(<FormsPage />);
-    await scenario('E51');
+    await scenario('Query and collapse');
     await waitFor(() => expect(screen.getByRole('list', { name: 'Query results' }).children).toHaveLength(3));
     expect(screen.getByLabelText('City')).not.toBeVisible();
     await userEvent.click(screen.getByRole('button', { expanded: false }));
@@ -203,7 +203,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('rejects invalid synchronous Zod input and keeps parse normalization out of raw input', async () => {
     render(<FormsPage />);
-    await scenario('E52');
+    await scenario('Synchronous validation');
     const name = screen.getByRole('textbox', { name: 'Name' });
     await userEvent.type(name, ' ');
     await userEvent.click(screen.getByRole('button', { name: 'Submit validated values' }));
@@ -218,7 +218,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('focuses the first visible invalid control and expands a collapsed invalid row on submit', async () => {
     render(<FormsPage />);
-    await scenario('E53');
+    await scenario('Focus on submit error');
     expect(screen.queryByLabelText('Hidden invalid field')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Name', { exact: true })).not.toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Submit and focus' }));
@@ -233,7 +233,7 @@ describe('FormsPage existing form capabilities', () => {
 
   it('keeps raw range strings and converts only the chosen public fields to a one-way DTO', async () => {
     render(<FormsPage />);
-    await scenario('E54');
+    await scenario('Raw values and DTO');
     await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), '  Ada  ');
     fireEvent.change(screen.getByLabelText('Date range 开始日期'), { target: { value: '2026-10-01' } });
     fireEvent.change(screen.getByLabelText('Date range 结束日期'), { target: { value: '2026-10-31' } });

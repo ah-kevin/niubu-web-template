@@ -34,14 +34,14 @@ function mount(props: Parameters<typeof FormsPage>[0] = {}) {
     await act(() => i18n.changeLocale(locale, i18n.requiredNamespaces));
   };
 }
-async function scenario(id: string) {
-  await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${id} ·`) }));
+async function scenario(label: string) {
+  await userEvent.click(screen.getByRole('button', { name: label }));
 }
 
 describe('FormsPage live locale metadata', () => {
   it('localizes both date range endpoint labels without replacing their retained values', async () => {
     const changeLocale = mount();
-    await scenario('E44');
+    await scenario('11种内建字段');
     const start = screen.getByLabelText('日期范围 开始日期');
     const end = screen.getByLabelText('日期范围 结束日期');
     fireEvent.change(start, { target: { value: '2026-10-01' } });
@@ -56,14 +56,14 @@ describe('FormsPage live locale metadata', () => {
     expect(screen.getByLabelText('日期范围 结束日期')).toBe(end);
   });
   it.each([
-    ['E43', '名称', 'Name'], ['E44', '名称', 'Name'], ['E46', '名称', 'Name'],
-    ['E47', '代码', 'Code'], ['E48', '企业名称', 'Company'], ['E51', '关键词', 'Keyword'],
-    ['E52', '名称', 'Name'], ['E53', '名称', 'Name'], ['E54', '名称', 'Name'],
+    ['公开 API', '名称', 'Name'], ['11种内建字段', '名称', 'Name'], ['列布局与 JSX', '名称', 'Name'],
+    ['自定义 renderer', '代码', 'Code'], ['纯字段联动', '企业名称', 'Company'], ['查询与收起', '关键词', 'Keyword'],
+    ['同步校验', '名称', 'Name'], ['提交错误聚焦', '名称', 'Name'], ['原值与 DTO', '名称', 'Name'],
   ])('%s changes labels zh→en→zh on the same dirty input and keeps its reset baseline', async (id, zh, en) => {
     const changeLocale = mount();
     await scenario(id);
-    if (id === 'E48') await userEvent.click(screen.getByRole('checkbox', { name: '企业账户' }));
-    if (id === 'E53') await userEvent.click(screen.getByRole('button', { name: '提交并聚焦' }));
+    if (id === '纯字段联动') await userEvent.click(screen.getByRole('checkbox', { name: '企业账户' }));
+    if (id === '提交错误聚焦') await userEvent.click(screen.getByRole('button', { name: '提交并聚焦' }));
     const input = screen.getByRole('textbox', { name: zh });
     fireEvent.change(input, { target: { value: 'Dirty retained input' } });
     const form = input.closest('form');
@@ -74,7 +74,7 @@ describe('FormsPage live locale metadata', () => {
     await changeLocale('zh-CN');
     expect(screen.getByRole('textbox', { name: zh })).toBe(input);
     expect(input).toHaveValue('Dirty retained input');
-    if (id === 'E43') {
+    if (id === '公开 API') {
       await userEvent.click(screen.getByRole('button', { name: '重置值' }));
       expect(input).toHaveValue('Ada');
     }
@@ -82,7 +82,7 @@ describe('FormsPage live locale metadata', () => {
 
   it('changes selected option text, checkbox/radio labels and password help without resetting values', async () => {
     const changeLocale = mount();
-    await scenario('E44');
+    await scenario('11种内建字段');
     const select = screen.getByRole('combobox', { name: '分类' });
     await userEvent.click(select);
     await userEvent.click(await screen.findByRole('option', { name: '研究' }));
@@ -103,16 +103,16 @@ describe('FormsPage live locale metadata', () => {
   });
 
   it.each([
-    ['E43', '名称', '提交值', 'Submit values', '请输入至少两个字符', 'Enter at least two characters'],
-    ['E47', '代码', '提交代码', 'Submit code', '请输入 EX- 加数字', 'Use EX- followed by digits'],
-    ['E48', '企业名称', '提交联动字段', 'Submit derived fields', '请输入企业名称', 'Enter a company name'],
-    ['E52', '名称', '提交校验结果', 'Submit validated values', '请输入至少两个字符', 'Enter at least two characters'],
-    ['E53', '名称', '提交并聚焦', 'Submit and focus', '请输入至少两个字符', 'Enter at least two characters'],
+    ['公开 API', '名称', '提交值', 'Submit values', '请输入至少两个字符', 'Enter at least two characters'],
+    ['自定义 renderer', '代码', '提交代码', 'Submit code', '请输入 EX- 加数字', 'Use EX- followed by digits'],
+    ['纯字段联动', '企业名称', '提交联动字段', 'Submit derived fields', '请输入企业名称', 'Enter a company name'],
+    ['同步校验', '名称', '提交校验结果', 'Submit validated values', '请输入至少两个字符', 'Enter at least two characters'],
+    ['提交错误聚焦', '名称', '提交并聚焦', 'Submit and focus', '请输入至少两个字符', 'Enter at least two characters'],
   ])('%s translates existing errors and future validation without replacing input', async (id, label, submitZh, submitEn, errorZh, errorEn) => {
     const changeLocale = mount();
     await scenario(id);
-    if (id === 'E48') await userEvent.click(screen.getByRole('checkbox', { name: '企业账户' }));
-    if (id === 'E53') await userEvent.click(screen.getByRole('button', { name: submitZh }));
+    if (id === '纯字段联动') await userEvent.click(screen.getByRole('checkbox', { name: '企业账户' }));
+    if (id === '提交错误聚焦') await userEvent.click(screen.getByRole('button', { name: submitZh }));
     const input = screen.getByRole('textbox', { name: label });
     fireEvent.change(input, { target: { value: '' } });
     await userEvent.click(screen.getByRole('button', { name: submitZh }));
@@ -161,9 +161,9 @@ describe('FormsPage live locale metadata', () => {
     expect(savedNames).toEqual(['Dirty pending']);
   });
 
-  it('links the common heading to the bundled repository form guide for E44/E46/E54', async () => {
+  it('links the common heading to the bundled repository form guide for builtin fields, layout and DTO scenes', async () => {
     mount();
-    for (const id of ['E44', 'E46', 'E54']) {
+    for (const id of ['11种内建字段', '列布局与 JSX', '原值与 DTO']) {
       await scenario(id);
       const links = screen.getAllByRole('link');
       expect(links).toHaveLength(1);

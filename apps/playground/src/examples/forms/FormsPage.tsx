@@ -50,7 +50,7 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
             aria-pressed={selected === id}
             onClick={() => setSelected(id)}
           >
-            {id} · {text(label)}
+            {text(label)}
           </Button>
         ))}
       </nav>
@@ -61,11 +61,9 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
         ]
           .filter(Boolean)
           .join(' ')}
-        aria-label={`${active[0]} · ${text(active[1])}`}
+        aria-label={text(active[1])}
       >
-        <h2 className="text-lg font-semibold">
-          {active[0]} · {text(active[1])}
-        </h2>
+        <h2 className="text-lg font-semibold">{text(active[1])}</h2>
         {active[0] === 'E43' ? <ApiPanel saveName={saveName} /> : <Panel key={active[0]} />}
       </section>
     </div>
