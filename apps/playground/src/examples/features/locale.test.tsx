@@ -9,6 +9,7 @@ import { QueryPage } from './QueryPage';
 
 it('switches browser and preference copy while retaining the edited watermark and extension', async () => {
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const view = render(<I18nProvider instance={i18n}><BrowserFeaturesPage /><PreferencesPage /></I18nProvider>);
   try {
     const watermark = await screen.findByRole('textbox', { name: '演示水印文本' });
@@ -30,6 +31,7 @@ it('switches browser and preference copy while retaining the edited watermark an
 
 it('switches query labels while retaining context selection and the current page', async () => {
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const view = render(<I18nProvider instance={i18n}><QueryPage /></I18nProvider>);
   try {
     await selectOption(screen.getByRole('combobox', { name: '合成 scope' }), 'south');

@@ -9,13 +9,14 @@ import { AccessPage } from './AccessPage';
 import { NavigationPage } from './NavigationPage';
 import { RequestFeaturesPage } from './RequestFeaturesPage';
 
-function mount(node: React.ReactNode) {
+async function mount(node: React.ReactNode) {
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   return render(<I18nProvider instance={i18n}>{node}</I18nProvider>);
 }
 describe('confirmed application examples', () => {
   it('switches synthetic roles/codes/scope through real authorization projection without granting another scope', async () => {
-    mount(<AccessPage />);
+    await mount(<AccessPage />);
     expect(screen.getByText('admin 页面：允许')).toBeVisible();
     expect(screen.queryByRole('button', { name: '删除示例' })).not.toBeInTheDocument();
     await selectOption(screen.getByLabelText('合成角色'), 'super');
@@ -27,8 +28,8 @@ describe('confirmed application examples', () => {
     expect(screen.getByText('当前 scope 不在授权列表')).toBeVisible();
     expect(screen.queryByRole('button', { name: '删除示例' })).not.toBeInTheDocument();
   });
-  it('renders nested navigation, badge, hidden direct access, safe external links and projected breadcrumb', () => {
-    mount(<NavigationPage />);
+  it('renders nested navigation, badge, hidden direct access, safe external links and projected breadcrumb', async () => {
+    await mount(<NavigationPage />);
     const nav = screen.getByRole('navigation', { name: '合成菜单' });
     expect(within(nav).getByRole('link', { name: /Menu 1/ })).toBeVisible();
     expect(within(nav).queryByRole('link', { name: '隐藏详情' })).not.toBeInTheDocument();
@@ -42,7 +43,7 @@ describe('confirmed application examples', () => {
     expect(screen.queryByTitle('本地嵌入示例')).not.toBeInTheDocument();
   });
   it('uses repeated query keys and download metadata through the request client, strict expiry and isolated recovery', async () => {
-    mount(<RequestFeaturesPage />);
+    await mount(<RequestFeaturesPage />);
     await screen.findByText('合成会话 ready');
     fireEvent.click(screen.getByRole('button', { name: '发送重复参数' }));
     expect(await screen.findByText('query=one&query=two')).toBeVisible();
@@ -59,6 +60,7 @@ describe('confirmed application examples', () => {
 
 it('keeps the isolated request and capacity owners usable across StrictMode replay', async () => {
   const i18n = createPlaygroundI18n('zh-CN',{lang:'zh-CN',dir:'ltr'});
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const scene = render(<StrictMode><I18nProvider instance={i18n}><RequestFeaturesPage /><CapacityExample /></I18nProvider></StrictMode>);
   await screen.findByText('合成会话 ready');
   fireEvent.click(screen.getByRole('button', {name:'发送重复参数'}));
@@ -69,8 +71,8 @@ it('keeps the isolated request and capacity owners usable across StrictMode repl
 });
 
 
-it('keeps the embedded menu selection, breadcrumb and visible content aligned through revocation', () => {
-  mount(<NavigationPage />);
+it('keeps the embedded menu selection, breadcrumb and visible content aligned through revocation', async () => {
+  await mount(<NavigationPage />);
   const nav = screen.getByRole('navigation', { name: '合成菜单' });
   fireEvent.click(within(nav).getByRole('link', { name: '本地嵌入示例' }));
   expect(within(nav).getByRole('link', { name: '本地嵌入示例' })).toHaveAttribute('aria-current', 'page');
@@ -84,7 +86,7 @@ it('keeps the embedded menu selection, breadcrumb and visible content aligned th
 it('keeps a file-save failure in the download scene and preserves the session result', async () => {
   const createUrl = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => { throw Error('unavailable'); });
   try {
-    mount(<RequestFeaturesPage />);
+    await mount(<RequestFeaturesPage />);
     await screen.findByText('合成会话 ready');
     fireEvent.click(screen.getByRole('button', { name: '普通 401' }));
     fireEvent.click(screen.getByRole('button', { name: '读取下载元数据' }));

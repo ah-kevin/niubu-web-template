@@ -219,6 +219,7 @@ async function mount(kind: ResourceKind, writable = true, fixtures: Partial<type
     storage: createStoragePort({ getItem: () => null, setItem: () => {} }),
   });
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const system = {
     users: stubPort('users', fixtures.users),

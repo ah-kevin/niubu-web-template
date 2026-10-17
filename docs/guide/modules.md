@@ -11,7 +11,7 @@
 3. 填写 `titleKey`、`iconToken`、`order`、`navigation`、`scope`、`capability` 与所需 `requiredCodes` 等实际 `RouteMeta` 字段。菜单引用代码中已有 pageId；不能用菜单标题或后端 URL 代替身份。
 4. 给每条页面路径登记静态 loader，沿用 `'/system/users': async () => ({ Component: (await import('../system/UsersPage')).UsersPage })` 的写法。后端只能选择代码拥有的页面，不能下发 import、组件、任意执行地址或覆盖路径与加载器。
 5. 把模块加入 app 的 `createModuleRegistry([...])`。当前 playground 在 `modules/demo.tsx` 汇总；[router.tsx](../../apps/playground/src/router.tsx) 将 `registry.routes/loaders` 交给 `createRoutes`，不要另建并行路由清单。
-6. 为实际使用的 namespace 同步登记 app locale loader、双语言资源与 key/插值参数；示例见 [locales/index.ts](../../apps/playground/src/locales/index.ts)。`namespaces` 声明不能代替资源加载，不能覆盖公共 `common/validation/shell` namespace。
+6. 为实际使用的 namespace 登记 app 语言入口、双语言资源与 key/插值参数；示例见 [locales/index.ts](../../apps/playground/src/locales/index.ts)。推荐 `appNamespaces + loadMessages(locale, signal)` 在启动/切换时完整准备目标语言，页面不再单独等待文案；旧 `appLoaders` 同步中文 fallback 接法保持兼容。模块的 `namespaces` 声明不能代替资源加载，不能覆盖公共 `common/validation/shell` namespace。
 7. backend 模式同步后端菜单 pageId 与动作 codes；按钮使用对应 write code，页面直达仍经过 Guard。按[工程命令](./engineering-deploy.md)跑受影响包、locale、workspace/boundary 检查，收尾保留 Root 与完整检查。
 
 [createModuleRegistry](../../packages/effects/access/src/module-registry.ts) 拒绝重复 module id/pageId/路由身份、冲突 loader、未知菜单页面与 parentId。它汇总并冻结 routes/loaders/menus/permissions/namespaces，不替 app 登录或代替后端授权。菜单与 scoped query 的边界见[鉴权与请求](./auth-request.md)。

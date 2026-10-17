@@ -40,6 +40,7 @@ async function mount() {
   const preferences = createPreferenceManager({ identity: { ...appIdentity, identityKey: user.id }, appDefaults, policy: appPolicy,
     storage: createStoragePort({ getItem: () => null, setItem: () => {} }) });
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const network = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ code: 0, data: [], message: 'ok' }), { headers: { 'Content-Type': 'application/json' } }));
   const request = createRequestClient({ mode: 'enabled', baseURL: 'http://routing.test', fetch: network,

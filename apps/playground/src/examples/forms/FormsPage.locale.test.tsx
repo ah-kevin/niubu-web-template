@@ -26,9 +26,10 @@ afterEach(() => {
   cleanup();
   instances.splice(0).forEach(instance => instance.dispose());
 });
-function mount(props: Parameters<typeof FormsPage>[0] = {}) {
+async function mount(props: Parameters<typeof FormsPage>[0] = {}) {
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
   instances.push(i18n);
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   render(<I18nProvider instance={i18n}><FormsPage {...props} /></I18nProvider>);
   return async (locale: 'en-US' | 'zh-CN') => {
     await act(() => i18n.changeLocale(locale, i18n.requiredNamespaces));
@@ -40,7 +41,7 @@ async function scenario(label: string) {
 
 describe('FormsPage live locale metadata', () => {
   it('localizes both date range endpoint labels without replacing their retained values', async () => {
-    const changeLocale = mount();
+    const changeLocale = await mount();
     await scenario('11种内建字段');
     const start = screen.getByLabelText('日期范围 开始日期');
     const end = screen.getByLabelText('日期范围 结束日期');
@@ -60,7 +61,7 @@ describe('FormsPage live locale metadata', () => {
     ['自定义 renderer', '代码', 'Code'], ['纯字段联动', '企业名称', 'Company'], ['查询与收起', '关键词', 'Keyword'],
     ['同步校验', '名称', 'Name'], ['提交错误聚焦', '名称', 'Name'], ['原值与 DTO', '名称', 'Name'],
   ])('%s changes labels zh→en→zh on the same dirty input and keeps its reset baseline', async (id, zh, en) => {
-    const changeLocale = mount();
+    const changeLocale = await mount();
     await scenario(id);
     if (id === '纯字段联动') await userEvent.click(screen.getByRole('checkbox', { name: '企业账户' }));
     if (id === '提交错误聚焦') await userEvent.click(screen.getByRole('button', { name: '提交并聚焦' }));
@@ -81,7 +82,7 @@ describe('FormsPage live locale metadata', () => {
   });
 
   it('changes selected option text, checkbox/radio labels and password help without resetting values', async () => {
-    const changeLocale = mount();
+    const changeLocale = await mount();
     await scenario('11种内建字段');
     const select = screen.getByRole('combobox', { name: '分类' });
     await userEvent.click(select);
@@ -109,7 +110,7 @@ describe('FormsPage live locale metadata', () => {
     ['同步校验', '名称', '提交校验结果', 'Submit validated values', '请输入至少两个字符', 'Enter at least two characters'],
     ['提交错误聚焦', '名称', '提交并聚焦', 'Submit and focus', '请输入至少两个字符', 'Enter at least two characters'],
   ])('%s translates existing errors and future validation without replacing input', async (id, label, submitZh, submitEn, errorZh, errorEn) => {
-    const changeLocale = mount();
+    const changeLocale = await mount();
     await scenario(id);
     if (id === '纯字段联动') await userEvent.click(screen.getByRole('checkbox', { name: '企业账户' }));
     if (id === '提交错误聚焦') await userEvent.click(screen.getByRole('button', { name: submitZh }));
@@ -132,7 +133,7 @@ describe('FormsPage live locale metadata', () => {
     let complete!: () => void;
     const save = new Promise<void>(resolve => { complete = resolve; });
     const savedNames: string[] = [];
-    const changeLocale = mount({ saveName: async (name, context) => {
+    const changeLocale = await mount({ saveName: async (name, context) => {
       signal = context.signal;
       await save;
       if (!context.signal.aborted) savedNames.push(name);
@@ -163,7 +164,7 @@ describe('FormsPage live locale metadata', () => {
   });
 
   it('links the common heading to the bundled repository form guide for builtin fields, layout and DTO scenes', async () => {
-    mount();
+    await mount();
     for (const id of ['11种内建字段', '列布局与 JSX', '原值与 DTO']) {
       await scenario(id);
       const links = screen.getAllByRole('link');

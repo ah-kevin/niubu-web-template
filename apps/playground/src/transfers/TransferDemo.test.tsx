@@ -44,6 +44,7 @@ async function mount(codes = ['demo:transfer'], page = false) {
     scheduleRelease: vi.fn((release: () => void) => { releaseCallbacks.push(release); return vi.fn(); }),
   };
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const tree = (connected = true) => <I18nProvider instance={i18n}><PlaygroundApiContext value={connected ? api : { ...api, transfers: undefined as unknown as TransferApi }}><PlaygroundAuthProvider auth={auth}>{page ? <RequestPage /> : <TransferDemo downloadPorts={ports} />}</PlaygroundAuthProvider></PlaygroundApiContext></I18nProvider>;
   const view = render(tree());
   disposers.push(() => { auth.dispose(); i18n.dispose(); });

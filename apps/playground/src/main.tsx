@@ -196,18 +196,22 @@ export async function startPlayground(element: HTMLElement, options: Options = {
       matchMedia: query => window.matchMedia(query),
     });
     cleanups.push(() => theme.dispose());
+    let localeGeneration = 0;
     function applyPreferences() {
       const { core } = preferences.getSnapshot();
       theme.apply({ schemaVersion: 2, mode: core.theme.mode, density: core.density, appearance: core.theme });
-      if (core.locale !== i18n.getSnapshot().preferredLocale)
+      if (core.locale !== i18n.getSnapshot().preferredLocale) {
+        const currentLocaleGeneration = ++localeGeneration;
         void i18n
           .changeLocale(core.locale, i18n.requiredNamespaces)
           .then(() => {
-            if (!disposed) stores.ui.update({ localeError: null });
+            if (!disposed && currentLocaleGeneration === localeGeneration) stores.ui.update({ localeError: null });
           })
           .catch(() => {
-            if (!disposed) stores.ui.update({ localeError: 'Preferred language unavailable' });
+            if (!disposed && currentLocaleGeneration === localeGeneration)
+              stores.ui.update({ localeError: 'Preferred language unavailable' });
           });
+      }
     }
     applyPreferences();
     cleanups.push(preferences.subscribe(applyPreferences));

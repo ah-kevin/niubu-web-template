@@ -10,6 +10,7 @@ import { FeedbackPage, type ExampleRecord } from './FeedbackPage';
 
 it('switches flat-key control copy in place while retaining selected values and applied output', async () => {
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale(i18n.getSnapshot().preferredLocale, i18n.requiredNamespaces);
   const view = render(<I18nProvider instance={i18n}><ComponentsPage /></I18nProvider>);
   try {
     expect(screen.getByRole('heading', { name: '基础控件' })).toBeInTheDocument();
