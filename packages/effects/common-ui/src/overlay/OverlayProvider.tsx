@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -11,12 +11,12 @@ import { Button } from '@niubu/shadcn-ui/button';
 import { PendingOverlay } from '@niubu/shadcn-ui/pending-overlay';
 import { OverlayContext, useOverlayLabels } from './OverlayContext';
 import type { OverlayApi, OverlayOptions } from './types';
+import { captureOverlayFocus, restoreOverlayFocus } from './focus-restoration';
 
 type Entry = {
   id: number;
   kind: 'confirm' | 'alert';
   options: OverlayOptions;
-  trigger: HTMLElement | null;
   settle: (confirmed: boolean) => void;
 };
 
@@ -27,17 +27,21 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
   const mounted = useRef(true);
   const lifecycle = useRef(0);
   const initialFocus = useRef<HTMLButtonElement | null>(null);
+  const surface = useRef<HTMLDivElement | null>(null);
+  const returnTarget = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState<Entry | null>(null);
   const api = useMemo<OverlayApi>(() => {
     function enqueue(kind: Entry['kind'], options: OverlayOptions): Promise<boolean> {
       if (!mounted.current || options.signal?.aborted) return Promise.resolve(false);
+      if (entries.current.length === 0 && !surface.current?.contains(document.activeElement)) {
+        returnTarget.current = captureOverlayFocus();
+      }
       return new Promise(resolve => {
         let settled = false;
         const entry: Entry = {
           id: ++sequence.current,
           kind,
           options,
-          trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null,
           settle(confirmed) {
             if (settled) return;
             settled = true;
@@ -75,6 +79,10 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
     };
   }, [disposeIfCurrent]);
 
+  useLayoutEffect(() => {
+    if (active) initialFocus.current?.focus({ preventScroll: true });
+  }, [active]);
+
   function finish(entry: Entry, confirmed: boolean) {
     if (entries.current[0]?.id === entry.id) entry.settle(confirmed);
   }
@@ -82,7 +90,7 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
     <OverlayContext.Provider value={api}>
       {children}
       {active && (
-        <Suspense key={active.id} fallback={<PendingOverlay onCancel={() => finish(active, false)} />}>
+        <Suspense fallback={<PendingOverlay onCancel={() => finish(active, false)} />}>
           <AlertDialog
             open
             onOpenChange={open => {
@@ -90,9 +98,10 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
             }}
           >
             <AlertDialogContent
+              ref={surface}
               onOpenAutoFocus={event => {
                 event.preventDefault();
-                initialFocus.current?.focus();
+                initialFocus.current?.focus({ preventScroll: true });
               }}
               onEscapeKeyDown={event => {
                 event.preventDefault();
@@ -100,16 +109,16 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
               }}
               onCloseAutoFocus={event => {
                 event.preventDefault();
-                if (entries.current.length === 0 && active.trigger?.isConnected) active.trigger.focus();
+                if (entries.current.length === 0) restoreOverlayFocus(returnTarget.current, event.target);
               }}
             >
-              <AlertDialogHeader>
+              <AlertDialogHeader key={`header-${active.id}`}>
                 <AlertDialogTitle>{active.options.title}</AlertDialogTitle>
                 <AlertDialogDescription className={active.options.description == null ? 'sr-only' : undefined}>
                   {active.options.description}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
+              <AlertDialogFooter key={`footer-${active.id}`}>
                 {active.kind === 'confirm' && (
                   <Button ref={initialFocus} type="button" variant="outline" onClick={() => finish(active, false)}>
                     {labels.cancel}

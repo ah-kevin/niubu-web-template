@@ -1,12 +1,25 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { CommandSearch } from './CommandSearch';
 import CommandSearchDialog from './CommandSearchDialog';
 import type { ObjectSearchResult, SearchConfiguration } from './types';
 import { deferred, renderWidgets } from './widget-test-utils';
 const renderLink: SearchConfiguration['renderLink'] = props => <a {...props} />;
 const renderDialog = (props: React.ComponentProps<typeof CommandSearchDialog>) => <CommandSearchDialog {...props} />;
+
+it('focuses the initial search field without native viewport scrolling', async () => {
+  const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+  try {
+    await renderWidgets(<CommandSearch sessionKey="one" locale="en-US" pages={[]} renderLink={renderLink} renderDialog={renderDialog} />);
+    fireEvent.click(screen.getByRole('button', { name: /Search pages/ }));
+    const input = await screen.findByRole('searchbox');
+    expect(input).toHaveFocus();
+    const index = focus.mock.contexts.lastIndexOf(input);
+    expect(index).toBeGreaterThanOrEqual(0);
+    expect(focus.mock.calls[index]?.[0]).toEqual({ preventScroll: true });
+  } finally { focus.mockRestore(); }
+});
 
 it('searches only injected authorized items and preserves link keyboard navigation', async () => {
   await renderWidgets(<CommandSearch sessionKey="one" locale="en-US" pages={[{ id: 'page-a', title: 'Page Alpha', description: 'Visible section', href: '/alpha?view=list' }]} loadObjects={async () => ({ status: 'ready', data: [{ id: 'object-b', title: 'Object Beta', description: 'Visible object', href: '/beta' }] })} renderLink={renderLink} renderDialog={renderDialog} />);

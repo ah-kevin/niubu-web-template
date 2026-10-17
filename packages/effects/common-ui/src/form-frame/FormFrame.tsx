@@ -37,6 +37,7 @@ import { usePreviewServiceMode } from '../preview-service';
 import { createOperationOwner, type OperationLease } from '../form/operation';
 import { copyValue } from '../form/transforms';
 import { focusFirstInvalidControl } from '../form/focus';
+import { restoreOverlayFocus } from '../overlay/focus-restoration';
 
 export type FormGroupDefinition<T extends FieldValues> = {
   label: string;
@@ -333,7 +334,7 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
               const focus = returnFocus.current;
               returnFocus.current = null;
               if (mounted.current && focus?.generation === generation.current && focus.target.isConnected)
-                focus.target.focus();
+                restoreOverlayFocus(focus.target, event.target);
             }}
           >
             <AlertDialogHeader>

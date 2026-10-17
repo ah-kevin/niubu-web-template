@@ -6,6 +6,7 @@ import { useReturnPathResolver } from '../return-path';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@niubu/shadcn-ui/sheet';
 import { UnsavedGuard } from '../unsaved-guard';
+import { captureOverlayFocus, restoreOverlayFocus } from '../overlay/focus-restoration';
 
 export type QuickViewProps = {
   open: boolean;
@@ -39,7 +40,7 @@ export function QuickView({
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const unavailableReasonId = useId();
   const cannotPreserveDestination = dirty && !onNavigate;
-  if (pendingHref && !onNavigate) {
+  if ((!open && (confirmClose || pendingHref)) || (pendingHref && !onNavigate)) {
     setPendingHref(null);
     setConfirmClose(false);
   }
@@ -70,14 +71,12 @@ export function QuickView({
           closeLabel={t('common:close')}
           className="pattern-quick-view w-[min(100vw,640px)] max-w-[min(100vw,640px)] sm:max-w-[min(100vw,640px)] gap-0"
           onOpenAutoFocus={() => {
-            previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            previousFocus.current = captureOverlayFocus();
           }}
           onCloseAutoFocus={event => {
             const target = returnFocusRef?.current ?? previousFocus.current;
-            if (target?.isConnected) {
-              event.preventDefault();
-              target.focus();
-            }
+            event.preventDefault();
+            restoreOverlayFocus(target, event.target);
           }}
         >
           <SheetHeader className="border-b border-border pt-[26px] pr-[42px] pb-[22px] pl-[24px] [@media(max-width:700px)]:pl-[20px]">

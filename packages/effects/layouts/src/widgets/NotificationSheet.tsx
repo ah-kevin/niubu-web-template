@@ -28,11 +28,11 @@ export default function NotificationSheet({
           returnFocus();
         }}
       >
-        <SheetHeader className="border-b border-border px-[25px] pt-[29px] pb-[20px]">
+        <SheetHeader className="shrink-0 border-b border-border px-[25px] pt-[29px] pb-[20px]">
           <SheetTitle>{t('shell:notificationCenter')}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
-        <div className="notification-list px-[25px] py-[8px]">
+        <div className="notification-list min-h-0 flex-1 overflow-y-auto overscroll-contain px-[25px] py-[8px]">
           {items.length === 0 && (
             <p role="status" className="py-10 text-center text-sm text-muted-foreground">
               {t('shell:notificationEmpty')}
@@ -70,7 +70,7 @@ export default function NotificationSheet({
           ))}
         </div>
         {explanation && (
-          <div className="notification-foot mx-[25px] mt-auto mb-[25px] border-t border-border pt-[18px] text-[10px] text-muted-foreground">
+          <div className="notification-foot mx-[25px] mt-auto mb-[25px] shrink-0 border-t border-border pt-[18px] text-[10px] text-muted-foreground">
             {explanation}
           </div>
         )}

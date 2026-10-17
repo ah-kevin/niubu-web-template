@@ -1,5 +1,6 @@
 import { useTranslation } from '@niubu/locales/react';
 import { useRef, type ReactNode } from 'react';
+import { captureOverlayFocus, restoreOverlayFocus } from '../overlay/focus-restoration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,13 +27,11 @@ export function UnsavedGuard({ open, onStay, onLeave, preserveDraft = true, desc
     <AlertDialog open={open}>
       <AlertDialogContent
         onOpenAutoFocus={() => {
-          previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          previousFocus.current = captureOverlayFocus();
         }}
         onCloseAutoFocus={event => {
-          if (previousFocus.current?.isConnected) {
-            event.preventDefault();
-            previousFocus.current.focus();
-          }
+          event.preventDefault();
+          restoreOverlayFocus(previousFocus.current, event.target);
         }}
         onEscapeKeyDown={event => {
           event.preventDefault();

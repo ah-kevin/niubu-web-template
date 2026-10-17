@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { PendingOverlay } from '@niubu/shadcn-ui/pending-overlay';
 import { useOverlayLabels } from './OverlayContext';
 import type { OverlayCloseReason, OverlayProps } from './types';
+import { captureOverlayFocus, restoreOverlayFocus } from './focus-restoration';
 
 const fullscreenStyle: CSSProperties = {
   position: 'fixed',
@@ -95,11 +96,11 @@ export function OverlayFrame({
             style={fullscreen ? fullscreenStyle : undefined}
             {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
             onOpenAutoFocus={() => {
-              previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+              previousFocus.current = captureOverlayFocus();
             }}
             onCloseAutoFocus={event => {
               event.preventDefault();
-              if (previousFocus.current?.isConnected) previousFocus.current.focus();
+              restoreOverlayFocus(previousFocus.current, event.target);
             }}
             onEscapeKeyDown={event => {
               event.preventDefault();

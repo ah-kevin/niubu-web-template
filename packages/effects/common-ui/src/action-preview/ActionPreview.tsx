@@ -3,6 +3,7 @@ import { useId, useRef, useState, type ReactElement, type ReactNode } from 'reac
 import { Info } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { usePreviewServiceMode } from '../preview-service';
+import { restoreOverlayFocus } from '../overlay/focus-restoration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,7 @@ export function ActionPreview({ valid, children, reason, label, title, onReview 
   const [reviewed, setReviewed] = useState(false);
   const reasonId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
+  if (!valid && open) setOpen(false);
   return (
     <div className="pattern-action-preview">
       <Button
@@ -67,7 +69,7 @@ export function ActionPreview({ valid, children, reason, label, title, onReview 
           className="pattern-action-dialog min-w-0 max-h-[calc(100dvh-32px)] overflow-y-auto"
           onCloseAutoFocus={event => {
             event.preventDefault();
-            trigger.current?.focus();
+            restoreOverlayFocus(trigger.current, event.target);
           }}
         >
           <AlertDialogHeader>

@@ -80,7 +80,7 @@ export default function CommandSearchDialog({
         }}
         onOpenAutoFocus={event => {
           event.preventDefault();
-          inputRef.current?.focus();
+          inputRef.current?.focus({ preventScroll: true });
         }}
       >
         <DialogTitle>{t('shell:search.title')}</DialogTitle>

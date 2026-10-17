@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, within, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest';
 import { mountPlayground } from './playground-fixture';
 const fixtures:Array<Awaited<ReturnType<typeof mountPlayground>>>=[];
@@ -15,6 +16,17 @@ it('opens the real user menu and routes its scoped profile link to the actual sk
 });
 
 const lockCrypto={randomBytes:(size:number)=>new Uint8Array(size).fill(7),derive:async(password:string,salt:Uint8Array)=>Uint8Array.from({length:32},(_,index)=>((password.charCodeAt(index%password.length)||0)+(salt[index%salt.length]??0))%256)};
+it('returns a cancelled lock setup to the stable user-menu trigger', async () => {
+ const f=await mountPlayground({startup:{lockCrypto}});fixtures.push(f);
+ const trigger=await screen.findByRole('button',{name:'用户菜单'});
+ await userEvent.click(trigger);
+ await userEvent.click(await screen.findByRole('menuitem',{name:'锁屏'}));
+ const dialog=await screen.findByRole('dialog',{name:'设置本机界面锁'});
+ await userEvent.click(within(dialog).getByRole('button',{name:'关闭'}));
+ await waitFor(()=>expect(screen.queryByRole('dialog',{name:'设置本机界面锁'})).not.toBeInTheDocument());
+ expect(trigger.isConnected).toBe(true);
+ await waitFor(()=>expect(trigger).toHaveFocus());
+});
 async function menuAction(name:string){fireEvent.keyDown(screen.getByRole('button',{name:'用户菜单'}),{key:'ArrowDown'});fireEvent.click(await screen.findByRole('menuitem',{name}));}
 async function unlock(password='local-example'){
  const dialog=await screen.findByRole('dialog',{name:'本机界面已锁定'});

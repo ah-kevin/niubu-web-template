@@ -72,8 +72,16 @@ function PendingGuard({ onStay }: { onStay: () => void }) {
   return (
     <PendingOverlay
       onCancel={() => {
+        const active = document.activeElement;
         onStay();
-        if (previousFocus?.isConnected) previousFocus.focus();
+        if (
+          previousFocus?.isConnected &&
+          (active === previousFocus ||
+            active === document.body ||
+            !(active instanceof HTMLElement) ||
+            !active.isConnected)
+        )
+          previousFocus.focus({ preventScroll: true });
       }}
     />
   );

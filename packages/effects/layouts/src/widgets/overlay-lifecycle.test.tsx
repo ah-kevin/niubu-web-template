@@ -1,7 +1,7 @@
 import { lazy, StrictMode } from 'react';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { widgetIds } from '@niubu/core-preferences';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@niubu/shadcn-ui/dialog';
 import { PreferenceProvider } from '@niubu/preferences';
@@ -15,6 +15,39 @@ function Preferences({ contentId, onClose, returnFocus }: OverlayContentProps) {
 }
 const search = { locale: 'en-US', pages: [], renderLink: (props: React.ComponentProps<'a'> & { href: string }) => <a {...props} /> };
 const notifications = { items: [], renderLink: search.renderLink };
+
+it('returns focus after closing without asking the browser to scroll the launcher into view', async () => {
+  await renderWidgets(<DisplaySettings renderPreferences={props => <Preferences {...props} />} />);
+  const trigger = screen.getByRole('button', { name: 'Display preferences' });
+  fireEvent.click(trigger);
+  await screen.findByRole('dialog');
+  const focus = vi.spyOn(trigger, 'focus');
+  try {
+    await userEvent.setup().keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+  } finally { focus.mockRestore(); }
+});
+
+it('uses the main-content fallback when the launcher ancestor becomes hidden before close', async () => {
+  await renderWidgets(<><div data-testid="header"><DisplaySettings renderPreferences={props => <Preferences {...props} />} /></div><main id="main-content" tabIndex={-1}>Current page</main></>);
+  fireEvent.click(screen.getByRole('button', { name: 'Display preferences' }));
+  await screen.findByRole('dialog');
+  screen.getByTestId('header').style.display = 'none';
+  await userEvent.setup().keyboard('{Escape}');
+  await waitFor(() => expect(screen.getByRole('main')).toHaveFocus());
+});
+
+it('does not steal a newer focus choice while a closed dialog finishes focus cleanup', async () => {
+  await renderWidgets(<><DisplaySettings renderPreferences={props => <Preferences {...props} />} /><input aria-label="Next action" /></>);
+  fireEvent.click(screen.getByRole('button', { name: 'Display preferences' }));
+  await screen.findByRole('dialog');
+  fireEvent.click(screen.getByRole('button', { name: '关闭' }));
+  const next = screen.getByRole('textbox', { name: 'Next action' });
+  next.focus();
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+  expect(next).toHaveFocus();
+});
 
 it('cancels pending content without letting late resolution reopen or steal focus', async () => {
   const gate = deferred<{ default: typeof Preferences }>();

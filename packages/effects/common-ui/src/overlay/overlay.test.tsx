@@ -1,8 +1,9 @@
-import { StrictMode, lazy, useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
+import { StrictMode, lazy, useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Select } from '@niubu/shadcn-ui/select';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuPortal, DropdownMenuContent, DropdownMenuItem } from '@niubu/shadcn-ui/dropdown-menu';
 import { PendingOverlay } from '@niubu/shadcn-ui/pending-overlay';
 import * as alertDialog from '@niubu/shadcn-ui/alert-dialog';
 import { Modal } from './Modal';
@@ -113,6 +114,44 @@ describe.each([['Modal', Modal], ['Drawer', Drawer]] as const)('%s controlled sh
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('keeps a new ordinary input choice made in the same close commit', async () => {
+    function App() {
+      const [open, setOpen] = useState(false);
+      const started = useRef(false);
+      const next = useRef<HTMLInputElement>(null);
+      useLayoutEffect(() => {
+        if (open) started.current = true;
+        else if (started.current) next.current?.focus();
+      }, [open]);
+      return <><button onClick={() => setOpen(true)}>原入口</button><input ref={next} aria-label="关闭后选择的普通输入" /><Component open={open} onOpenChange={setOpen} title="关闭前编辑"><input aria-label="弹层内输入" /></Component></>;
+    }
+    render(<App />);
+    const entry = screen.getByRole('button', { name: '原入口' });
+    const next = screen.getByRole('textbox', { name: '关闭后选择的普通输入' });
+    await userEvent.click(entry);
+    const restore = vi.spyOn(entry, 'focus');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(next).toHaveFocus());
+    expect(restore).not.toHaveBeenCalled();
+    restore.mockRestore();
+  });
+
+  it('does not send the closing surface focus through an entry point after a replacement opens', async () => {
+    function App() {
+      const [step, setStep] = useState(0);
+      return <><button onClick={() => setStep(1)}>最初入口</button><Component open={step === 1} onOpenChange={open => { if (!open) setStep(0); }} title="旧编辑"><button onClick={() => setStep(2)}>切换新编辑</button></Component><Component open={step === 2} onOpenChange={open => { if (!open) setStep(0); }} title="新编辑"><input aria-label="新编辑字段" /></Component></>;
+    }
+    render(<App />);
+    const entry = screen.getByRole('button', { name: '最初入口' });
+    await userEvent.click(entry);
+    const restore = vi.spyOn(entry, 'focus');
+    await userEvent.click(screen.getByRole('button', { name: '切换新编辑' }));
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+    expect(screen.getByRole('dialog', { name: '新编辑' })).toContainElement(document.activeElement as HTMLElement);
+    expect(restore).not.toHaveBeenCalled();
+    restore.mockRestore();
+  });
+
   it('cancels suspended content through the shared pending registry and never mounts a late result', async () => {
     const module = deferred<{ default: () => ReactNode }>();
     const Content = lazy(() => module.promise);
@@ -137,6 +176,34 @@ describe.each([false, true])('app local overlay queue strict=%s', strict => {
     act(() => { alert = view.api.alert({ title: '键盘提示' }); });
     expect(screen.getByRole('button', { name: '确定' })).toHaveFocus();
     await userEvent.keyboard('{Enter}'); await expect(alert).resolves.toBeUndefined();
+  });
+
+  it('keeps one mounted surface and safely focuses each queued entry', async () => {
+    const view = service(strict); let first!: Promise<boolean>; let second!: Promise<void>; let third!: Promise<boolean>;
+    act(() => { first = view.api.confirm({ title: '稳定第一项' }); second = view.api.alert({ title: '稳定第二项' }); third = view.api.confirm({ title: '稳定第三项' }); });
+    const surface = screen.getByRole('alertdialog');
+    await userEvent.click(screen.getByRole('button', { name: '取消' }));
+    await expect(first).resolves.toBe(false);
+    expect(screen.getByRole('alertdialog', { name: '稳定第二项' })).toBe(surface);
+    expect(screen.getByRole('button', { name: '确定' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}'); await second;
+    expect(screen.getByRole('alertdialog', { name: '稳定第三项' })).toBe(surface);
+    expect(screen.getByRole('button', { name: '取消' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}'); await third;
+  });
+
+  it('returns a growing queue to its original connected entry point without scrolling', async () => {
+    const view = service(strict);
+    const trigger = document.createElement('button'); document.body.append(trigger); trigger.focus();
+    let first!: Promise<boolean>; let next!: Promise<void>;
+    act(() => { first = view.api.confirm({ title: '入口项' }); });
+    const restore = vi.spyOn(trigger, 'focus');
+    act(() => { next = view.api.alert({ title: '从已打开弹层追加' }); });
+    await userEvent.click(screen.getByRole('button', { name: '确定' })); await first;
+    await userEvent.keyboard('{Escape}'); await next;
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(restore).toHaveBeenCalledWith({ preventScroll: true });
+    restore.mockRestore(); trigger.remove();
   });
 
   it('serves FIFO confirm/alert requests, resolves each once and remains usable', async () => {
@@ -268,4 +335,17 @@ it('Escape dismisses select, then confirm, then the pending parent, one owner at
   expect(screen.queryByRole('listbox')).not.toBeInTheDocument(); expect(screen.getByRole('alertdialog')).toBeInTheDocument(); expect(cancelPending).not.toHaveBeenCalled();
   await userEvent.keyboard('{Escape}'); await expect(confirmation).resolves.toBe(false); expect(cancelPending).not.toHaveBeenCalled();
   await userEvent.keyboard('{Escape}'); expect(cancelPending).toHaveBeenCalledTimes(1);
+});
+
+it('returns menu-originated service confirmation to its stable menu trigger', async () => {
+  function Caller() {
+    const api = useOverlay();
+    return <DropdownMenu><DropdownMenuTrigger asChild><button>服务菜单入口</button></DropdownMenuTrigger><DropdownMenuPortal><DropdownMenuContent><DropdownMenuItem onSelect={() => { void api.confirm({ title: '菜单服务确认' }); }}>打开服务确认</DropdownMenuItem></DropdownMenuContent></DropdownMenuPortal></DropdownMenu>;
+  }
+  render(<OverlayProvider><Caller /></OverlayProvider>);
+  const trigger = screen.getByRole('button', { name: '服务菜单入口' });
+  await userEvent.click(trigger); await userEvent.click(screen.getByRole('menuitem', { name: '打开服务确认' }));
+  expect(screen.getByRole('alertdialog', { name: '菜单服务确认' })).toBeVisible();
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(trigger).toHaveFocus());
 });
