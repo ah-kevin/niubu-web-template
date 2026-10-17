@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { createElement, useMemo } from 'react';
+import { icons } from '../icons';
 import {
   createPageIdentityResolver,
   type ResolvedPageDescriptor,
@@ -59,7 +60,14 @@ export function usePlaygroundRouting(): PageRoutingRuntime {
         }
       },
       home: scope => describe({ pathname: '/home', search: withScope('', scope), hash: '' }),
-      renderTab: tab => ({ label: t(registry.routes.find(r => r.id === tab.routeId)?.titleKey ?? 'app:home') }),
+      renderTab: tab => {
+        const route = registry.routes.find(r => r.id === tab.routeId);
+        const Icon = icons.resolve(route?.iconToken ?? 'home');
+        return {
+          label: t(route?.titleKey ?? 'app:home'),
+          icon: Icon ? createElement(Icon, { width: 14, height: 14, 'aria-hidden': true }) : undefined,
+        };
+      },
       isContentRoute: location => !!match(location.pathname, location.search),
       intentStateKey: pageIntentStateKey(appIdentity.storageNamespace),
     };

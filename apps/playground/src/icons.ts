@@ -1,5 +1,12 @@
 import {
   LayoutGrid,
+  Boxes,
+  ClipboardList,
+  Database,
+  Bell,
+  Globe,
+  SlidersHorizontal,
+  Wrench,
   ArrowRight,
   ArrowUpRight,
   Monitor,
@@ -14,6 +21,14 @@ import {
 export const icons = createIconRegistry(
   [
     { name: 'home', icon: LayoutGrid },
+    { name: 'layout-grid', icon: LayoutGrid },
+    { name: 'boxes', icon: Boxes },
+    { name: 'clipboard-list', icon: ClipboardList },
+    { name: 'database', icon: Database },
+    { name: 'bell', icon: Bell },
+    { name: 'globe', icon: Globe },
+    { name: 'sliders-horizontal', icon: SlidersHorizontal },
+    { name: 'wrench', icon: Wrench },
     { name: 'arrow-right-left', icon: ArrowRight },
     { name: 'external-link', icon: ArrowUpRight },
     { name: 'monitor', icon: Monitor },

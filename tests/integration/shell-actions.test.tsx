@@ -67,7 +67,7 @@ it('preserves the same dirty form and owner through lock, same-person reauthenti
  const reauth=await screen.findByRole('dialog',{name:'会话已过期'});
  expect(reauth.closest('[inert]')).toBeNull();expect(reauth).not.toHaveAttribute('aria-hidden','true');
  expect(screen.queryByRole('dialog',{name:'本机界面已锁定'})).not.toBeInTheDocument();
- fireEvent.change(within(reauth).getByLabelText('邮箱'),{target:{value:'demo@playground.invalid'}});fireEvent.change(within(reauth).getByLabelText('密码'),{target:{value:'demo-only'}});fireEvent.click(within(reauth).getByRole('button',{name:'登录'}));
+ fireEvent.change(within(reauth).getByLabelText('账号'),{target:{value:'demo@playground.invalid'}});fireEvent.change(within(reauth).getByLabelText('密码'),{target:{value:'demo-only'}});fireEvent.click(within(reauth).getByRole('button',{name:'登录'}));
  await screen.findByRole('dialog',{name:'本机界面已锁定'});expect(f.runtime.lock).toBe(owner);expect(input.isConnected).toBe(true);expect(input).toHaveValue('Locked draft');expect(f.runtime.stores.interaction.getSnapshot().dirty).toBe(true);
  await unlock();expect(screen.getByRole('textbox',{name:'名称'})).toBe(input);expect(input).toHaveValue('Locked draft');
  await waitFor(()=>expect(screen.getByRole('button',{name:'保存'})).toBeEnabled());fireEvent.click(screen.getByRole('button',{name:'保存'}));

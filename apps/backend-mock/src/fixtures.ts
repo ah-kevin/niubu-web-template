@@ -35,8 +35,9 @@ export const publicMenu = [home] as const satisfies readonly BackendMenuItem[];
 export const systemMenu = {
   kind: 'group',
   id: 'system',
-  title: 'System',
-  order: 15,
+  title: 'app:navigation.system',
+  icon: 'settings',
+  order: 40,
   children: ['users', 'roles', 'menus', 'departments'].map(resource => ({
     kind: 'page' as const,
     id: `system-${resource}`,
@@ -55,75 +56,128 @@ export const systemWriteCodes = [
   'system:menus:write',
   'system:departments:write',
 ] as const;
+const overviewMenu = {
+  kind: 'group',
+  id: 'workspace-pages',
+  title: 'app:navigation.overview',
+  icon: 'home',
+  order: 10,
+  children: [home],
+} as const satisfies BackendMenuItem;
 export const examplesMenu = {
   kind: 'group',
   id: 'playground-examples',
-  title: 'Playground Examples',
-  order: 16,
+  title: 'app:navigation.components',
+  icon: 'boxes',
+  order: 20,
   children: [
     { kind: 'page', id: 'example-forms', pageId: 'playground.examples.forms' },
     { kind: 'page', id: 'example-tables', pageId: 'playground.examples.tables' },
     { kind: 'page', id: 'example-components', pageId: 'playground.examples.components' },
     { kind: 'page', id: 'example-feedback', pageId: 'playground.examples.feedback' },
-    { kind: 'page', id: 'example-access', pageId: 'playground.examples.access' },
-    { kind: 'page', id: 'example-navigation', pageId: 'playground.examples.navigation' },
-    { kind: 'page', id: 'example-browser', pageId: 'playground.examples.browser' },
-    { kind: 'page', id: 'example-requests', pageId: 'playground.examples.requests' },
-    { kind: 'page', id: 'example-query', pageId: 'playground.examples.query' },
-    { kind: 'page', id: 'example-preferences', pageId: 'playground.examples.preferences' },
-    { kind: 'page', id: 'example-tabs', pageId: 'playground.examples.tabs' },
-    { kind: 'page', id: 'example-tab-detail', pageId: 'playground.examples.tab-detail', hidden: true },
-    { kind: 'page', id: 'example-navigation-second', pageId: 'playground.examples.navigation-second', hidden: true },
-    { kind: 'page', id: 'example-navigation-third', pageId: 'playground.examples.navigation-third', hidden: true },
-    { kind: 'page', id: 'example-navigation-deep', pageId: 'playground.examples.navigation-deep', hidden: true },
-    { kind: 'page', id: 'example-navigation-detail', pageId: 'playground.examples.navigation-detail', hidden: true },
   ],
 } as const satisfies BackendMenuItem;
-export const scopedFixtures = {
-  north: {
-    menu: [
+const northNetworkMenu = [
+  { kind: 'page', id: 'request', pageId: 'playground.request', icon: 'arrow-right-left', badge: 'Demo' },
+  {
+    kind: 'external',
+    id: 'documentation',
+    title: 'app:navigation.documentation',
+    href: 'https://example.com/docs',
+    icon: 'external-link',
+    order: 20,
+    openInNewWindow: true,
+  },
+  {
+    kind: 'iframe',
+    id: 'frame-demo',
+    title: 'app:navigation.embedded',
+    src: '/frame-demo.html',
+    icon: 'monitor',
+    order: 30,
+  },
+  // Deliberately unknown: consumers must diagnose and skip this item only.
+  { kind: 'page', id: 'unknown-demo', pageId: 'unknown.page', title: 'app:navigation.unknown', order: 40 },
+] as const satisfies readonly BackendMenuItem[];
+function featureMenu(networkEntries: readonly BackendMenuItem[] = []): BackendMenuItem {
+  return {
+    kind: 'group',
+    id: 'playground-features',
+    title: 'app:navigation.features',
+    icon: 'wrench',
+    order: 30,
+    children: [
       {
         kind: 'group',
-        id: 'workspace-pages',
-        title: 'Workspace',
-        order: 10,
+        id: 'feature-application',
+        title: 'app:navigation.application',
+        icon: 'layout-grid',
         children: [
-          home,
-          { kind: 'page', id: 'request', pageId: 'playground.request', icon: 'arrow-right-left', badge: 'Demo' },
+          { kind: 'page', id: 'example-access', pageId: 'playground.examples.access' },
+          { kind: 'page', id: 'example-navigation', pageId: 'playground.examples.navigation' },
+          { kind: 'page', id: 'example-tabs', pageId: 'playground.examples.tabs' },
+          { kind: 'page', id: 'example-tab-detail', pageId: 'playground.examples.tab-detail', hidden: true },
+          {
+            kind: 'page',
+            id: 'example-navigation-second',
+            pageId: 'playground.examples.navigation-second',
+            hidden: true,
+          },
+          {
+            kind: 'page',
+            id: 'example-navigation-third',
+            pageId: 'playground.examples.navigation-third',
+            hidden: true,
+          },
+          { kind: 'page', id: 'example-navigation-deep', pageId: 'playground.examples.navigation-deep', hidden: true },
+          {
+            kind: 'page',
+            id: 'example-navigation-detail',
+            pageId: 'playground.examples.navigation-detail',
+            hidden: true,
+          },
         ],
       },
-      systemMenu,
-      examplesMenu,
       {
-        kind: 'external',
-        id: 'documentation',
-        title: 'Documentation',
-        href: 'https://example.com/docs',
-        icon: 'external-link',
-        order: 20,
-        openInNewWindow: true,
+        kind: 'group',
+        id: 'feature-browser',
+        title: 'app:navigation.browser',
+        icon: 'monitor',
+        children: [
+          { kind: 'page', id: 'example-browser', pageId: 'playground.examples.browser' },
+          { kind: 'page', id: 'example-preferences', pageId: 'playground.examples.preferences' },
+        ],
       },
-      { kind: 'iframe', id: 'frame-demo', title: 'Embedded demo', src: '/frame-demo.html', icon: 'monitor', order: 30 },
-      // Deliberately unknown: consumers must diagnose and skip this item only.
-      { kind: 'page', id: 'unknown-demo', pageId: 'unknown.page', title: 'Unknown page demo', order: 40 },
-      profile,
+      {
+        kind: 'group',
+        id: 'feature-network',
+        title: 'app:navigation.network',
+        icon: 'globe',
+        children: [
+          ...networkEntries.filter(item => item.kind === 'page' && item.id === 'request'),
+          { kind: 'page', id: 'example-requests', pageId: 'playground.examples.requests' },
+          { kind: 'page', id: 'example-query', pageId: 'playground.examples.query' },
+          ...networkEntries.filter(item => item.id !== 'request'),
+        ],
+      },
     ],
+  };
+}
+const featuresMenu = featureMenu();
+export const scopedFixtures = {
+  north: {
+    menu: [overviewMenu, examplesMenu, featureMenu(northNetworkMenu), systemMenu, profile],
     codes: ['demo:read', 'demo:echo', 'demo:transfer', ...systemReadCodes, ...systemWriteCodes],
   },
-  south: { menu: [...publicMenu, examplesMenu, profile], codes: ['demo:read'] },
+  south: { menu: [overviewMenu, examplesMenu, featuresMenu, profile], codes: ['demo:read'] },
 } as const satisfies Record<string, { menu: readonly BackendMenuItem[]; codes: readonly string[] }>;
 
 const secondScopedFixtures = {
   north: {
-    menu: [
-      { kind: 'group', id: 'workspace-pages', title: 'Workspace', order: 10, children: [home] },
-      systemMenu,
-      examplesMenu,
-      profile,
-    ],
+    menu: [overviewMenu, examplesMenu, featuresMenu, systemMenu, profile],
     codes: ['demo:read', ...systemReadCodes],
   },
-  south: { menu: [...publicMenu, examplesMenu, profile], codes: ['demo:read'] },
+  south: { menu: [overviewMenu, examplesMenu, featuresMenu, profile], codes: ['demo:read'] },
 } as const satisfies Record<string, { menu: readonly BackendMenuItem[]; codes: readonly string[] }>;
 
 export const syntheticAccounts = [

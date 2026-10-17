@@ -1,3 +1,4 @@
+import { Button } from '@niubu/shadcn-ui/button';
 import { useFeaturesText } from './copy';
 import { z } from 'zod';
 import type { PreferenceExtension } from '@niubu/core-preferences';
@@ -26,9 +27,9 @@ function BusinessPreferences() {
           summary: value.showSummary ? t('preferences.visible') : t('preferences.hidden'),
         })}
       </p>
-      <button type="button" onClick={() => update({ layout: 'wide', showSummary: false })}>
+      <Button type="button" onClick={() => update({ layout: 'wide', showSummary: false })}>
         {t('preferences.widePreset')}
-      </button>
+      </Button>
       <label>
         <input
           type="checkbox"
@@ -37,9 +38,9 @@ function BusinessPreferences() {
         />
         {t('preferences.showSummary')}
       </label>
-      <button type="button" onClick={() => reset()}>
+      <Button type="button" onClick={() => reset()}>
         {t('preferences.reset')}
-      </button>
+      </Button>
       <div>
         {value.layout === 'wide' ? t('preferences.wide') : t('preferences.balanced')}
         {value.showSummary && <p>{t('preferences.summary')}</p>}
@@ -52,7 +53,7 @@ function BusinessPreferences() {
 export function PreferencesPage(): React.JSX.Element {
   const { t } = useFeaturesText();
   return (
-    <div className="space-y-4 p-4">
+    <div className="playground-page example-page feature-example-page">
       <h1>{t('preferences.title')}</h1>
       <p>{t('preferences.help')}</p>
       <SyntheticPreferences>

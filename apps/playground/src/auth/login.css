@@ -1,0 +1,88 @@
+.template-login-layout {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  background: var(--card, #fff);
+  color: var(--foreground, #18181b);
+}
+.template-login-layout::before {
+  content: '';
+  position: absolute;
+  inset: 0 50% 0 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 45% 48%, #dfe7ff 0, #edf1ff 47%, #f4f7ff 100%);
+}
+.template-login-layout .public-shell { background: transparent; min-height: 100dvh; }
+.template-login-layout .public-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 100px;
+  padding: 0 40px;
+}
+.template-login-layout .public-grid {
+  min-height: 100dvh;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.template-login-layout .public-main { min-width: 0; padding: 112px 40px 80px; }
+.template-login-layout .public-footer { display: none; }
+.template-login-art { display: grid; place-items: center; min-width: 0; padding: 110px 24px 80px; color: #7187dc; }
+.template-login-art > svg { width: min(100%, 560px); height: auto; }
+.template-auth { width: 100%; max-width: 380px; min-width: 0; }
+.template-auth .auth-card { width: 100%; }
+.template-auth .auth-card > .eyebrow:empty,
+.template-auth .auth-card > .auth-intro:empty { display: none; }
+.template-auth .auth-card > h1 {
+  margin: 0 0 32px;
+  font-size: 30px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -.035em;
+}
+.template-auth .auth-card form { margin-top: 0; }
+.template-auth .form-field { margin-bottom: 23px; }
+.template-auth .form-field label { margin-bottom: 9px; font-size: 14px; font-weight: 500; line-height: 1.5; }
+.template-auth .field-label-row { display: block; }
+.template-auth .form-field input {
+  height: 46px;
+  border: 1px solid var(--control-border, #767680);
+  border-radius: 6px;
+  padding: 0 14px;
+  background: var(--card, #fff);
+  color: var(--foreground, #18181b);
+  font-size: 14px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.template-auth .form-field input:hover { border-color: var(--primary-text, #4268ee); }
+.template-auth .form-field input:focus-visible {
+  outline: 0;
+  border-color: var(--ring, #4268ee);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #4268ee) 14%, transparent);
+}
+.template-auth .form-field input[aria-invalid='true'] { border-color: var(--destructive, #b83b3b); }
+.template-auth .form-field input[aria-invalid='true']:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive, #b83b3b) 14%, transparent); }
+.template-auth .auth-submit[data-slot='button'] {
+  height: 46px;
+  margin-top: 5px;
+  border-radius: 6px;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.template-auth .auth-card .submission-state[role='alert'] { background: color-mix(in srgb, var(--destructive) 7%, var(--card)); color: var(--destructive); }
+.template-auth[data-expired='true'] { max-width: none; }
+.template-auth[data-expired='true'] .auth-card > h1 { font-size: 24px; margin-bottom: 24px; }
+:root[data-theme='dark'] .template-login-layout::before { background: radial-gradient(ellipse at 45% 48%, #242f53, #1a2138 60%, #191e2d); }
+@media (max-width: 800px) {
+  .template-login-layout::before, .template-login-art { display: none; }
+  .template-login-layout .public-grid { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100dvh; }
+  .template-login-layout .public-header { height: 88px; padding: 0 24px; }
+  .template-login-layout .public-main { min-height: 100dvh; padding: 128px 24px 64px; }
+  .template-auth .auth-card > h1 { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .template-auth .form-field input { transition: none; }
+}

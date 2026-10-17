@@ -11,7 +11,7 @@ export const appIdentity: PreferenceIdentity = Object.freeze({
 });
 export const appDefaults: DeepPartial<CorePreferences> = Object.freeze({
   theme: Object.freeze({ mode: 'system' }),
-  tabbar: Object.freeze({ enabled: false }),
+  tabbar: Object.freeze({ enabled: true }),
   copyright: Object.freeze({ companyName: 'Template Playground' }),
 });
 export const appPolicy: DeepPartial<CorePreferences> = Object.freeze({});

@@ -5,24 +5,306 @@ import { createMockBackend } from './dispatcher';
 import type { MockRequest, MockResponse } from './dispatcher';
 
 type Tokens = { accessToken: string; refreshToken: string; tokenType: string; expiresIn: number };
-const expectedExamplesMenu = {kind:'group',id:'playground-examples',title:'Playground Examples',order:16,children:[
-  {kind:'page',id:'example-forms',pageId:'playground.examples.forms'},
-  {kind:'page',id:'example-tables',pageId:'playground.examples.tables'},
-  {kind:'page',id:'example-components',pageId:'playground.examples.components'},
-  {kind:'page',id:'example-feedback',pageId:'playground.examples.feedback'},
-  {kind:'page',id:'example-access',pageId:'playground.examples.access'},
-  {kind:'page',id:'example-navigation',pageId:'playground.examples.navigation'},
-  {kind:'page',id:'example-browser',pageId:'playground.examples.browser'},
-  {kind:'page',id:'example-requests',pageId:'playground.examples.requests'},
-  {kind:'page',id:'example-query',pageId:'playground.examples.query'},
-  {kind:'page',id:'example-preferences',pageId:'playground.examples.preferences'},
-  {kind:'page',id:'example-tabs',pageId:'playground.examples.tabs'},
-  {kind:'page',id:'example-tab-detail',pageId:'playground.examples.tab-detail',hidden:true},
-  {kind:'page',id:'example-navigation-second',pageId:'playground.examples.navigation-second',hidden:true},
-  {kind:'page',id:'example-navigation-third',pageId:'playground.examples.navigation-third',hidden:true},
-  {kind:'page',id:'example-navigation-deep',pageId:'playground.examples.navigation-deep',hidden:true},
-  {kind:'page',id:'example-navigation-detail',pageId:'playground.examples.navigation-detail',hidden:true},
-]} as const;
+const expectedOverviewMenu = {
+  kind: 'group',
+  id: 'workspace-pages',
+  title: 'app:navigation.overview',
+  icon: 'home',
+  order: 10,
+  children: [
+    {
+      kind: 'page',
+      id: 'home',
+      pageId: 'playground.home',
+      icon: 'home',
+    },
+  ],
+} as const;
+const expectedSystemMenu = {
+  kind: 'group',
+  id: 'system',
+  title: 'app:navigation.system',
+  icon: 'settings',
+  order: 40,
+  children: [
+    {
+      kind: 'page',
+      id: 'system-users',
+      pageId: 'playground.system.users',
+    },
+    {
+      kind: 'page',
+      id: 'system-roles',
+      pageId: 'playground.system.roles',
+    },
+    {
+      kind: 'page',
+      id: 'system-menus',
+      pageId: 'playground.system.menus',
+    },
+    {
+      kind: 'page',
+      id: 'system-departments',
+      pageId: 'playground.system.departments',
+    },
+  ],
+} as const;
+const expectedExamplesMenu = {
+  kind: 'group',
+  id: 'playground-examples',
+  title: 'app:navigation.components',
+  icon: 'boxes',
+  order: 20,
+  children: [
+    {
+      kind: 'page',
+      id: 'example-forms',
+      pageId: 'playground.examples.forms',
+    },
+    {
+      kind: 'page',
+      id: 'example-tables',
+      pageId: 'playground.examples.tables',
+    },
+    {
+      kind: 'page',
+      id: 'example-components',
+      pageId: 'playground.examples.components',
+    },
+    {
+      kind: 'page',
+      id: 'example-feedback',
+      pageId: 'playground.examples.feedback',
+    },
+  ],
+} as const;
+const expectedFeaturesMenu = {
+  kind: 'group',
+  id: 'playground-features',
+  title: 'app:navigation.features',
+  icon: 'wrench',
+  order: 30,
+  children: [
+    {
+      kind: 'group',
+      id: 'feature-application',
+      title: 'app:navigation.application',
+      icon: 'layout-grid',
+      children: [
+        {
+          kind: 'page',
+          id: 'example-access',
+          pageId: 'playground.examples.access',
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation',
+          pageId: 'playground.examples.navigation',
+        },
+        {
+          kind: 'page',
+          id: 'example-tabs',
+          pageId: 'playground.examples.tabs',
+        },
+        {
+          kind: 'page',
+          id: 'example-tab-detail',
+          pageId: 'playground.examples.tab-detail',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-second',
+          pageId: 'playground.examples.navigation-second',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-third',
+          pageId: 'playground.examples.navigation-third',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-deep',
+          pageId: 'playground.examples.navigation-deep',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-detail',
+          pageId: 'playground.examples.navigation-detail',
+          hidden: true,
+        },
+      ],
+    },
+    {
+      kind: 'group',
+      id: 'feature-browser',
+      title: 'app:navigation.browser',
+      icon: 'monitor',
+      children: [
+        {
+          kind: 'page',
+          id: 'example-browser',
+          pageId: 'playground.examples.browser',
+        },
+        {
+          kind: 'page',
+          id: 'example-preferences',
+          pageId: 'playground.examples.preferences',
+        },
+      ],
+    },
+    {
+      kind: 'group',
+      id: 'feature-network',
+      title: 'app:navigation.network',
+      icon: 'globe',
+      children: [
+        {
+          kind: 'page',
+          id: 'example-requests',
+          pageId: 'playground.examples.requests',
+        },
+        {
+          kind: 'page',
+          id: 'example-query',
+          pageId: 'playground.examples.query',
+        },
+      ],
+    },
+  ],
+} as const;
+const expectedNorthFeaturesMenu = {
+  kind: 'group',
+  id: 'playground-features',
+  title: 'app:navigation.features',
+  icon: 'wrench',
+  order: 30,
+  children: [
+    {
+      kind: 'group',
+      id: 'feature-application',
+      title: 'app:navigation.application',
+      icon: 'layout-grid',
+      children: [
+        {
+          kind: 'page',
+          id: 'example-access',
+          pageId: 'playground.examples.access',
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation',
+          pageId: 'playground.examples.navigation',
+        },
+        {
+          kind: 'page',
+          id: 'example-tabs',
+          pageId: 'playground.examples.tabs',
+        },
+        {
+          kind: 'page',
+          id: 'example-tab-detail',
+          pageId: 'playground.examples.tab-detail',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-second',
+          pageId: 'playground.examples.navigation-second',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-third',
+          pageId: 'playground.examples.navigation-third',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-deep',
+          pageId: 'playground.examples.navigation-deep',
+          hidden: true,
+        },
+        {
+          kind: 'page',
+          id: 'example-navigation-detail',
+          pageId: 'playground.examples.navigation-detail',
+          hidden: true,
+        },
+      ],
+    },
+    {
+      kind: 'group',
+      id: 'feature-browser',
+      title: 'app:navigation.browser',
+      icon: 'monitor',
+      children: [
+        {
+          kind: 'page',
+          id: 'example-browser',
+          pageId: 'playground.examples.browser',
+        },
+        {
+          kind: 'page',
+          id: 'example-preferences',
+          pageId: 'playground.examples.preferences',
+        },
+      ],
+    },
+    {
+      kind: 'group',
+      id: 'feature-network',
+      title: 'app:navigation.network',
+      icon: 'globe',
+      children: [
+        {
+          kind: 'page',
+          id: 'request',
+          pageId: 'playground.request',
+          icon: 'arrow-right-left',
+          badge: 'Demo',
+        },
+        {
+          kind: 'page',
+          id: 'example-requests',
+          pageId: 'playground.examples.requests',
+        },
+        {
+          kind: 'page',
+          id: 'example-query',
+          pageId: 'playground.examples.query',
+        },
+        {
+          kind: 'external',
+          id: 'documentation',
+          title: 'app:navigation.documentation',
+          href: 'https://example.com/docs',
+          icon: 'external-link',
+          order: 20,
+          openInNewWindow: true,
+        },
+        {
+          kind: 'iframe',
+          id: 'frame-demo',
+          title: 'app:navigation.embedded',
+          src: '/frame-demo.html',
+          icon: 'monitor',
+          order: 30,
+        },
+        {
+          kind: 'page',
+          id: 'unknown-demo',
+          pageId: 'unknown.page',
+          title: 'app:navigation.unknown',
+          order: 40,
+        },
+      ],
+    },
+  ],
+} as const;
 
 const loginRequest: MockRequest = {
   method: 'POST',
@@ -47,7 +329,7 @@ describe('mock backend public contract', () => {
     });
   });
   it('exposes only registered public menu ids before login', async () => {
-    expect(jsonBody((await createMockBackend().dispatch({ method: 'GET', path: '/api/menu' }))).data).toEqual([
+    expect(jsonBody(await createMockBackend().dispatch({ method: 'GET', path: '/api/menu' })).data).toEqual([
       { kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },
     ]);
   });
@@ -126,7 +408,7 @@ describe('mock sessions and scope', () => {
       accessToken: expect.any(String),
     });
     const request = { method: 'GET', path: '/api/user', headers: auth(token.accessToken) };
-    expect(jsonBody((await a.dispatch(request))).data).toEqual({
+    expect(jsonBody(await a.dispatch(request)).data).toEqual({
       id: 'demo-user',
       name: 'Demo User',
       roles: ['admin'],
@@ -157,7 +439,7 @@ describe('mock sessions and scope', () => {
       failure(await user(first.accessToken), 401, ACCESS_EXPIRED_CODE);
       const refresh = () =>
         backend.dispatch({ method: 'POST', path: '/api/auth/refresh', body: { refreshToken: first.refreshToken } });
-      const second = jsonBody((await refresh())).data as Tokens;
+      const second = jsonBody(await refresh()).data as Tokens;
       expect(second.refreshToken).toBe(first.refreshToken);
       expect(second.accessToken).not.toBe(first.accessToken);
       expect((await user(second.accessToken)).status).toBe(200);
@@ -202,48 +484,11 @@ describe('mock sessions and scope', () => {
       [
         'north',
         [
-          {
-            kind: 'group',
-            id: 'workspace-pages',
-            title: 'Workspace',
-            order: 10,
-            children: [
-              { kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },
-              { kind: 'page', id: 'request', pageId: 'playground.request', icon: 'arrow-right-left', badge: 'Demo' },
-            ],
-          },
-          {
-            kind: 'group',
-            id: 'system',
-            title: 'System',
-            order: 15,
-            children: [
-              { kind: 'page', id: 'system-users', pageId: 'playground.system.users' },
-              { kind: 'page', id: 'system-roles', pageId: 'playground.system.roles' },
-              { kind: 'page', id: 'system-menus', pageId: 'playground.system.menus' },
-              { kind: 'page', id: 'system-departments', pageId: 'playground.system.departments' },
-            ],
-          },
+          expectedOverviewMenu,
           expectedExamplesMenu,
-          {
-            kind: 'external',
-            id: 'documentation',
-            title: 'Documentation',
-            href: 'https://example.com/docs',
-            icon: 'external-link',
-            order: 20,
-            openInNewWindow: true,
-          },
-          {
-            kind: 'iframe',
-            id: 'frame-demo',
-            title: 'Embedded demo',
-            src: '/frame-demo.html',
-            icon: 'monitor',
-            order: 30,
-          },
-          { kind: 'page', id: 'unknown-demo', pageId: 'unknown.page', title: 'Unknown page demo', order: 40 },
-          {kind:'page',id:'profile',pageId:'playground.profile',hidden:true},
+          expectedNorthFeaturesMenu,
+          expectedSystemMenu,
+          { kind: 'page', id: 'profile', pageId: 'playground.profile', hidden: true },
         ],
         [
           'demo:read',
@@ -259,11 +504,20 @@ describe('mock sessions and scope', () => {
           'system:departments:write',
         ],
       ],
-      ['south', [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },expectedExamplesMenu,{kind:'page',id:'profile',pageId:'playground.profile',hidden:true}], ['demo:read']],
+      [
+        'south',
+        [
+          expectedOverviewMenu,
+          expectedExamplesMenu,
+          expectedFeaturesMenu,
+          { kind: 'page', id: 'profile', pageId: 'playground.profile', hidden: true },
+        ],
+        ['demo:read'],
+      ],
     ] as const) {
       const request = { method: 'GET', query: { scopeKind: 'workspace', scopeId: id }, headers: auth(accessToken) };
-      expect(jsonBody((await backend.dispatch({ ...request, path: '/api/menu' }))).data).toEqual(pages);
-      expect(jsonBody((await backend.dispatch({ ...request, path: '/api/auth/codes' }))).data).toEqual(codes);
+      expect(jsonBody(await backend.dispatch({ ...request, path: '/api/menu' })).data).toEqual(pages);
+      expect(jsonBody(await backend.dispatch({ ...request, path: '/api/auth/codes' })).data).toEqual(codes);
     }
   });
   it('resolves the second authoritative identity and reduced grants without changing the first session', async () => {
@@ -271,7 +525,7 @@ describe('mock sessions and scope', () => {
     const first = await login(backend);
     const second = await login(backend, 'second@playground.invalid');
     const request = { method: 'GET', headers: auth(second.accessToken) };
-    expect(jsonBody((await backend.dispatch({ ...request, path: '/api/user' }))).data).toEqual({
+    expect(jsonBody(await backend.dispatch({ ...request, path: '/api/user' })).data).toEqual({
       id: 'second-user',
       name: 'Second User',
       roles: ['viewer'],
@@ -282,41 +536,30 @@ describe('mock sessions and scope', () => {
     });
     for (const scopeId of ['north', 'south']) {
       const query = { scopeKind: 'workspace', scopeId };
-      expect(jsonBody((await backend.dispatch({ ...request, path: '/api/auth/codes', query }))).data).toEqual(
+      expect(jsonBody(await backend.dispatch({ ...request, path: '/api/auth/codes', query })).data).toEqual(
         scopeId === 'north'
           ? ['demo:read', 'system:users:read', 'system:roles:read', 'system:menus:read', 'system:departments:read']
           : ['demo:read'],
       );
-      expect(jsonBody((await backend.dispatch({ ...request, path: '/api/menu', query }))).data).toEqual(
+      expect(jsonBody(await backend.dispatch({ ...request, path: '/api/menu', query })).data).toEqual(
         scopeId === 'north'
           ? [
-              {
-                kind: 'group',
-                id: 'workspace-pages',
-                title: 'Workspace',
-                order: 10,
-                children: [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' }],
-              },
-              {
-                kind: 'group',
-                id: 'system',
-                title: 'System',
-                order: 15,
-                children: [
-                  { kind: 'page', id: 'system-users', pageId: 'playground.system.users' },
-                  { kind: 'page', id: 'system-roles', pageId: 'playground.system.roles' },
-                  { kind: 'page', id: 'system-menus', pageId: 'playground.system.menus' },
-                  { kind: 'page', id: 'system-departments', pageId: 'playground.system.departments' },
-                ],
-              },
+              expectedOverviewMenu,
               expectedExamplesMenu,
-              {kind:'page',id:'profile',pageId:'playground.profile',hidden:true},
+              expectedFeaturesMenu,
+              expectedSystemMenu,
+              { kind: 'page', id: 'profile', pageId: 'playground.profile', hidden: true },
             ]
-          : [{ kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },expectedExamplesMenu,{kind:'page',id:'profile',pageId:'playground.profile',hidden:true}],
+          : [
+              expectedOverviewMenu,
+              expectedExamplesMenu,
+              expectedFeaturesMenu,
+              { kind: 'page', id: 'profile', pageId: 'playground.profile', hidden: true },
+            ],
       );
     }
     expect(
-      jsonBody((await backend.dispatch({ method: 'GET', path: '/api/user', headers: auth(first.accessToken) }))).data,
+      jsonBody(await backend.dispatch({ method: 'GET', path: '/api/user', headers: auth(first.accessToken) })).data,
     ).toMatchObject({ id: 'demo-user', roles: ['admin'] });
     const refreshed = await backend.dispatch({
       method: 'POST',
@@ -330,7 +573,7 @@ describe('mock sessions and scope', () => {
     const pair = jsonBody(refreshed).data as Tokens;
     expect(pair.accessToken).not.toBe(second.accessToken);
     expect(
-      jsonBody((await backend.dispatch({ method: 'GET', path: '/api/user', headers: auth(pair.accessToken) }))).data,
+      jsonBody(await backend.dispatch({ method: 'GET', path: '/api/user', headers: auth(pair.accessToken) })).data,
     ).toMatchObject({ id: 'second-user', roles: ['viewer'] });
     failure(await backend.dispatch({ ...request, path: '/api/user' }), 401, 'UNAUTHENTICATED');
   });
@@ -422,7 +665,7 @@ describe('mock sessions and scope', () => {
       'UNAUTHENTICATED',
     );
     expect(
-      jsonBody((await backend.dispatch({ method: 'GET', path: '/api/user', headers: auth(second.accessToken) }))).data,
+      jsonBody(await backend.dispatch({ method: 'GET', path: '/api/user', headers: auth(second.accessToken) })).data,
     ).toMatchObject({ id: 'second-user' });
     expect(
       (
@@ -450,7 +693,7 @@ describe('mock sessions and scope', () => {
     const response = await a.dispatch({ method: 'GET', path: '/api/menu' });
     (jsonBody(response).data as { pageId: string }[])[0].pageId = 'tampered';
     for (const backend of [a, createMockBackend()]) {
-      expect(jsonBody((await backend.dispatch({ method: 'GET', path: '/api/menu' }))).data).toEqual([
+      expect(jsonBody(await backend.dispatch({ method: 'GET', path: '/api/menu' })).data).toEqual([
         { kind: 'page', id: 'home', pageId: 'playground.home', icon: 'home' },
       ]);
     }
@@ -474,22 +717,57 @@ describe('mock sessions and scope', () => {
 });
 
 it('opens an authenticated workspace upload session through the real dispatcher', async () => {
-  const backend=createMockBackend();
+  const backend = createMockBackend();
   try {
-    const tokens=await login(backend);
-    const response=await backend.dispatch({method:'POST',path:'/api/transfers',headers:auth(tokens.accessToken),query:{scopeKind:'workspace',scopeId:'north'},body:{name:'example.txt',contentType:'text/plain',size:3}});
+    const tokens = await login(backend);
+    const response = await backend.dispatch({
+      method: 'POST',
+      path: '/api/transfers',
+      headers: auth(tokens.accessToken),
+      query: { scopeKind: 'workspace', scopeId: 'north' },
+      body: { name: 'example.txt', contentType: 'text/plain', size: 3 },
+    });
     expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({code:0,data:{uploadId:expect.any(String)}});
-  } finally {backend.dispose();}
+    expect(response.body).toMatchObject({ code: 0, data: { uploadId: expect.any(String) } });
+  } finally {
+    backend.dispose();
+  }
 });
-it('enforces session expiry and transfer grants before entering its repository',async()=>{
- let now=0;const backend=createMockBackend({now:()=>now});
- const request={method:'POST',path:'/api/transfers',query:{scopeKind:'workspace',scopeId:'north'},body:{name:'example.txt',contentType:'text/plain',size:3}};
- try{
-  failure(await backend.dispatch(request),401,'UNAUTHENTICATED');
-  const viewer=await login(backend,'second@playground.invalid');failure(await backend.dispatch({...request,headers:auth(viewer.accessToken)}),403,'FORBIDDEN');
-  const admin=await login(backend);failure(await backend.dispatch({...request,headers:auth(admin.accessToken),query:{scopeKind:'workspace',scopeId:'south'}}),403,'FORBIDDEN');
-  failure(await backend.dispatch({...request,headers:auth(admin.accessToken),query:new URLSearchParams('scopeKind=workspace&scopeId=north&scopeId=south')}),400,'INVALID_QUERY');
-  now=300_001;failure(await backend.dispatch({...request,headers:auth(admin.accessToken)}),401,'ACCESS_EXPIRED');
- }finally{backend.dispose();}
+it('enforces session expiry and transfer grants before entering its repository', async () => {
+  let now = 0;
+  const backend = createMockBackend({ now: () => now });
+  const request = {
+    method: 'POST',
+    path: '/api/transfers',
+    query: { scopeKind: 'workspace', scopeId: 'north' },
+    body: { name: 'example.txt', contentType: 'text/plain', size: 3 },
+  };
+  try {
+    failure(await backend.dispatch(request), 401, 'UNAUTHENTICATED');
+    const viewer = await login(backend, 'second@playground.invalid');
+    failure(await backend.dispatch({ ...request, headers: auth(viewer.accessToken) }), 403, 'FORBIDDEN');
+    const admin = await login(backend);
+    failure(
+      await backend.dispatch({
+        ...request,
+        headers: auth(admin.accessToken),
+        query: { scopeKind: 'workspace', scopeId: 'south' },
+      }),
+      403,
+      'FORBIDDEN',
+    );
+    failure(
+      await backend.dispatch({
+        ...request,
+        headers: auth(admin.accessToken),
+        query: new URLSearchParams('scopeKind=workspace&scopeId=north&scopeId=south'),
+      }),
+      400,
+      'INVALID_QUERY',
+    );
+    now = 300_001;
+    failure(await backend.dispatch({ ...request, headers: auth(admin.accessToken) }), 401, 'ACCESS_EXPIRED');
+  } finally {
+    backend.dispose();
+  }
 });

@@ -443,5 +443,18 @@
   "examples.application.routeHelp": "；标题来自登记元数据，未加入动态标题API。",
   "examples.features.query.pageRow": "{{context}} · 第 {{page}} 页 · 条目 {{id}}",
   "examples.features.query.moreRow": "{{context}} · 更多条目 {{id}}",
-  "examples.application.routedDetail": "在路由中打开隐藏详情"
+  "examples.application.routedDetail": "在路由中打开隐藏详情",
+  "navigation.overview": "总览",
+  "navigation.components": "组件示例",
+  "navigation.features": "功能演示",
+  "navigation.system": "系统管理",
+  "navigation.application": "应用交互",
+  "navigation.browser": "浏览器能力",
+  "navigation.network": "网络请求",
+  "navigation.documentation": "文档",
+  "navigation.embedded": "内嵌页面",
+  "navigation.unknown": "未知页面诊断",
+  "login.welcome": "欢迎回来",
+  "login.account": "账号",
+  "login.accountPlaceholder": "邮箱地址"
 }

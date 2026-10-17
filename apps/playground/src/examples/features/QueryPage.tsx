@@ -1,3 +1,4 @@
+import { Button } from '@niubu/shadcn-ui/button';
 import { useFeaturesText } from './copy';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -45,12 +46,12 @@ function Pagination({ context, fixture }: SceneProps) {
           <li key={id}>{t('query.pageRow', { context: contextLabel(context), page: fulfilledPage, id })}</li>
         ))}
       </ul>
-      <button type="button" disabled={page === 1 || query.isFetching} onClick={() => setPage(value => value - 1)}>
+      <Button type="button" disabled={page === 1 || query.isFetching} onClick={() => setPage(value => value - 1)}>
         {t('query.previous')}
-      </button>
-      <button type="button" disabled={page === 3 || query.isFetching} onClick={() => setPage(value => value + 1)}>
+      </Button>
+      <Button type="button" disabled={page === 3 || query.isFetching} onClick={() => setPage(value => value + 1)}>
         {t('query.next')}
-      </button>
+      </Button>
     </section>
   );
 }
@@ -71,20 +72,20 @@ function Retry({ context, fixture }: SceneProps) {
     <section aria-label={t('query.retry')}>
       <h2>{t('query.retry')}</h2>
       <p>{t('query.retryHelp')}</p>
-      <button
+      <Button
         type="button"
         disabled={query.isFetching}
         onClick={() => setScenario(value => ({ failure: 'once', run: value.run + 1 }))}
       >
         {t('query.retryOnce')}
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         disabled={query.isFetching}
         onClick={() => setScenario(value => ({ failure: 'always', run: value.run + 1 }))}
       >
         {t('query.fail')}
-      </button>
+      </Button>
       {query.isFetching && <p role="status">{t('query.runningGet')}</p>}
       {query.data && (
         <p role="status">{t('query.attempts', { value: query.data.value, attempts: query.data.attempts })}</p>
@@ -132,7 +133,7 @@ function Concurrency({ context, fixture }: SceneProps) {
     <section aria-label={t('query.concurrent')}>
       <h2>{t('query.concurrent')}</h2>
       <p>{t('query.concurrentHelp')}</p>
-      <button
+      <Button
         type="button"
         disabled={pending}
         onClick={() => {
@@ -140,7 +141,7 @@ function Concurrency({ context, fixture }: SceneProps) {
         }}
       >
         {t('query.concurrentRead')}
-      </button>
+      </Button>
       <p role="status">{pending ? t('query.concurrentPending') : outputText}</p>
     </section>
   );
@@ -169,7 +170,7 @@ function Infinite({ context, fixture }: SceneProps) {
           page.value.map(id => <li key={id}>{t('query.moreRow', { context: contextLabel(context), id })}</li>),
         )}
       </ul>
-      <button
+      <Button
         type="button"
         disabled={!query.hasNextPage || query.isFetching}
         onClick={() => {
@@ -177,7 +178,7 @@ function Infinite({ context, fixture }: SceneProps) {
         }}
       >
         {query.isSuccess && !query.hasNextPage ? t('query.exhausted') : t('query.more')}
-      </button>
+      </Button>
     </section>
   );
 }
@@ -225,7 +226,7 @@ export function QueryPage(): React.JSX.Element {
     [owner],
   );
   return (
-    <div className="space-y-4 p-4">
+    <div className="playground-page example-page feature-example-page">
       <h1>{t('query.title')}</h1>
       <p>{t('query.help')}</p>
       <label>
@@ -248,9 +249,9 @@ export function QueryPage(): React.JSX.Element {
           <option>south</option>
         </select>
       </label>
-      <button type="button" onClick={() => setContext(value => ({ ...value, generation: value.generation + 1 }))}>
+      <Button type="button" onClick={() => setContext(value => ({ ...value, generation: value.generation + 1 }))}>
         {t('query.generation')}
-      </button>
+      </Button>
       <p>{t('query.context', { context: contextLabel(context) })}</p>
       <QueryClientProvider client={owner.client}>
         <Scenarios key={JSON.stringify(syntheticKey(context))} context={context} fixture={owner.fixture} />

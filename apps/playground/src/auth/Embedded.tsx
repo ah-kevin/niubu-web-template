@@ -13,12 +13,13 @@ export function EmbeddedPage() {
         <h1>{t('forbidden')}</h1>
       </section>
     );
+  const title = item.title.startsWith('app:') ? t(item.title) : item.title;
   return (
     <section className="playground-page">
-      <h1>{item.title}</h1>
+      <h1>{title}</h1>
       <iframe
         key={`${state.user?.id}:${state.scope?.kind}:${state.scope?.id}:${item.id}`}
-        title={item.title}
+        title={title}
         src={item.src}
         sandbox="allow-scripts allow-forms"
         referrerPolicy="no-referrer"

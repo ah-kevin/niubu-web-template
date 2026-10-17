@@ -443,5 +443,18 @@
   "examples.application.routeHelp": "; title comes from static metadata. Dynamic title API remains a gap.",
   "examples.features.query.pageRow": "{{context}} · Page {{page}} · Item {{id}}",
   "examples.features.query.moreRow": "{{context}} · More item {{id}}",
-  "examples.application.routedDetail": "Open hidden detail in the router"
+  "examples.application.routedDetail": "Open hidden detail in the router",
+  "navigation.overview": "Overview",
+  "navigation.components": "Component Examples",
+  "navigation.features": "Feature Demos",
+  "navigation.system": "System Management",
+  "navigation.application": "Application",
+  "navigation.browser": "Browser Features",
+  "navigation.network": "Network Requests",
+  "navigation.documentation": "Documentation",
+  "navigation.embedded": "Embedded Page",
+  "navigation.unknown": "Unknown Page Diagnostic",
+  "login.welcome": "Welcome back",
+  "login.account": "Account",
+  "login.accountPlaceholder": "Email address"
 }

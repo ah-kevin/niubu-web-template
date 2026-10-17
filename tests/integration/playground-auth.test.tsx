@@ -37,14 +37,14 @@ function fixture(now?:()=>number, rejectRefresh?:()=>boolean) {
   return {mount,seed,reload,calls,values};
 }
 function submit(form:HTMLElement,username='demo@playground.invalid') {
-  fireEvent.change(within(form).getByLabelText('邮箱'),{target:{value:username}});
+  fireEvent.change(within(form).getByLabelText('账号'),{target:{value:username}});
   fireEvent.change(within(form).getByLabelText('密码'),{target:{value:'demo-only'}});
   fireEvent.click(within(form).getByRole('button',{name:'登录'}));
 }
 it('uses the actual public login form and a safe scope-bearing return destination',async()=>{
   const f=fixture();const runtime=await f.mount('/request?scopeKind=workspace&scopeId=north');
-  expect(await screen.findByRole('heading',{name:'登录'})).toBeVisible();
-  const form=screen.getByRole('heading',{name:'登录'}).closest('section')!;
+  expect(await screen.findByRole('heading',{name:'欢迎回来'})).toBeVisible();
+  const form=screen.getByRole('heading',{name:'欢迎回来'}).closest('section')!;
   submit(form);
   await waitFor(()=>expect(f.reload).toHaveBeenCalledWith('/request?scopeKind=workspace&scopeId=north'));
   expect(f.calls.filter(call=>call.path==='/api/auth/login').at(-1)?.username).toBe('demo@playground.invalid');
@@ -96,11 +96,11 @@ it('logs out by clearing its owned state and blocking automatic credential resto
 
 it('renders safe external metadata and removes an embedded frame as soon as its scope grant is revoked',async()=>{
   const f=fixture();await f.seed();await f.mount('/embedded/frame-demo?scopeKind=workspace&scopeId=north');
-  expect(await screen.findByTitle('Embedded demo')).toHaveAttribute('src','/frame-demo.html');
-  const external=screen.getByRole('link',{name:'Documentation'});
+  expect(await screen.findByTitle('内嵌页面')).toHaveAttribute('src','/frame-demo.html');
+  const external=screen.getByRole('link',{name:'文档'});
   expect(external).toHaveAttribute('target','_blank');expect(external).toHaveAttribute('rel','noopener noreferrer');
   fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
-  expect(screen.queryByTitle('Embedded demo')).not.toBeInTheDocument();
+  expect(screen.queryByTitle('内嵌页面')).not.toBeInTheDocument();
   expect(await screen.findByRole('heading',{name:'无权访问'})).toBeVisible();
   expect(f.reload).not.toHaveBeenCalled();
 });

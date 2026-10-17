@@ -261,6 +261,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
             <Button
               type="button"
               variant="ghost"
+              size="sm"
               aria-label={t('system.viewAction', { name })}
               onClick={() => void openRecord('detail', record.id)}
             >
@@ -271,6 +272,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
                   aria-label={t('system.editAction', { name })}
                   disabled={!lookup.ready}
                   onClick={() => void openRecord('edit', record.id)}
@@ -280,6 +282,8 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
+                  data-action="delete"
                   aria-label={t('system.deleteAction', { name })}
                   onClick={() => void remove(record)}
                 >
@@ -322,7 +326,9 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           </Button>
         )}
       </header>
-      <table.queryForm.Form submitLabel={t('common:search')} resetLabel={t('common:reset')} />
+      <div className="system-query-card">
+        <table.queryForm.Form submitLabel={t('common:search')} resetLabel={t('common:reset')} />
+      </div>
       {lookup.error && (
         <div role="alert">
           {t('system.lookupFailed')}{' '}

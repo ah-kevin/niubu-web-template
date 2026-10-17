@@ -243,7 +243,7 @@ it('preserves the exact editor and dirty input on cancelled scope navigation and
   expect(screen.getByRole('textbox', { name: '名称' })).toBe(input);
   await act(async () => f.runtime.auth.markLoginExpired());
   const expired = await screen.findByRole('dialog', { name: '会话已过期' });
-  fireEvent.change(within(expired).getByLabelText('邮箱'), { target: { value: 'demo@playground.invalid' } });
+  fireEvent.change(within(expired).getByLabelText('账号'), { target: { value: 'demo@playground.invalid' } });
   fireEvent.change(within(expired).getByLabelText('密码'), { target: { value: 'demo-only' } });
   fireEvent.click(within(expired).getByRole('button', { name: '登录' }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: '会话已过期' })).not.toBeInTheDocument());

@@ -1,3 +1,4 @@
+import { Button } from '@niubu/shadcn-ui/button';
 import { useFeaturesText } from './copy';
 import { useEffect, useRef, useState } from 'react';
 import { createIconRegistry, Database, Settings2 } from '@niubu/icons';
@@ -21,7 +22,7 @@ function RootFullscreen() {
   return (
     <section aria-label={t('browser.fullscreen')}>
       <h2>{t('browser.fullscreen')}</h2>
-      <button
+      <Button
         type="button"
         disabled={snapshot.status === 'unsupported' || snapshot.status === 'pending'}
         onClick={() => {
@@ -29,7 +30,7 @@ function RootFullscreen() {
         }}
       >
         {t('browser.toggleFullscreen')}
-      </button>
+      </Button>
       <p role="status">
         {t('browser.fullscreenStatus', {
           status: snapshot.status === 'idle' && snapshot.active ? 'active' : snapshot.status,
@@ -62,14 +63,14 @@ function ConfigurationAndWatermark() {
     <>
       <section aria-label={t('browser.configuration')}>
         <h2>{t('browser.configuration')}</h2>
-        <button
+        <Button
           type="button"
           onClick={() => {
             void copy();
           }}
         >
           {t('browser.copy')}
-        </button>
+        </Button>
         <p role="status">{localize(copyStatus)}</p>
         <textarea aria-label={t('browser.manualCopy')} readOnly value={text} rows={8} />
         <p>{t('browser.copyHelp')}</p>
@@ -100,7 +101,7 @@ function ConfigurationAndWatermark() {
 export function BrowserFeaturesPage(): React.JSX.Element {
   const { t } = useFeaturesText();
   return (
-    <div className="space-y-4 p-4">
+    <div className="playground-page example-page feature-example-page">
       <h1>{t('browser.title')}</h1>
       <p>{t('browser.help')}</p>
       <RootFullscreen />

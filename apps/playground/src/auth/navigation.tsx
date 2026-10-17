@@ -24,7 +24,6 @@ export function projectMenu(
       return {
         ...common,
         kind: 'branch' as const,
-        presentation: 'group' as const,
         children: projectMenu(node.children, pathname, scope, translate),
       };
     const href = node.kind === 'iframe' ? `/embedded/${encodeURIComponent(node.id)}${withScope('', scope)}` : node.href;
