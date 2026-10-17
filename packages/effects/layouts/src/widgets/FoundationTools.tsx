@@ -170,7 +170,11 @@ export function FoundationTools({
           : label(widget);
     const button = (
       <Button
-        className={menu ? undefined : 'foundation-tool-trigger'}
+        className={
+          menu
+            ? 'h-auto min-h-[34px] w-full justify-start gap-[10px] text-left whitespace-normal'
+            : 'foundation-tool-trigger size-[30px] p-0'
+        }
         data-widget-id={widget}
         data-widget-position={menu ? 'user-dropdown' : resolveWidgetPlacement(core.widget[widget].position, available)}
         data-slot={widget === 'notification' ? 'sheet-trigger' : 'dialog-trigger'}
@@ -193,7 +197,7 @@ export function FoundationTools({
         title={title}
       >
         <Icon size={17} aria-hidden="true" />
-        {menu && <span>{label(widget)}</span>}
+        {menu && <span className="min-w-0 wrap-anywhere">{label(widget)}</span>}
       </Button>
     );
     return menu ? (
@@ -215,7 +219,7 @@ export function FoundationTools({
         <DropdownMenuTrigger asChild>
           <Button
             ref={owner === 'fixed' ? fixedMenuTrigger : menuTrigger}
-            className="foundation-tool-trigger"
+            className="foundation-tool-trigger size-[30px] p-0"
             data-tool-group={owner}
             variant="ghost"
             size="icon"
@@ -226,20 +230,20 @@ export function FoundationTools({
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
           <DropdownMenuContent
-            className="foundation-tools-menu"
+            className="foundation-tools-menu z-[70] max-h-[70vh] min-w-[220px] max-w-[calc(100vw_-_24px)] overflow-auto rounded-[var(--radius)] border border-border bg-card p-[8px] text-foreground shadow-[0_8px_24px_#0003]"
             sideOffset={6}
             onCloseAutoFocus={event => {
               if (overlay.open) event.preventDefault();
             }}
           >
-            {identityNote && <p>{identityNote}</p>}
+            {identityNote && <p className="p-[8px] text-[.75rem] text-muted-foreground">{identityNote}</p>}
             {widgets.map(widget => trigger(widget, true, owner))}
           </DropdownMenuContent>
         </DropdownMenuPortal>
       </DropdownMenu>
     );
   const header = (
-    <div className="foundation-header-tools">
+    <div className="foundation-header-tools flex w-full flex-nowrap items-center justify-end gap-[3px] [&>*]:shrink-0">
       {groups.header.map(widget => trigger(widget))}
       {available && toolsMenu(groups['user-dropdown'], 'header')}
     </div>
@@ -248,14 +252,17 @@ export function FoundationTools({
   return (
     <>
       {available && headerTarget && createPortal(header, headerTarget)}
-      <div className="foundation-fixed-tools" aria-label={t('shell:tools.menu')}>
+      <div
+        className="foundation-fixed-tools fixed right-[12px] bottom-[58px] z-40 flex max-w-[calc(100vw_-_24px)] flex-wrap items-center justify-end gap-[3px] rounded-[var(--radius)] bg-card shadow-[0_3px_12px_#0002] empty:hidden [&>*]:shrink-0"
+        aria-label={t('shell:tools.menu')}
+      >
         {groups.fixed.map(widget => trigger(widget))}
         {toolsMenu(fixedMenuWidgets, 'fixed')}
       </div>
       {!core.widget.preferences.enabled && (
         <Button
           ref={recovery}
-          className="foundation-preferences-recovery"
+          className="foundation-preferences-recovery fixed right-[12px] bottom-[12px] z-40 bg-card shadow-[0_3px_12px_#0002] dark:bg-card"
           variant="outline"
           size="icon"
           aria-label={t('shell:tools.recoverPreferences')}
@@ -266,7 +273,10 @@ export function FoundationTools({
         </Button>
       )}
       {core.widget.fullscreen.enabled && fullscreen.snapshot.status === 'error' && (
-        <p className="foundation-tool-status" role="status">
+        <p
+          className="foundation-tool-status fixed right-[12px] bottom-[96px] z-40 max-w-[300px] bg-card p-[8px] text-[.8rem]"
+          role="status"
+        >
           {t('shell:tools.fullscreenError')}
         </p>
       )}

@@ -255,14 +255,23 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
   }
   return (
     <FormProvider {...form}>
-      <form ref={formElement} id={formId} className="pattern-form-frame" noValidate onSubmit={reviewInputs}>
+      <form
+        ref={formElement}
+        id={formId}
+        className="pattern-form-frame min-w-0 max-w-full"
+        noValidate
+        onSubmit={reviewInputs}
+      >
         <PageHeader
           headingLevel={headingLevel}
           title={title}
           description={t(onSubmit ? 'common:form.liveDescription' : 'common:form.description')}
         />
         {hasErrors && checked && (
-          <div className="pattern-form-error-summary" role="alert">
+          <div
+            className="pattern-form-error-summary mb-[var(--workspace-section-gap)] rounded-[var(--radius)] border border-destructive border-l-[3px] bg-card p-[var(--workspace-card-padding)] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-destructive [&_ul]:mt-[8px] [&_ul]:pl-[18px]"
+            role="alert"
+          >
             <strong>{t('common:form.fixErrors')}</strong>
             <ul>
               {errorGroups.length ? (
@@ -275,8 +284,8 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
             </ul>
           </div>
         )}
-        <div className="pattern-form-content">{children}</div>
-        <footer className="pattern-form-actions">
+        <div className="pattern-form-content grid gap-[var(--workspace-section-gap)]">{children}</div>
+        <footer className="pattern-form-actions mt-[var(--workspace-section-gap)] flex flex-wrap items-center justify-between gap-[14px] border-t border-border pt-[var(--workspace-card-padding)] [@media(max-width:700px)]:items-start [&>p]:text-[length:var(--workspace-caption-font-size)] [&>p]:text-muted-foreground [&>div]:flex [&>div]:flex-wrap [&>div]:gap-[8px] [@media(max-width:700px)]:[&>div]:w-full [@media(max-width:700px)]:[&>div]:justify-end">
           <p>{isDirty ? t('common:form.dirty') : t('common:form.clean')}</p>
           <div>
             <Button type="button" variant="outline" onClick={requestCancel}>
@@ -288,7 +297,11 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
           </div>
         </footer>
         {reviewed && (
-          <div className="submission-state" role="status" aria-label={t('common:form.submissionStatus')}>
+          <div
+            className="submission-state mt-[17px] flex items-start gap-[10px] rounded-[var(--radius)] bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-[var(--primary-text)] [&_p]:text-[length:var(--workspace-caption-font-size)] [&_p]:text-[var(--secondary-muted-foreground)]"
+            role="status"
+            aria-label={t('common:form.submissionStatus')}
+          >
             <div>
               <strong>
                 {t(
@@ -314,7 +327,7 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
       <AlertDialog open={reviewOpen} onOpenChange={changeReview}>
         {reviewOpen && (
           <AlertDialogContent
-            className="pattern-action-dialog"
+            className="pattern-action-dialog min-w-0 max-h-[calc(100dvh-32px)] overflow-y-auto"
             onCloseAutoFocus={event => {
               event.preventDefault();
               const focus = returnFocus.current;
@@ -331,7 +344,7 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
                 {t(onSubmit ? 'common:form.liveReviewDescription' : 'common:form.reviewDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="pattern-review-content">
+            <div className="pattern-review-content min-w-0 rounded-[var(--radius)] border border-border bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] [--muted-foreground:var(--secondary-muted-foreground)] [overflow-wrap:anywhere]">
               {review ?? <p>{t(onSubmit ? 'common:form.liveReviewPassed' : 'common:form.reviewPassed')}</p>}
             </div>
             {submitError && <div role="alert">{submitError}</div>}
@@ -366,10 +379,16 @@ export function FormGroup({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="pattern-form-group">
-      <legend>{title}</legend>
-      {description && <p className="pattern-description">{description}</p>}
-      <div className="pattern-field-grid">{children}</div>
+    <fieldset className="pattern-form-group m-0 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
+      <legend className="px-[8px] text-base font-semibold">{title}</legend>
+      {description && (
+        <p className="pattern-description text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-muted-foreground">
+          {description}
+        </p>
+      )}
+      <div className="pattern-field-grid mt-[8px] grid grid-cols-2 gap-[var(--workspace-section-gap)] [@media(max-width:700px)]:grid-cols-1 [@media(max-width:700px)]:gap-[var(--workspace-heading-gap)]">
+        {children}
+      </div>
     </fieldset>
   );
 }
@@ -393,13 +412,21 @@ export function FormField({ name, label, type = 'text', description, unit, requi
   const help = description ? `${id}-help` : '';
   const errorId = error ? `${id}-error` : '';
   return (
-    <div className="pattern-form-field">
-      <Label htmlFor={id}>
+    <div className="pattern-form-field min-w-0">
+      <Label
+        className="mb-[10px] flex-wrap text-[length:var(--workspace-caption-font-size)] leading-[1.5] [&>span[aria-hidden]]:text-destructive"
+        htmlFor={id}
+      >
         {label}
         {required && <span aria-hidden="true"> *</span>}
-        {unit && <span className="pattern-unit">{unit}</span>}
+        {unit && (
+          <span className="pattern-unit ml-auto text-[length:var(--workspace-caption-font-size)] font-normal text-muted-foreground">
+            {unit}
+          </span>
+        )}
       </Label>
       <Input
+        className="h-[var(--workspace-control-height)] border-[var(--control-border)] bg-card dark:bg-card text-[length:var(--workspace-body-font-size)] md:text-[length:var(--workspace-body-font-size)] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100 aria-invalid:border-destructive"
         id={id}
         aria-label={label}
         type={type}
@@ -409,12 +436,18 @@ export function FormField({ name, label, type = 'text', description, unit, requi
         aria-describedby={[help, errorId].filter(Boolean).join(' ') || undefined}
       />
       {description && (
-        <p id={help} className="pattern-field-help">
+        <p
+          id={help}
+          className="pattern-field-help mt-[7px] text-[length:var(--workspace-caption-font-size)] leading-[1.7] text-muted-foreground"
+        >
           {description}
         </p>
       )}
       {error && (
-        <p id={errorId} className="field-error">
+        <p
+          id={errorId}
+          className="field-error mt-[7px] text-[length:var(--workspace-caption-font-size)] text-destructive"
+        >
           {resolveMessage
             ? resolveMessage(String(error.message ?? t('validation:checkField')))
             : String(error.message ?? t('validation:checkField'))}

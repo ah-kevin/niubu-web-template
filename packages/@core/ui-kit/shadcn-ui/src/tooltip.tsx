@@ -11,9 +11,9 @@ export function Tooltip({ children, content }: { children: React.ReactNode; cont
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         {portal.ready && <TooltipPrimitive.Portal container={portal.container}>
         <BusinessPortalAdmission>
-          <BusinessPortalContent><TooltipPrimitive.Content ref={boundaryRef} className="preference-tooltip" sideOffset={5}>
+          <BusinessPortalContent><TooltipPrimitive.Content ref={boundaryRef} className="preference-tooltip z-[90] max-w-[280px] rounded-lg border border-border bg-card p-[8px] text-[.8rem] text-foreground" sideOffset={5}>
             {content}
-            <TooltipPrimitive.Arrow />
+            <TooltipPrimitive.Arrow className="fill-card" />
           </TooltipPrimitive.Content></BusinessPortalContent>
         </BusinessPortalAdmission>
       </TooltipPrimitive.Portal>}

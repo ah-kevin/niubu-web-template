@@ -44,11 +44,11 @@ export function DetailFrame({
   const id = useId();
   const activeTab = tabs.some(item => item.id === tab) ? tab : tabs[0]?.id;
   return (
-    <section className="pattern-detail-frame">
+    <section className="pattern-detail-frame min-w-0 max-w-full">
       <Button
         type="button"
         variant="ghost"
-        className="pattern-back"
+        className="pattern-back mb-[20px] pl-0 text-[length:var(--workspace-caption-font-size)]"
         onClick={() => onNavigate(safeReturnTo(returnTo, fallback))}
       >
         <ArrowLeft size={16} aria-hidden="true" />
@@ -59,7 +59,7 @@ export function DetailFrame({
         description={description}
         actions={actions}
         meta={
-          <p className="pattern-provenance">
+          <p className="pattern-provenance text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-muted-foreground">
             {t('common:source')}：{source} · {t('common:asOf')}{' '}
             <time dateTime={asOf} title={asOf}>
               {formatInstant(asOf, { locale, timeZone })}
@@ -69,9 +69,15 @@ export function DetailFrame({
       />
       {summary}
       {tabs.length > 0 && (
-        <div className="pattern-detail-tabs" role="tablist" aria-label={t('common:detailContent')}>
+        <div
+          className="pattern-detail-tabs mb-[24px] flex max-w-full gap-[var(--workspace-section-gap)] overflow-x-auto border-b border-border"
+          role="tablist"
+          aria-label={t('common:detailContent')}
+        >
           {tabs.map((item, index) => (
-            <button
+            <Button
+              variant="ghost"
+              className="h-auto min-h-[44px] rounded-none border-b-2 border-transparent px-0 py-[13px] text-[length:var(--workspace-caption-font-size)] whitespace-nowrap text-muted-foreground aria-selected:border-primary aria-selected:font-semibold aria-selected:text-[var(--primary-text)]"
               type="button"
               role="tab"
               id={`${id}-${item.id}`}
@@ -99,12 +105,12 @@ export function DetailFrame({
               }}
             >
               {item.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
       <div
-        className="pattern-detail-content"
+        className="pattern-detail-content min-w-0 [overflow-wrap:anywhere]"
         id={`${id}-panel`}
         role={tabs.length ? 'tabpanel' : undefined}
         aria-labelledby={tabs.length ? `${id}-${activeTab}` : undefined}

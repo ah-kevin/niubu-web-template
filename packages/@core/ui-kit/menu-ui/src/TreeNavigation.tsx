@@ -68,7 +68,7 @@ export function TreeNavigation(p: TreeNavigationProps) {
     );
     return (
       <ul
-        className="navigation-list"
+        className="navigation-list m-0 list-none p-0"
         data-depth={depth}
         style={{ '--navigation-indent': `${indent * 18}px` } as CSSProperties}
       >
@@ -118,7 +118,7 @@ export function TreeNavigation(p: TreeNavigationProps) {
                       ? {}
                       : { rel: node.rel }),
                   ...(node.external === undefined ? {} : { external: node.external }),
-                  className: `nav-link${node.active ? ' active' : ''}`,
+                  className: `nav-link my-[2px] flex min-h-[var(--row-height)] items-center gap-[12px] rounded-[7px] px-[12px] py-[8px] text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground${node.active ? ' active' : ''}`,
                   'aria-current': node.active ? 'page' : undefined,
                   onClick: p.onNavigate,
                   children: (
@@ -129,7 +129,9 @@ export function TreeNavigation(p: TreeNavigationProps) {
                         {node.badge !== undefined && (
                           <>
                             {' '}
-                            <span className="nav-badge">{node.badge}</span>
+                            <span className="nav-badge inline-block rounded-[var(--radius)] bg-muted px-[5px] text-[.7rem] leading-[1.4] text-muted-foreground align-middle">
+                              {node.badge}
+                            </span>
                           </>
                         )}
                       </span>
@@ -137,19 +139,21 @@ export function TreeNavigation(p: TreeNavigationProps) {
                   ),
                 })
               ) : group ? (
-                <p className="navigation-group-label">
+                <p className="navigation-group-label px-[12px] py-[6px] text-[.7rem] text-muted-foreground">
                   {node.label}
                   {node.badge !== undefined && (
                     <>
                       {' '}
-                      <span className="nav-badge">{node.badge}</span>
+                      <span className="nav-badge inline-block rounded-[var(--radius)] bg-muted px-[5px] text-[.7rem] leading-[1.4] text-muted-foreground align-middle">
+                        {node.badge}
+                      </span>
                     </>
                   )}
                 </p>
               ) : (
                 <button
                   type="button"
-                  className={`nav-link navigation-branch${active(node) ? ' active-parent' : ''}`}
+                  className={`nav-link navigation-branch my-[2px] flex min-h-[var(--row-height)] items-center gap-[12px] rounded-[7px] px-[12px] py-[8px] text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground w-full border-0 bg-transparent text-left [font-family:inherit]${active(node) ? ' active-parent' : ''}`}
                   aria-expanded={open && !p.compact}
                   aria-controls={contentId}
                   onClick={() => {
@@ -163,11 +167,13 @@ export function TreeNavigation(p: TreeNavigationProps) {
                     {node.badge !== undefined && (
                       <>
                         {' '}
-                        <span className="nav-badge">{node.badge}</span>
+                        <span className="nav-badge inline-block rounded-[var(--radius)] bg-muted px-[5px] text-[.7rem] leading-[1.4] text-muted-foreground align-middle">
+                          {node.badge}
+                        </span>
                       </>
                     )}
                   </span>
-                  <span className="navigation-chevron" aria-hidden="true">
+                  <span className="navigation-chevron ml-auto inline-flex flex-none items-center" aria-hidden="true">
                     {open ? (
                       <ChevronDown size={14} aria-hidden="true" />
                     ) : (
@@ -222,7 +228,7 @@ export function TreeNavigation(p: TreeNavigationProps) {
             if (node.kind === 'branch' && p.expandedIds.includes(node.id)) p.onExpand(node.id, false);
           });
       }}
-      className="primary-navigation tree-navigation"
+      className="primary-navigation tree-navigation flex-1 overflow-y-auto px-px [scrollbar-width:thin]"
       aria-label={p.label}
       data-orientation={p.orientation ?? 'vertical'}
       data-compact={!!p.compact}

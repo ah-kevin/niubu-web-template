@@ -40,7 +40,7 @@ export function SchemaFields<V extends FieldValues, C extends CustomFieldParams>
     return (
       <div
         key={field.name}
-        className="pattern-schema-cell"
+        className="pattern-schema-cell min-w-0"
         hidden={collapsed && !showAll}
         data-schema-field={field.name}
         style={{ '--schema-col-span': Math.min(columns, Math.max(1, field.colSpan ?? 1)) } as CSSProperties}
@@ -70,7 +70,10 @@ export function SchemaFields<V extends FieldValues, C extends CustomFieldParams>
       style={style}
     >
       {ungrouped.length > 0 && (
-        <div className="pattern-field-grid pattern-schema-grid" style={style}>
+        <div
+          className="pattern-field-grid pattern-schema-grid mt-[8px] grid grid-cols-2 gap-[var(--workspace-section-gap)] [@media(max-width:700px)]:grid-cols-1 [@media(max-width:700px)]:gap-[var(--workspace-heading-gap)]"
+          style={style}
+        >
           {ungrouped.map(fieldNode)}
         </div>
       )}
@@ -78,10 +81,16 @@ export function SchemaFields<V extends FieldValues, C extends CustomFieldParams>
         const grouped = rows.filter(({ field }) => field.group === group.id);
         return (
           grouped.length > 0 && (
-            <fieldset key={group.id} className="pattern-form-group">
-              <legend>{group.title}</legend>
+            <fieldset
+              key={group.id}
+              className="pattern-form-group m-0 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]"
+            >
+              <legend className="px-[8px] text-base font-semibold">{group.title}</legend>
               {group.description && <p>{group.description}</p>}
-              <div className="pattern-field-grid pattern-schema-grid" style={style}>
+              <div
+                className="pattern-field-grid pattern-schema-grid mt-[8px] grid grid-cols-2 gap-[var(--workspace-section-gap)] [@media(max-width:700px)]:grid-cols-1 [@media(max-width:700px)]:gap-[var(--workspace-heading-gap)]"
+                style={style}
+              >
                 {grouped.map(fieldNode)}
               </div>
             </fieldset>

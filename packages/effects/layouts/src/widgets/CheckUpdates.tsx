@@ -1,5 +1,6 @@
 import { useEffect, useId, useSyncExternalStore } from 'react';
 import type { UpdateChecker } from '@niubu/hooks';
+import { Button } from '@niubu/shadcn-ui/button';
 
 export type UpdateLabels = Readonly<{
   checking: string;
@@ -44,7 +45,9 @@ export function CheckUpdates({
       {snapshot.status === 'available' && (
         <>
           {snapshot.errorCode && <span>{labels.unavailable}</span>}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             type="button"
             disabled={dirty}
             aria-describedby={dirty ? dirtyId : undefined}
@@ -53,7 +56,7 @@ export function CheckUpdates({
             }}
           >
             {labels.reload}
-          </button>
+          </Button>
           {dirty && <span id={dirtyId}>{labels.dirty}</span>}
         </>
       )}

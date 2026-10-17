@@ -47,17 +47,19 @@ export function ReadState({
   const href = safeReturnTo(fallback, '');
   return (
     <section
-      className="pattern-read-state"
+      className="pattern-read-state flex min-w-0 flex-col items-center gap-[12px] px-[22px] py-[48px] text-center [overflow-wrap:anywhere]"
       role={status === 'error' ? 'alert' : 'status'}
       aria-busy={status === 'loading'}
     >
-      <span className="pattern-state-symbol">
+      <span className="pattern-state-symbol inline-flex size-[56px] items-center justify-center rounded-[var(--radius)] bg-secondary text-[var(--primary-text)]">
         <Icon size={26} aria-hidden="true" />
       </span>
-      <h2>{t(titles[status])}</h2>
-      <p>{message ?? t(explanations[status])}</p>
+      <h2 className="text-base font-semibold">{t(titles[status])}</h2>
+      <p className="max-w-[440px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-muted-foreground">
+        {message ?? t(explanations[status])}
+      </p>
       {children}
-      <div className="pattern-state-actions">
+      <div className="pattern-state-actions mt-[6px] flex flex-wrap justify-center gap-[8px]">
         {status === 'error' && onRetry && (
           <Button type="button" onClick={onRetry}>
             {t('common:retry')}

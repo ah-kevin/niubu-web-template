@@ -35,10 +35,10 @@ export function Navigation({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="primary-navigation" aria-label={label}>
+    <nav className="primary-navigation flex-1 overflow-y-auto px-px [scrollbar-width:thin]" aria-label={label}>
       {[...new Set(items.map(item => item.group))].map(group => (
-        <div className="nav-group" key={group}>
-          <p>{group}</p>
+        <div className="nav-group mb-[19px]" key={group}>
+          <p className="mb-[7px] px-[13px] text-[10px] tracking-[1px] text-muted-foreground">{group}</p>
           {items
             .filter(item => item.group === group)
             .map(item => (
@@ -52,7 +52,7 @@ export function Navigation({
                       ? {}
                       : { rel: item.rel }),
                   ...(item.external === undefined ? {} : { external: item.external }),
-                  className: item.active ? 'nav-link active' : 'nav-link',
+                  className: `nav-link my-[2px] flex min-h-[var(--row-height)] items-center gap-[12px] rounded-[7px] px-[12px] py-[8px] text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground${item.active ? ' active' : ''}`,
                   'aria-current': item.active ? 'page' : undefined,
                   onClick: onNavigate,
                   children: (
@@ -63,11 +63,13 @@ export function Navigation({
                         {item.badge !== undefined && (
                           <>
                             {' '}
-                            <span className="nav-badge">{item.badge}</span>
+                            <span className="nav-badge inline-block rounded-[var(--radius)] bg-muted px-[5px] text-[.7rem] leading-[1.4] text-muted-foreground align-middle">
+                              {item.badge}
+                            </span>
                           </>
                         )}
                       </span>
-                      {item.active && <span className="nav-indicator" />}
+                      {item.active && <span className="nav-indicator ml-auto size-[5px] rounded-full bg-primary" />}
                     </>
                   ),
                 })}

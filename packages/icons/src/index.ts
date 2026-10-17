@@ -39,6 +39,7 @@ export {
   MailX,
   Menu,
   Monitor,
+  Minus,
   Moon,
   Pin,
   PinOff,

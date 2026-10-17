@@ -20,6 +20,19 @@ function deferred() {
   return { promise, resolve, reject };
 }
 describe('AuthenticationForm', () => {
+  it('uses shared input and label controls while retaining browser autofill and validation focus', () => {
+    render(<AuthenticationForm {...base} fieldIds={{ email: 'shared-email', password: 'shared-password' }} />);
+    const email = screen.getByLabelText('Email');
+    const password = screen.getByLabelText('Password');
+    expect(email).toHaveAttribute('data-slot', 'input');
+    expect(password).toHaveAttribute('data-slot', 'input');
+    expect(document.querySelector('label[for="shared-email"]')).toHaveAttribute('data-slot', 'label');
+    expect(email).toHaveAttribute('autocomplete', 'email');
+    expect(password).toHaveAttribute('autocomplete', 'current-password');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(email).toHaveFocus();
+    expect(email).toHaveAccessibleDescription('Valid email required');
+  });
   it('uses caller field identifiers for labels and validation descriptions', () => {
     render(<AuthenticationForm {...base} fieldIds={{ email: 'existing-email', password: 'existing-password' }} />);
     const email = screen.getByLabelText('Email');

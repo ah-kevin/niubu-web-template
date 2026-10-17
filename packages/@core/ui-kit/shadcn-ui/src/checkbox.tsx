@@ -1,8 +1,14 @@
 import * as React from 'react';
 import { Checkbox as CheckboxPrimitive } from 'radix-ui';
-import { Check } from '@niubu/icons';
+import { Check, Minus } from '@niubu/icons';
 import { cn } from './cn';
 export function Checkbox({ className, name, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+  const indicator = (
+    <CheckboxPrimitive.Indicator className="group/checkbox-indicator flex items-center justify-center">
+      <Check size={14} aria-hidden="true" className="hidden group-data-[state=checked]/checkbox-indicator:block" />
+      <Minus size={14} aria-hidden="true" className="hidden group-data-[state=indeterminate]/checkbox-indicator:block" />
+    </CheckboxPrimitive.Indicator>
+  );
   return (
     <CheckboxPrimitive.Root
       {...props}
@@ -16,14 +22,10 @@ export function Checkbox({ className, name, ...props }: React.ComponentProps<typ
     >
       {name ? (
         <button type="button" name={name}>
-          <CheckboxPrimitive.Indicator>
-            <Check size={14} aria-hidden="true" />
-          </CheckboxPrimitive.Indicator>
+          {indicator}
         </button>
       ) : (
-        <CheckboxPrimitive.Indicator>
-          <Check size={14} aria-hidden="true" />
-        </CheckboxPrimitive.Indicator>
+        indicator
       )}
     </CheckboxPrimitive.Root>
   );

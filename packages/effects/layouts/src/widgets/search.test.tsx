@@ -14,6 +14,7 @@ it('searches only injected authorized items and preserves link keyboard navigati
   await user.click(screen.getByRole('button', { name: /Search pages/ }));
   const dialog = await screen.findByRole('dialog');
   const input = within(dialog).getByRole('searchbox');
+  expect(input).toHaveFocus();
   expect(within(dialog).getByRole('link', { name: /Page Alpha/ })).toHaveAttribute('href', '/alpha?view=list');
   expect(await within(dialog).findByRole('link', { name: /Object Beta/ })).toHaveAttribute('href', '/beta');
   await user.type(input, 'beta');
@@ -23,6 +24,9 @@ it('searches only injected authorized items and preserves link keyboard navigati
   await user.keyboard('{ArrowUp}'); expect(input).toHaveFocus();
   await user.type(input, ' unknown');
   expect(within(dialog).queryAllByRole('link')).toHaveLength(0);
+  await user.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getByRole('button', { name: /Search pages/ })).toHaveFocus();
 });
 
 it('aborts a closed search and excludes its late objects from the next session', async () => {

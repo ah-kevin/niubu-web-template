@@ -34,7 +34,7 @@ export function CommandSearch({ sessionKey, renderDialog, ...search }: CommandSe
         data-slot="dialog-trigger"
         data-state={overlay.open ? 'open' : 'closed'}
         aria-controls={contentId}
-        className="search-trigger"
+        className="search-trigger h-[34px] w-[216px] justify-start bg-background text-[11px] font-normal text-muted-foreground shadow-none dark:bg-background"
         variant="outline"
         aria-haspopup="dialog"
         aria-expanded={overlay.open}
@@ -43,7 +43,9 @@ export function CommandSearch({ sessionKey, renderDialog, ...search }: CommandSe
       >
         <Search size={16} aria-hidden="true" />
         <span>{t('shell:search.title')}</span>
-        <kbd>{shortcutHint(navigator.platform, 'K')}</kbd>
+        <kbd className="ml-auto rounded-[4px] border border-border px-[4px] [font-family:inherit] text-[10px]">
+          {shortcutHint(navigator.platform, 'K')}
+        </kbd>
       </Button>
       {overlay.open && (
         <Suspense

@@ -8,6 +8,7 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
+import { Label } from '@niubu/shadcn-ui/label';
 import { Input } from '@niubu/shadcn-ui/input';
 import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { RadioGroup, RadioGroupItem } from '@niubu/shadcn-ui/radio-group';
@@ -200,7 +201,7 @@ export function ControlledField<
             return (
               <div role="group" aria-labelledby={shell['aria-labelledby']} aria-describedby={shell['aria-describedby']}>
                 {options.map((option, index) => (
-                  <label key={option.value} htmlFor={`${shell.id}-${index}`}>
+                  <Label className="flex items-center gap-2" key={option.value} htmlFor={`${shell.id}-${index}`}>
                     <Checkbox
                       {...(inputProps as React.ComponentProps<typeof Checkbox>)}
                       {...binding}
@@ -219,7 +220,7 @@ export function ControlledField<
                       }
                     />
                     {option.label}
-                  </label>
+                  </Label>
                 ))}
               </div>
             );
@@ -235,7 +236,7 @@ export function ControlledField<
                 onValueChange={field.onChange}
               >
                 {options.map((option, index) => (
-                  <label key={option.value} htmlFor={`${shell.id}-${index}`}>
+                  <Label className="flex items-center gap-2" key={option.value} htmlFor={`${shell.id}-${index}`}>
                     <RadioGroupItem
                       {...shell}
                       aria-labelledby={undefined}
@@ -248,7 +249,7 @@ export function ControlledField<
                       onBlur={field.onBlur}
                     />
                     {option.label}
-                  </label>
+                  </Label>
                 ))}
               </RadioGroup>
             );

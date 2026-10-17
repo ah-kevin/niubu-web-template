@@ -1,5 +1,10 @@
+import { Button } from '@niubu/shadcn-ui/button';
+import { Checkbox } from '@niubu/shadcn-ui/checkbox';
+import { Label } from '@niubu/shadcn-ui/label';
+import { NumberInput } from '@niubu/shadcn-ui/number-input';
+import { Select } from '@niubu/shadcn-ui/select';
 import { rowActivation } from './row-activation';
-import { Fragment, memo, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import { Fragment, memo, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 import type { Column, Header, ReactTable, Row, RowData } from '@tanstack/react-table';
 import type { listFeatures, selectableListFeatures } from './profiles';
 import type { BaseTableProps, ListSlices, TableLabels } from './types';
@@ -15,13 +20,13 @@ export function ReadMessage<T>({
   const { labels } = props;
   if (props.readState === 'pending')
     return (
-      <div role="status" aria-busy="true">
+      <div className="px-[18px] py-[32px]" role="status" aria-busy="true">
         {labels.pending}
       </div>
     );
   if (props.readState === 'error')
     return (
-      <div role="alert">
+      <div className="px-[18px] py-[32px]" role="alert">
         {labels.error}
         {props.emptyAction}
       </div>
@@ -36,7 +41,7 @@ export function ReadMessage<T>({
           ? labels.sourceUnknown
           : labels.filteredEmpty;
   return (
-    <div role="status">
+    <div className="px-[18px] py-[32px]" role="status">
       {message}
       {props.emptyAction}
     </div>
@@ -51,18 +56,14 @@ export const SelectionCheckbox = memo(function SelectionCheckbox({
   selected: boolean;
   indeterminate?: boolean;
   label: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  onChange: (selected: boolean) => void;
 }) {
   return (
-    <input
-      type="checkbox"
+    <Checkbox
+      className="size-[24px]"
       aria-label={label}
-      checked={selected}
-      aria-checked={indeterminate ? 'mixed' : selected}
-      ref={input => {
-        if (input) input.indeterminate = indeterminate;
-      }}
-      onChange={onChange}
+      checked={indeterminate ? 'indeterminate' : selected}
+      onCheckedChange={checked => onChange(checked === true)}
     />
   );
 });
@@ -82,6 +83,34 @@ function pinnedStyle<T extends RowData>(
     background: pin ? 'var(--card, Canvas)' : undefined,
   };
 }
+function ColumnWidthInput({
+  value,
+  label,
+  onCommit,
+}: {
+  value: number;
+  label: string;
+  onCommit: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  return (
+    <NumberInput
+      className="w-[65px]"
+      valueMode="string"
+      value={draft}
+      onValueChange={setDraft}
+      aria-label={label}
+      min={80}
+      max={640}
+      onBlur={() => {
+        const next = Number(draft);
+        const width = Number.isFinite(next) ? clampColumnWidth(next) : value;
+        setDraft(String(width));
+        onCommit(width);
+      }}
+    />
+  );
+}
 function ColumnSettings<T extends RowData>({
   table,
   labels,
@@ -93,66 +122,52 @@ function ColumnSettings<T extends RowData>({
 }) {
   const columns = table.getAllLeafColumns();
   return (
-    <details className="pattern-table-settings">
+    <details className="pattern-table-settings relative [&>summary]:min-h-[32px] [&>summary]:cursor-pointer">
       <summary>{labels.settings}</summary>
-      <div className="pattern-column-settings">
+      <div className="pattern-column-settings absolute end-0 top-[calc(100%+8px)] z-10 max-h-[60dvh] w-[min(360px,calc(100vw-44px))] overflow-y-auto rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
         {columns.map(column => {
           const name = labels.columnName(column.id);
           const visible = table.state.columnVisibility[column.id] !== false;
           return (
-            <fieldset key={column.id}>
+            <fieldset className="flex flex-wrap gap-[10px] border border-border p-[9px]" key={column.id}>
               <legend>{name}</legend>
-              <label>
-                <input
-                  type="checkbox"
+              <Label className="flex items-center gap-[5px]">
+                <Checkbox
+                  className="size-[24px]"
                   checked={visible}
                   aria-label={labels.showColumn(name)}
                   disabled={!column.getCanHide() || (visible && table.getVisibleLeafColumns().length === 1)}
-                  onChange={column.getToggleVisibilityHandler()}
+                  onCheckedChange={checked => column.toggleVisibility(checked === true)}
                 />
                 {labels.showColumn(name)}
-              </label>
-              <label>
+              </Label>
+              <Label className="flex items-center gap-[5px]">
                 {labels.columnWidth(name)}
-                <input
-                  type="number"
+                <ColumnWidthInput
                   key={`${column.id}:${column.getSize()}`}
-                  aria-label={labels.columnWidth(name)}
-                  min={80}
-                  max={640}
-                  defaultValue={column.getSize()}
-                  onBlur={event => {
-                    const n = Number(event.currentTarget.value);
-                    const value = Number.isFinite(n) ? clampColumnWidth(n) : column.getSize();
-                    event.currentTarget.value = String(value);
-                    table.setColumnSizing(old => ({ ...old, [column.id]: value }));
-                  }}
+                  value={column.getSize()}
+                  label={labels.columnWidth(name)}
+                  onCommit={value => table.setColumnSizing(old => ({ ...old, [column.id]: value }))}
                 />
-              </label>
-              <label>
+              </Label>
+              <Label className="flex items-center gap-[5px]">
                 {labels.pinColumn(name)}
-                <select
-                  aria-label={labels.pinColumn(name)}
+                <Select
+                  label={labels.pinColumn(name)}
                   value={column.getIsPinned() || 'none'}
-                  onChange={event =>
-                    column.pin(
-                      event.currentTarget.value === 'start'
-                        ? 'start'
-                        : event.currentTarget.value === 'end'
-                          ? 'end'
-                          : false,
-                    )
-                  }
-                >
-                  <option value="none">{labels.unpin}</option>
-                  <option value="start">{labels.pinStart}</option>
-                  <option value="end">{labels.pinEnd}</option>
-                </select>
-              </label>
+                  onValueChange={value => column.pin(value === 'start' ? 'start' : value === 'end' ? 'end' : false)}
+                  options={[
+                    { value: 'none', label: labels.unpin },
+                    { value: 'start', label: labels.pinStart },
+                    { value: 'end', label: labels.pinEnd },
+                  ]}
+                />
+              </Label>
             </fieldset>
           );
         })}
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={() => {
             if (onResetColumns) {
@@ -165,7 +180,7 @@ function ColumnSettings<T extends RowData>({
           }}
         >
           {labels.resetColumns}
-        </button>
+        </Button>
       </div>
     </details>
   );
@@ -199,16 +214,23 @@ function HeaderView<T extends RowData>({
     >
       {!header.isPlaceholder &&
         (column.getCanSort() ? (
-          <button type="button" aria-label={labels.sortColumn(name)} onClick={column.getToggleSortingHandler()}>
+          <Button
+            className="h-auto justify-start whitespace-normal p-0 text-inherit"
+            variant="ghost"
+            type="button"
+            aria-label={labels.sortColumn(name)}
+            onClick={column.getToggleSortingHandler()}
+          >
             {children}
-          </button>
+          </Button>
         ) : (
           children
         ))}
       {column.getCanResize() && (
-        <button
+        <Button
+          variant="ghost"
           type="button"
-          className="pattern-column-resizer"
+          className="pattern-column-resizer rounded-none p-0"
           aria-label={labels.resizeColumn(name)}
           onMouseDown={header.getResizeHandler()}
           onTouchStart={header.getResizeHandler()}
@@ -260,40 +282,40 @@ function Pagination<T extends RowData>({
 }) {
   const pagination = table.state.pagination;
   return (
-    <nav className="pattern-pagination" aria-label={caption}>
-      <label>
+    <nav
+      className="pattern-pagination flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-body-font-size)]"
+      aria-label={caption}
+    >
+      <Label className="flex items-center gap-[5px]">
         {labels.pageSize}
-        <select
-          aria-label={labels.pageSize}
-          value={pagination.pageSize}
-          onChange={event => table.setPageSize(Number(event.currentTarget.value))}
-        >
-          {[...new Set([25, 50, 100, pagination.pageSize])]
+        <Select
+          label={labels.pageSize}
+          value={String(pagination.pageSize)}
+          onValueChange={value => table.setPageSize(Number(value))}
+          options={[...new Set([25, 50, 100, pagination.pageSize])]
             .sort((a, b) => a - b)
-            .map(size => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-        </select>
-      </label>
+            .map(size => ({ value: String(size), label: String(size) }))}
+        />
+      </Label>
       <span aria-live="polite">{labels.page(pagination.pageIndex + 1, Math.max(1, table.getPageCount()))}</span>
-      <button
+      <Button
+        variant="outline"
         type="button"
         aria-label={labels.previousPage}
         disabled={!table.getCanPreviousPage()}
         onClick={() => table.previousPage()}
       >
         {labels.previousPage}
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="outline"
         type="button"
         aria-label={labels.nextPage}
         disabled={!table.getCanNextPage()}
         onClick={() => table.nextPage()}
       >
         {labels.nextPage}
-      </button>
+      </Button>
     </nav>
   );
 }
@@ -320,15 +342,18 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   selectionSummary?: ReactNode;
 }) {
   return (
-    <section className="pattern-data-table native-data-table" aria-label={props.caption}>
-      <div className="pattern-table-toolbar">
+    <section
+      className="pattern-data-table native-data-table [&_table]:border-separate [&_table]:border-spacing-0 [&_table]:text-start [&_th]:relative [&_th]:box-border [&_th]:h-[var(--row-height)] [&_th]:border-b [&_th]:border-border [&_th]:bg-secondary [&_th]:px-[var(--workspace-card-padding)] [&_th]:py-0 [&_th]:text-start [&_th]:text-[length:var(--workspace-caption-font-size)] [&_td]:box-border [&_td]:border-b [&_td]:border-border [&_td]:px-[var(--workspace-card-padding)] [&_td]:py-[var(--workspace-heading-gap)] [&_td]:text-[length:var(--workspace-body-font-size)] [&_td]:whitespace-normal [&_td]:[overflow-wrap:anywhere] [&_tr[tabindex]]:cursor-pointer [&_tr:focus-visible]:outline-2 [&_tr:focus-visible]:outline-primary [&_tr:focus-visible]:-outline-offset-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card"
+      aria-label={props.caption}
+    >
+      <div className="pattern-table-toolbar flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-body-font-size)]">
         {props.resultCount !== null && <p>{props.labels.total(props.resultCount)}</p>}
         {selectionSummary}
         <ColumnSettings table={table} labels={props.labels} onResetColumns={props.onResetColumns} />
       </div>
       <ReadMessage props={props} hasRows={rows.length > 0} />
       {props.readState === 'ready' && rows.length > 0 && (
-        <div className="native-table-scroll">
+        <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
           <table style={{ width: table.getTotalSize() + (selectionHeader ? 44 : 0), tableLayout: 'fixed' }}>
             <caption className="sr-only">{props.caption}</caption>
             <thead>

@@ -67,7 +67,11 @@ export function RoutePresentation({
   return (
     <PendingContext.Provider value={store}>
       {pending > 0 && core.transition.progress && (
-        <div className="foundation-route-progress" role="progressbar" aria-label={t('shell:routeProgress')} />
+        <div
+          className="foundation-route-progress fixed inset-x-0 top-0 z-[100] h-[2px] overflow-hidden bg-muted"
+          role="progressbar"
+          aria-label={t('shell:routeProgress')}
+        />
       )}
       {children}
     </PendingContext.Provider>
@@ -80,7 +84,7 @@ export function RoutePending() {
   const { t } = useTranslation();
   useLayoutEffect(() => store?.register(), [store]);
   return core.transition.loading ? (
-    <div className="page-loading" role="status">
+    <div className="page-loading p-[60px] text-center text-[13px] text-muted-foreground" role="status">
       {t('shell:pageLoading')}
     </div>
   ) : null;

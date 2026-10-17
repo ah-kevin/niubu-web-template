@@ -4,7 +4,6 @@
 @keyframes route-fade-down { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 @keyframes route-fade-slide { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
 @keyframes route-fade-up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-.foundation-route-progress { position:fixed; inset:0 0 auto; height:2px; z-index:100; overflow:hidden; background:var(--muted); }
 .foundation-route-progress::after { content:''; position:absolute; width:30%; height:100%; background:var(--primary); animation:route-progress 1.1s ease-in-out infinite; }
 .route-entry-fade { animation:route-fade .18s ease-out; }
 .route-entry-fade-down { animation:route-fade-down .18s ease-out; }

@@ -569,7 +569,7 @@ it('starts an internally owned selection empty when no initial value is supplied
   fireEvent.click(screen.getByRole('checkbox', { name: '选择 record' }));
   expect(screen.getByText('已选 1')).toBeVisible();
 });
-it('shows mixed page selection on the native checkbox and keeps row clicks separate from selection', () => {
+it('shows mixed page selection on the shared checkbox and keeps row clicks separate from selection', () => {
   const sh = createSelectableColumnHelper<{ id: string }>();
   const activate = vi.fn();
   render(
@@ -597,10 +597,10 @@ it('shows mixed page selection on the native checkbox and keeps row clicks separ
   );
   const page = screen.getByRole('checkbox', { name: '选择当前页' });
   expect(page).toHaveAttribute('aria-checked', 'mixed');
-  expect(page).toHaveProperty('indeterminate', true);
+  expect(page).toHaveAttribute('data-state', 'indeterminate');
   fireEvent.click(screen.getByRole('checkbox', { name: '选择 two' }));
   expect(activate).not.toHaveBeenCalled();
-  expect(page).toHaveProperty('indeterminate', false);
+  expect(page).toHaveAttribute('data-state', 'checked');
 });
 it('sizes a native grouped header to its visible child widths', () => {
   render(
@@ -870,4 +870,21 @@ it('group keyboard resize clamps each leaf independently at its lower bound', ()
   fireEvent.keyDown(handle, { key: 'ArrowLeft' });
   expect(screen.getByRole('columnheader', { name: '事实' })).toHaveStyle({ width: '160px' });
   expect(screen.getByRole('columnheader', { name: /ID/ })).toHaveStyle({ width: '80px' });
+});
+
+it('applies shared select keyboard choices to the page size and column pin owner', async () => {
+  render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} />);
+  const pageSize = screen.getByRole('combobox', { name: labels.pageSize });
+  pageSize.focus();
+  fireEvent.keyDown(pageSize, { key: 'ArrowDown' });
+  const fifty = await screen.findByRole('option', { name: '50' });
+  fireEvent.keyDown(fifty, { key: 'Enter' });
+  expect(pageSize).toHaveTextContent('50');
+  fireEvent.click(screen.getByText(labels.settings));
+  const pin = screen.getByRole('combobox', { name: labels.pinColumn('id') });
+  pin.focus();
+  fireEvent.keyDown(pin, { key: 'ArrowDown' });
+  fireEvent.keyDown(await screen.findByRole('option', { name: labels.pinEnd }), { key: 'Enter' });
+  expect(pin).toHaveTextContent(labels.pinEnd);
+  expect(screen.getAllByRole('columnheader')[1]).toHaveStyle({ insetInlineEnd: '0px' });
 });

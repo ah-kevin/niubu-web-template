@@ -277,7 +277,10 @@ export function PageTabsBinding({
   return (
     <ControllerContext value={controller}>
       {status && (
-        <span className="page-tabs-status" role="status">
+        <span
+          className="page-tabs-status fixed right-[16px] bottom-[20px] z-[80] max-w-[min(480px,90vw)] rounded-[var(--radius)] border border-border bg-card px-[14px] py-[10px] text-[.8125rem] text-foreground shadow-[0_4px_16px_#0003]"
+          role="status"
+        >
           {t(`shell:tabs.error.${status}`)}
         </span>
       )}

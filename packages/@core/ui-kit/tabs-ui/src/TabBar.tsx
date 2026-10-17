@@ -95,16 +95,29 @@ export function TabBar(p: TabBarProps) {
     if (scroll.current) scroll.current.scrollLeft += direction * Math.max(100, scroll.current.clientWidth * 0.7);
   };
   return (
-    <nav className="page-tabbar" data-style={p.style} aria-label={p.labels.navigation}>
+    <nav
+      className="page-tabbar relative flex size-full min-w-0 items-stretch gap-[3px] bg-card px-[5px] text-foreground"
+      data-style={p.style}
+      aria-label={p.labels.navigation}
+    >
       {overflow && (
-        <button type="button" className="page-tab-tool" aria-label={p.labels.previous} onClick={() => move(-1)}>
+        <button
+          type="button"
+          className="page-tab-tool grid w-[32px] flex-none place-items-center border-l border-border hover:bg-muted focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
+          aria-label={p.labels.previous}
+          onClick={() => move(-1)}
+        >
           <ChevronLeft aria-hidden="true" />
         </button>
       )}
-      <div className="page-tab-scroll" ref={scroll} data-testid="page-tab-scroll">
+      <div
+        className="page-tab-scroll relative flex min-w-0 flex-1 items-stretch gap-[3px] overflow-x-auto overscroll-x-contain [scrollbar-width:none]"
+        ref={scroll}
+        data-testid="page-tab-scroll"
+      >
         {p.tabs.map((tab, index) => (
           <div
-            className="page-tab"
+            className="page-tab relative flex min-w-[70px] max-w-[260px] flex-none items-center border border-transparent border-b-2 text-[.8125rem] data-[active=true]:border-b-primary data-[active=true]:bg-accent data-[active=true]:text-primary-text"
             data-active={p.activeKey === tab.key}
             data-pinned={tab.pinned}
             key={tab.key}
@@ -159,7 +172,7 @@ export function TabBar(p: TabBarProps) {
             )}
             <button
               type="button"
-              className="page-tab-title"
+              className="page-tab-title relative flex min-w-0 items-center gap-[7px] self-stretch px-[9px] text-left aria-[current=page]:font-medium focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
               aria-current={p.activeKey === tab.key ? 'page' : undefined}
               onClick={() => p.onActivate(tab.key)}
               onKeyDown={event => {
@@ -188,9 +201,9 @@ export function TabBar(p: TabBarProps) {
               }}
             >
               {p.showIcon && tab.icon}
-              <span>{tab.label}</span>
+              <span className="truncate">{tab.label}</span>
               {tab.pinned && (
-                <span aria-hidden="true" className="page-tab-pin">
+                <span aria-hidden="true" className="page-tab-pin inline-flex flex-none">
                   <LockKeyhole aria-hidden="true" />
                 </span>
               )}
@@ -198,7 +211,7 @@ export function TabBar(p: TabBarProps) {
             {tab.closable && !tab.pinned && (
               <button
                 type="button"
-                className="page-tab-close"
+                className="page-tab-close relative mr-[5px] grid size-[20px] flex-none place-items-center rounded-[4px] hover:bg-muted focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
                 onPointerDown={event => {
                   if (event.button === 0) event.preventDefault();
                 }}
@@ -229,19 +242,28 @@ export function TabBar(p: TabBarProps) {
         ))}
       </div>
       {overflow && (
-        <button type="button" className="page-tab-tool" aria-label={p.labels.next} onClick={() => move(1)}>
+        <button
+          type="button"
+          className="page-tab-tool grid w-[32px] flex-none place-items-center border-l border-border hover:bg-muted focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
+          aria-label={p.labels.next}
+          onClick={() => move(1)}
+        >
           <ChevronRight aria-hidden="true" />
         </button>
       )}
       {p.overflow && (
-        <span className="page-tab-overflow" role="status" title={p.labels.overflow}>
+        <span
+          className="page-tab-overflow self-center px-[4px] text-primary-text"
+          role="status"
+          title={p.labels.overflow}
+        >
           <CircleAlert aria-hidden="true" />
         </span>
       )}
       {p.activeKey && p.showRefresh && (
         <button
           type="button"
-          className="page-tab-tool"
+          className="page-tab-tool grid w-[32px] flex-none place-items-center border-l border-border hover:bg-muted focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
           aria-label={p.labels.refresh}
           onClick={() => p.onCommand('refresh', p.activeKey!)}
         >
@@ -251,7 +273,7 @@ export function TabBar(p: TabBarProps) {
       {p.activeKey && p.showMaximize && (
         <button
           type="button"
-          className="page-tab-tool"
+          className="page-tab-tool grid w-[32px] flex-none place-items-center border-l border-border hover:bg-muted focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
           aria-label={p.maximized ? p.labels.restore : p.labels.maximize}
           onClick={() => p.onCommand('maximize', p.activeKey!)}
         >
@@ -261,7 +283,7 @@ export function TabBar(p: TabBarProps) {
       {p.activeKey && p.showMore && (
         <button
           type="button"
-          className="page-tab-tool"
+          className="page-tab-tool grid w-[32px] flex-none place-items-center border-l border-border hover:bg-muted focus-visible:rounded-[4px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-3"
           aria-label={p.labels.more}
           aria-haspopup="menu"
           aria-expanded={!!selected && !!menu && 'element' in menu.anchor && menu.anchor.align === 'end'}

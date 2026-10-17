@@ -12,3 +12,8 @@ if (!globalThis.ResizeObserver) {
     disconnect() {}
   };
 }
+
+// Radix Select scrolls keyboard-focused options; JSDOM has no scrolling layout.
+if (!HTMLElement.prototype.scrollIntoView) {
+  HTMLElement.prototype.scrollIntoView = () => {};
+}

@@ -212,3 +212,64 @@ it('binds extracted fields to their actual public preference consumers and behav
   check(['general.copyPreferences'], 'packages/effects/common-ui/src/preferences/PreferenceDrawer.tsx');
   check(['locale'], 'apps/playground/src/main.tsx');
 });
+
+// Numeric controls keep incomplete edits local until validation on blur/Enter.
+it('retains empty and out-of-range numeric drafts without saving them', async () => {
+  const user = userEvent.setup();
+  const change = vi.fn(() => ({ kind: 'persisted' as const }));
+  render(<ControlledDrawer onChange={change} />);
+  await user.click(screen.getByRole('tab', { name: '布局' }));
+  const width = screen.getByRole('spinbutton', { name: '定宽宽度（px）' });
+  await user.clear(width);
+  expect(width).toHaveValue(null);
+  expect(change).not.toHaveBeenCalled();
+  await user.tab();
+  expect(screen.getByRole('alert')).toBeVisible();
+  expect(width).toHaveValue(null);
+  expect(change).not.toHaveBeenCalled();
+  await user.click(width);
+  await user.type(width, '12{Enter}');
+  expect(width).toHaveValue(12);
+  expect(change).not.toHaveBeenCalled();
+  await user.click(width);
+  await user.clear(width);
+  await user.type(width, '1280');
+  expect(change).not.toHaveBeenCalled();
+  await user.keyboard('{Enter}');
+  expect(change).toHaveBeenCalledExactlyOnceWith({ layout: { fixedWidth: 1280 } });
+  expect(width).toHaveValue(1280);
+  expect(width).not.toHaveFocus();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+it('resets only extensions explicitly selected through the checkbox control', async () => {
+  const user = userEvent.setup();
+  const firstReset = vi.fn(() => ({ kind: 'persisted' as const }));
+  const secondReset = vi.fn(() => ({ kind: 'persisted' as const }));
+  render(
+    <PreferenceDrawer
+      value={corePreferenceDefaults}
+      onChange={() => ({ kind: 'persisted' })}
+      onReset={() => ({ kind: 'persisted' })}
+      extensions={[
+        { namespace: 'sample.first', version: 1, titleKey: 'preferences.group.extensions', render: () => null, reset: firstReset },
+        { namespace: 'sample.second', version: 1, titleKey: 'preferences.group.extensions', render: () => null, reset: secondReset },
+      ]}
+      onClose={() => {}}
+      returnFocus={() => {}}
+    />,
+  );
+  await user.click(screen.getByRole('tab', { name: '拓展' }));
+  const [first, second] = screen.getAllByRole('checkbox');
+  await user.click(first!);
+  expect(first).toBeChecked();
+  expect(second).not.toBeChecked();
+  await user.click(screen.getByRole('button', { name: '恢复默认' }));
+  expect(firstReset).toHaveBeenCalledTimes(1);
+  expect(secondReset).not.toHaveBeenCalled();
+  await user.click(first!);
+  expect(first).not.toBeChecked();
+  await user.click(screen.getByRole('button', { name: '恢复默认' }));
+  expect(firstReset).toHaveBeenCalledTimes(1);
+  expect(secondReset).not.toHaveBeenCalled();
+});

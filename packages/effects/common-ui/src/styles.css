@@ -1,264 +1,13 @@
 @import './data-table/styles.css';
 @import './preferences/styles.css';
 
-/* Compositional professional workspace patterns. Business facts never live in styles. */
-.pattern-page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--workspace-heading-gap);
-  flex-wrap: wrap;
-  min-width: 0;
-  max-width: 100%;
-  margin-bottom: var(--workspace-section-gap);
-}
-.pattern-heading-copy {
-  flex: 1 1 260px;
-  min-width: 0;
-}
-.pattern-title {
-  overflow-wrap: anywhere;
-  word-break: normal;
-  line-height: 1.35;
-  min-width: 0;
-}
-.pattern-page-header h1 {
-  font-size: var(--workspace-title-font-size);
-  font-weight: 650;
-  margin: 0 0 var(--workspace-heading-gap);
-  letter-spacing: -0.025em;
-}
+/* Existing application JSX consumes these public pattern classes directly.
+   Keep their original priority over primitive defaults for density and typography. */
 .pattern-description,
 .pattern-provenance {
   font-size: var(--workspace-caption-font-size);
   line-height: 1.8;
   color: var(--muted-foreground);
-}
-.pattern-header-meta {
-  margin-top: var(--workspace-heading-gap);
-}
-.pattern-header-actions {
-  display: flex;
-  flex: 0 1 auto;
-  gap: 8px;
-  flex-wrap: wrap;
-  max-width: 100%;
-  padding-top: 6px;
-}
-.pattern-header-actions [data-slot='button'] {
-  white-space: normal;
-  height: auto;
-  min-height: var(--workspace-control-height);
-  text-align: center;
-}
-.pattern-filter-bar {
-  display: flex;
-  gap: var(--workspace-heading-gap) var(--workspace-section-gap);
-  flex-wrap: wrap;
-  align-items: center;
-  padding: var(--workspace-card-padding) 0;
-  margin-bottom: 8px;
-  min-width: 0;
-}
-.pattern-search-field {
-  position: relative;
-  flex: 1 1 210px;
-  max-width: 360px;
-  min-width: 0;
-}
-.pattern-search-field > svg {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted-foreground);
-  pointer-events: none;
-}
-.pattern-search-field [data-slot='input'] {
-  padding-left: 38px;
-  height: var(--workspace-control-height);
-  font-size: var(--workspace-body-font-size);
-}
-.pattern-filter-group {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-  min-width: 0;
-  border: 0;
-  padding: 0;
-  margin: 0;
-}
-.pattern-filter-group legend {
-  font-size: var(--workspace-caption-font-size);
-  color: var(--muted-foreground);
-  float: left;
-  margin-right: 7px;
-  padding-top: 8px;
-}
-.pattern-filter-group label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--workspace-caption-font-size);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 6px 8px;
-  cursor: pointer;
-}
-.pattern-filter-group label:has(input:checked) {
-  background: var(--nav-active);
-  border-color: var(--primary);
-  color: var(--primary-text);
-}
-.pattern-detail-frame {
-  min-width: 0;
-  max-width: 100%;
-}
-.pattern-back[data-slot='button'] {
-  padding-left: 0;
-  margin-bottom: 20px;
-  font-size: var(--workspace-caption-font-size);
-}
-.pattern-detail-tabs {
-  display: flex;
-  gap: var(--workspace-section-gap);
-  overflow-x: auto;
-  max-width: 100%;
-  border-bottom: 1px solid var(--border);
-  margin: 0 0 24px;
-}
-.pattern-detail-tabs > button {
-  padding: 13px 0;
-  font-size: var(--workspace-caption-font-size);
-  white-space: nowrap;
-  min-height: 44px;
-  border-bottom: 2px solid transparent;
-  color: var(--muted-foreground);
-}
-.pattern-detail-tabs > button[aria-selected='true'] {
-  color: var(--primary-text);
-  border-bottom-color: var(--primary);
-  font-weight: 600;
-}
-.pattern-detail-content {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.pattern-quick-view[data-slot='sheet-content'] {
-  width: min(100vw, 640px);
-  max-width: min(100vw, 640px);
-  gap: 0;
-}
-.pattern-quick-view [data-slot='sheet-header'] {
-  padding: 26px 42px 22px 24px;
-  border-bottom: 1px solid var(--border);
-}
-.pattern-quick-view [data-slot='sheet-title'] {
-  font-size: var(--workspace-title-font-size);
-}
-.pattern-quick-view [data-slot='sheet-description'] {
-  font-size: var(--workspace-caption-font-size);
-  line-height: 1.8;
-  margin-top: 8px;
-}
-.pattern-quick-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--workspace-card-padding);
-  overflow-wrap: anywhere;
-}
-.pattern-quick-view [data-slot='sheet-footer'] {
-  border-top: 1px solid var(--border);
-  padding: 18px 24px;
-  background: var(--card);
-}
-.pattern-read-state {
-  padding: 48px 22px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.pattern-state-symbol {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  color: var(--primary-text);
-  background: var(--secondary);
-  border-radius: var(--radius);
-}
-.pattern-read-state h2 {
-  font-size: 1rem;
-  font-weight: 600;
-}
-.pattern-read-state p {
-  font-size: var(--workspace-caption-font-size);
-  line-height: 1.8;
-  color: var(--muted-foreground);
-  max-width: 440px;
-}
-.pattern-state-actions {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-.pattern-action-reason {
-  font-size: var(--workspace-caption-font-size);
-  color: var(--muted-foreground);
-  line-height: 1.8;
-  margin-top: 7px;
-  overflow-wrap: anywhere;
-}
-.pattern-action-dialog {
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  min-width: 0;
-}
-.pattern-review-content {
-  --muted-foreground: var(--secondary-muted-foreground);
-  overflow-wrap: anywhere;
-  min-width: 0;
-  font-size: var(--workspace-caption-font-size);
-  line-height: 1.8;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--secondary);
-}
-.pattern-form-frame {
-  min-width: 0;
-  max-width: 100%;
-}
-.workspace-main > .page-tab-content > .route-entry,
-.workspace-main > .pattern-detail-frame,
-.workspace-main > .pattern-form-frame {
-  padding: max(0px, calc(var(--workspace-card-padding) - var(--layout-content-padding, 0px)));
-}
-.pattern-form-content {
-  display: grid;
-  gap: var(--workspace-section-gap);
-}
-.pattern-form-group {
-  min-width: 0;
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: var(--workspace-card-padding);
-  margin: 0;
-}
-.pattern-form-group legend {
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0 8px;
 }
 .pattern-field-grid {
   display: grid;
@@ -281,18 +30,6 @@
 }
 .pattern-form-field [data-slot='label'] > span[aria-hidden] {
   color: var(--destructive);
-}
-.pattern-unit {
-  color: var(--muted-foreground);
-  font-size: var(--workspace-caption-font-size);
-  font-weight: 400;
-  margin-left: auto;
-}
-.pattern-field-help {
-  color: var(--muted-foreground);
-  font-size: var(--workspace-caption-font-size);
-  line-height: 1.7;
-  margin-top: 7px;
 }
 .pattern-form-error-summary {
   padding: var(--workspace-card-padding);
@@ -342,15 +79,15 @@
 .pattern-form-field [data-slot='input'][aria-invalid='true'] {
   border-color: var(--destructive);
 }
+.field-error {
+  color: var(--destructive);
+  font-size: var(--workspace-caption-font-size);
+  margin-top: 7px;
+}
+.pattern-schema-cell {
+  min-width: 0;
+}
 @media (max-width: 700px) {
-  .pattern-header-actions {
-    width: 100%;
-    padding-top: 0;
-  }
-  .pattern-search-field {
-    max-width: none;
-    flex-basis: 100%;
-  }
   .pattern-field-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--workspace-heading-gap);
@@ -362,9 +99,12 @@
     width: 100%;
     justify-content: flex-end;
   }
-  .pattern-quick-view [data-slot='sheet-header'] {
-    padding-left: 20px;
-  }
+}
+
+.workspace-main > .page-tab-content > .route-entry,
+.workspace-main > .pattern-detail-frame,
+.workspace-main > .pattern-form-frame {
+  padding: max(0px, calc(var(--workspace-card-padding) - var(--layout-content-padding, 0px)));
 }
 /* Shared opt-in list rhythm: a flex gap owns separation, never nested pattern margins.
    Keeps T04 and T05 compact header/filter/table controls at the same density. */
@@ -394,57 +134,8 @@
 :root[data-density='compact'] .pattern-list-workspace .pattern-filter-group label {
   padding: 4px 7px;
 }
-.field-error {
-  color: var(--destructive);
-  font-size: var(--workspace-caption-font-size);
-  margin-top: 7px;
-}
-.submission-state {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 17px;
-  border-radius: var(--radius);
-  padding: 14px;
-  background: var(--secondary);
-  color: var(--primary-text);
-  font-size: var(--workspace-caption-font-size);
-  line-height: 1.8;
-}
-.submission-state p {
-  font-size: var(--workspace-caption-font-size);
-  color: var(--secondary-muted-foreground);
-}
 
-/* Schema fields keep layout metadata in CSS variables so narrow viewports can override columns. */
-.pattern-schema-cell {
-  min-width: 0;
-}
-.schema-field {
-  display: grid;
-  min-width: 0;
-  gap: 0.4rem;
-}
-.schema-field-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-.schema-field-unit,
-.schema-field-help {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-}
-.schema-field-help,
-.schema-field-error {
-  margin: 0;
-}
-.schema-field-error {
-  color: var(--destructive);
-  font-size: 0.75rem;
-}
+/* Dynamic schema geometry must retain its responsive override. */
 @media (min-width: 701px) {
   .pattern-field-grid.pattern-schema-grid {
     grid-template-columns: repeat(var(--schema-columns, 1), minmax(0, 1fr));

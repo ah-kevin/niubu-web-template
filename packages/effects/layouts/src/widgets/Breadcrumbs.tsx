@@ -25,18 +25,18 @@ export function Breadcrumbs({ items, value, renderLink, renderIcon }: Breadcrumb
   const visible = items.filter(item => !item.home || value.showHome);
   if (!value.enabled || (value.hideOnlyOne && visible.length <= 1)) return null;
   return (
-    <nav aria-label={t('shell:breadcrumbs')} className="breadcrumbs" data-breadcrumb-style={value.style}>
+    <nav
+      aria-label={t('shell:breadcrumbs')}
+      className="breadcrumbs flex flex-wrap items-center gap-[10px] text-[10px] text-muted-foreground [&>span:last-child]:text-foreground [&_a:hover]:text-primary-text [&_a:hover]:underline"
+      data-breadcrumb-style={value.style}
+    >
       {visible.map((item, index) => {
         const text = t(item.labelKey, item.titleParams ? { title: t(item.titleParams.titleKey) } : undefined);
         return (
           <span
             key={item.id}
-            className="breadcrumb-item"
+            className="breadcrumb-item inline-flex shrink-0 items-center gap-[5px]"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              flexShrink: 0,
               ...(value.style === 'background'
                 ? { background: 'var(--muted)', padding: '3px 6px', borderRadius: 'var(--radius)' }
                 : {}),

@@ -33,10 +33,16 @@ export function UserDropdown({ displayName, profile, trigger, lock, logout, chil
         )}
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
-        <DropdownMenuContent className="foundation-tools-menu user-dropdown" align="end">
-          <p className="user-dropdown-name">{displayName}</p>
+        <DropdownMenuContent
+          className="foundation-tools-menu user-dropdown z-[70] max-h-[70vh] min-w-[220px] max-w-[calc(100vw_-_24px)] overflow-auto rounded-[var(--radius)] border border-border bg-card p-[8px] text-foreground shadow-[0_8px_24px_#0003]"
+          align="end"
+        >
+          <p className="user-dropdown-name p-[8px] text-[.75rem] text-muted-foreground">{displayName}</p>
           {profile && ProfileLink && (
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem
+              className="flex cursor-pointer flex-col gap-[4px] rounded-[var(--radius)] px-[10px] py-[8px] no-underline outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:cursor-default data-[disabled]:opacity-60"
+              asChild
+            >
               <ProfileLink href={profile.href}>{profile.label ?? t('user.profile')}</ProfileLink>
             </DropdownMenuItem>
           )}
@@ -46,6 +52,7 @@ export function UserDropdown({ displayName, profile, trigger, lock, logout, chil
             const id = reasonPrefix + '-' + kind;
             return (
               <DropdownMenuItem
+                className="flex cursor-pointer flex-col gap-[4px] rounded-[var(--radius)] px-[10px] py-[8px] no-underline outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:cursor-default data-[disabled]:opacity-60"
                 key={kind}
                 disabled={action.disabled}
                 aria-label={t('user.' + kind)}
@@ -55,7 +62,11 @@ export function UserDropdown({ displayName, profile, trigger, lock, logout, chil
                 }}
               >
                 <span>{t('user.' + kind)}</span>
-                {action.reason && <small id={id}>{action.reason}</small>}
+                {action.reason && (
+                  <small className="text-muted-foreground whitespace-normal" id={id}>
+                    {action.reason}
+                  </small>
+                )}
               </DropdownMenuItem>
             );
           })}

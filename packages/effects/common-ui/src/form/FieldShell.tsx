@@ -24,12 +24,12 @@ export function FieldShell({
   const describedBy = [description && helpId, error && errorId].filter(Boolean).join(' ') || undefined;
   const message = error ? (resolveMessage?.(error) ?? error) : undefined;
   return (
-    <div className="schema-field">
-      <div className="schema-field-heading">
+    <div className="schema-field grid min-w-0 gap-[0.4rem]">
+      <div className="schema-field-heading flex items-baseline gap-[0.3rem] text-sm font-medium">
         <Label id={labelId} htmlFor={id}>
           {label}
         </Label>
-        {unit && <span className="schema-field-unit">{unit}</span>}
+        {unit && <span className="schema-field-unit text-xs text-muted-foreground">{unit}</span>}
         {required && <span aria-hidden="true"> *</span>}
       </div>
       {children({
@@ -40,12 +40,12 @@ export function FieldShell({
         'aria-invalid': !!error,
       })}
       {description && (
-        <p id={helpId} className="schema-field-help">
+        <p id={helpId} className="schema-field-help m-0 text-xs text-muted-foreground">
           {description}
         </p>
       )}
       {message && (
-        <p id={errorId} role="alert" className="schema-field-error">
+        <p id={errorId} role="alert" className="schema-field-error m-0 text-xs text-destructive">
           {message}
         </p>
       )}

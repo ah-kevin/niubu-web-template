@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement, type ReactNode } from 'react';
 import { ArrowRight, Info, LockKeyhole } from '@niubu/icons';
+import { Input } from '@niubu/shadcn-ui/input';
+import { Label } from '@niubu/shadcn-ui/label';
 import { Button } from '@niubu/shadcn-ui/button';
 export type AuthenticationMode = 'login' | 'recover' | 'invite';
 export interface AuthenticationValues {
@@ -113,12 +115,12 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
     return renderLink ? renderLink(props) : <a {...props} />;
   }
   return (
-    <section className="auth-card">
+    <section className="auth-card w-full max-w-[370px]">
       <span className="eyebrow">{labels.eyebrow}</span>
-      <h1>{labels.heading}</h1>
-      <p className="auth-intro muted">{labels.description}</p>
+      <h1 className="mt-[13px] mb-[12px] text-[28px] [@media(max-width:700px)]:text-[27px]">{labels.heading}</h1>
+      <p className="auth-intro muted text-[12px] text-muted-foreground">{labels.description}</p>
       {labels.notice && (
-        <div className="notice">
+        <div className="notice my-[20px] flex items-start gap-[10px] rounded-[var(--radius-md)] border border-border bg-secondary px-[14px] py-[13px] text-[12px] leading-[1.75] text-foreground [&>svg]:mt-[2px] [&>svg]:text-[var(--primary-text)] [&_strong]:text-[12px] [&_strong]:font-semibold [&_p]:mt-[3px] [&_p]:text-[11px] [&_p]:text-[var(--secondary-muted-foreground)]">
           <Info aria-hidden="true" size={18} />
           <div>
             <strong>{labels.notice.heading}</strong>
@@ -126,10 +128,13 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
           </div>
         </div>
       )}
-      <form noValidate onSubmit={submit} aria-busy={pending}>
-        <div className="form-field">
-          <label htmlFor={emailId}>{labels.email}</label>
-          <input
+      <form className="mt-[33px]" noValidate onSubmit={submit} aria-busy={pending}>
+        <div className="form-field mb-[20px]">
+          <Label className="mb-[9px] block text-[12px] font-[550]" htmlFor={emailId}>
+            {labels.email}
+          </Label>
+          <Input
+            className="h-[44px] w-full rounded-[var(--radius-md)] border-[var(--control-border)] bg-card dark:bg-card px-[12px] py-0 text-[12px] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100 aria-invalid:border-destructive md:text-[12px]"
             id={emailId}
             ref={emailRef}
             type="email"
@@ -142,18 +147,24 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
             onChange={changed}
           />
           {errors.email && (
-            <p className="field-error" id={`${emailId}-error`}>
+            <p
+              className="field-error mt-[7px] text-[length:var(--workspace-caption-font-size)] text-destructive"
+              id={`${emailId}-error`}
+            >
               {labels.emailError}
             </p>
           )}
         </div>
         {mode === 'login' && (
-          <div className="form-field">
-            <div className="field-label-row">
-              <label htmlFor={passwordId}>{labels.password}</label>
+          <div className="form-field mb-[20px]">
+            <div className="field-label-row flex justify-between gap-[10px] [&_a]:text-[10px] [&_a]:text-[var(--primary-text)]">
+              <Label className="mb-[9px] block text-[12px] font-[550]" htmlFor={passwordId}>
+                {labels.password}
+              </Label>
               {links?.recovery && link(links.recovery)}
             </div>
-            <input
+            <Input
+              className="h-[44px] w-full rounded-[var(--radius-md)] border-[var(--control-border)] bg-card dark:bg-card px-[12px] py-0 text-[12px] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100 aria-invalid:border-destructive md:text-[12px]"
               id={passwordId}
               ref={passwordRef}
               type="password"
@@ -166,18 +177,29 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
               onChange={changed}
             />
             {errors.password && (
-              <p className="field-error" id={`${passwordId}-error`}>
+              <p
+                className="field-error mt-[7px] text-[length:var(--workspace-caption-font-size)] text-destructive"
+                id={`${passwordId}-error`}
+              >
                 {labels.passwordError}
               </p>
             )}
           </div>
         )}
-        <Button className="auth-submit" size="lg" type="submit" disabled={pending}>
+        <Button
+          className="auth-submit mt-[3px] h-[44px] w-full justify-between rounded-[var(--radius-md)] px-[16px] py-0 text-[12px]"
+          size="lg"
+          type="submit"
+          disabled={pending}
+        >
           {labels.submit}
           <ArrowRight aria-hidden="true" size={17} />
         </Button>
         {result && (
-          <div className="submission-state" role={result.kind === 'error' ? 'alert' : 'status'}>
+          <div
+            className="submission-state mt-[17px] flex items-start gap-[10px] rounded-[var(--radius)] bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-[var(--primary-text)] [&_p]:text-[length:var(--workspace-caption-font-size)] [&_p]:text-[var(--secondary-muted-foreground)]"
+            role={result.kind === 'error' ? 'alert' : 'status'}
+          >
             <Info size={18} aria-hidden="true" />
             <div>
               <strong>{labels.resultTitles[result.kind]}</strong>
@@ -189,13 +211,21 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
         )}
       </form>
       {labels.note && (
-        <div className="auth-note">
+        <div className="auth-note mt-[17px] flex items-start gap-[7px] text-[9px] leading-[1.8] text-muted-foreground [&_svg]:mt-[2px]">
           <LockKeyhole size={14} aria-hidden="true" />
           <span>{labels.note}</span>
         </div>
       )}
-      {links?.back && link(links.back, 'auth-return')}
-      {labels.help && <div className="auth-help">{labels.help}</div>}
+      {links?.back &&
+        link(
+          links.back,
+          'auth-return inline-block mt-[24px] text-[12px] text-[var(--primary-text)] underline underline-offset-4',
+        )}
+      {labels.help && (
+        <div className="auth-help mt-[34px] border-t border-border pt-[24px] text-[10px] text-muted-foreground">
+          {labels.help}
+        </div>
+      )}
     </section>
   );
 }

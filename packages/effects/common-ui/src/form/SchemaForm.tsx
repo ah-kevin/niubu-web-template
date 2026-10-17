@@ -53,7 +53,7 @@ export function SchemaForm<V extends FieldValues, C extends CustomFieldParams>({
       >
         {children ?? <SchemaFields model={model} />}
         {showActions && (
-          <div className="pattern-form-actions">
+          <div className="pattern-form-actions mt-[var(--workspace-section-gap)] flex flex-wrap items-center justify-between gap-[14px] border-t border-border pt-[var(--workspace-card-padding)] [@media(max-width:700px)]:items-start [&>p]:text-[length:var(--workspace-caption-font-size)] [&>p]:text-muted-foreground [&>div]:flex [&>div]:flex-wrap [&>div]:gap-[8px] [@media(max-width:700px)]:[&>div]:w-full [@media(max-width:700px)]:[&>div]:justify-end">
             <Button type="submit">{submitLabel ?? t('common:submit')}</Button>
             <Button type="reset" variant="outline">
               {resetLabel ?? t('common:reset')}

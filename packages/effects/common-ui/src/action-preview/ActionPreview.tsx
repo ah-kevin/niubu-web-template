@@ -43,12 +43,18 @@ export function ActionPreview({ valid, children, reason, label, title, onReview 
         {label ?? t('common:checkContinue')}
       </Button>
       {!valid && (
-        <p id={reasonId} className="pattern-action-reason">
+        <p
+          id={reasonId}
+          className="pattern-action-reason mt-[7px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-muted-foreground [overflow-wrap:anywhere]"
+        >
           {reason ?? t('common:action.reason')}
         </p>
       )}
       {valid && reviewed && (
-        <div className="submission-state" role="status">
+        <div
+          className="submission-state mt-[17px] flex items-start gap-[10px] rounded-[var(--radius)] bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-[var(--primary-text)] [&_p]:text-[length:var(--workspace-caption-font-size)] [&_p]:text-[var(--secondary-muted-foreground)]"
+          role="status"
+        >
           <Info size={18} aria-hidden="true" />
           <div>
             <strong>{t(service === 'disabled' ? 'common:notSubmitted' : 'common:previewNotSubmitted')}</strong>
@@ -58,17 +64,21 @@ export function ActionPreview({ valid, children, reason, label, title, onReview 
       )}
       <AlertDialog open={open && valid} onOpenChange={setOpen}>
         <AlertDialogContent
-          className="pattern-action-dialog"
+          className="pattern-action-dialog min-w-0 max-h-[calc(100dvh-32px)] overflow-y-auto"
           onCloseAutoFocus={event => {
             event.preventDefault();
             trigger.current?.focus();
           }}
         >
           <AlertDialogHeader>
-            <AlertDialogTitle className="pattern-title">{title ?? t('common:action.title')}</AlertDialogTitle>
+            <AlertDialogTitle className="pattern-title min-w-0 [overflow-wrap:anywhere] break-normal leading-[1.35]">
+              {title ?? t('common:action.title')}
+            </AlertDialogTitle>
             <AlertDialogDescription>{t('common:action.description')}</AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="pattern-review-content">{children}</div>
+          <div className="pattern-review-content min-w-0 rounded-[var(--radius)] border border-border bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] [--muted-foreground:var(--secondary-muted-foreground)] [overflow-wrap:anywhere]">
+            {children}
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common:backToEdit')}</AlertDialogCancel>
             <AlertDialogAction

@@ -26,7 +26,7 @@ export default function MobileDrawer(p: {
         closeLabel={p.labels.close}
         id={p.contentId}
         side="left"
-        className="mobile-nav-sheet"
+        className="mobile-nav-sheet w-[min(320px,85vw)] pb-[20px]"
         onCloseAutoFocus={event => {
           event.preventDefault();
           p.returnFocus();

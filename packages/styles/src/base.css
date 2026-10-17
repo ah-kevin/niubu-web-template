@@ -1,12 +1,11 @@
 @import 'tw-animate-css';
+@layer base {
 * { box-sizing: border-box; border-color: var(--border); }
 body { margin: 0; min-width: 320px; font-size: var(--workspace-body-font-size); }
 button, input, select, textarea { font: inherit; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), a { cursor: pointer; }
-@layer base {
   a { color: inherit; text-decoration: none; }
-}
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 input:focus-visible { outline-offset: 1px; }
 h1, h2, h3, p { margin: 0; }
@@ -17,6 +16,7 @@ svg { flex-shrink: 0; }
 .muted { color: var(--muted-foreground); line-height: 1.75; }
 .small { font-size: var(--workspace-caption-font-size); }
 .eyebrow { font-size: 10px; letter-spacing: 1.5px; font-weight: 650; color: var(--muted-foreground); display: block; }
+}
 
 :root { --workspace-body-font-size: .875rem; --workspace-caption-font-size: .75rem; --workspace-title-font-size: 1.25rem; font-size: var(--font-size-base); filter: var(--presentation-filter, none); }
 .desktop-sidebar, [data-theme-region='sidebar'] { --background: var(--sidebar-background); --warm: var(--sidebar-warm); --muted: var(--sidebar-muted); --foreground: var(--sidebar-foreground); --primary-text: var(--sidebar-primary-text); --muted-foreground: var(--sidebar-muted-foreground); --nav-active: var(--sidebar-nav-active); --ring: var(--sidebar-ring); --accent: var(--sidebar-accent); --card: var(--sidebar-card); --secondary: var(--sidebar-secondary); --border: var(--sidebar-border); --control-border: var(--sidebar-control-border); --placeholder: var(--sidebar-placeholder); --destructive: var(--sidebar-destructive); --secondary-muted-foreground: var(--muted-foreground); background: var(--sidebar); color: var(--sidebar-foreground); }

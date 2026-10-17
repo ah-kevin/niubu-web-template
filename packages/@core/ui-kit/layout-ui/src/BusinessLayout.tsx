@@ -148,12 +148,12 @@ export function BusinessLayout(p: AppLayoutProps) {
     selected: string | undefined,
     onSelect: ((id: string) => void) | undefined,
   ) => (
-    <nav className="layout-selectors" aria-label={label}>
+    <nav className="layout-selectors flex flex-col gap-[4px]" aria-label={label}>
       {nodes.map(node => (
         <button
           key={node.id}
           type="button"
-          className="nav-link"
+          className="nav-link my-[2px] flex min-h-[var(--row-height)] w-full items-center gap-[12px] rounded-[7px] border-0 bg-transparent px-[12px] py-[8px] text-left [font-family:inherit] text-[.8125rem] text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-pressed={selected === node.id}
           onClick={() => {
             if (m.sidebarCollapsed && label !== p.labels.topNavigation) p.onSidebarTemporaryExpansionChange?.(true);
@@ -251,7 +251,10 @@ export function BusinessLayout(p: AppLayoutProps) {
         p.onSidebarTemporaryExpansionChange?.(false);
       }}
     >
-      <a className="skip-link" href="#main-content">
+      <a
+        className="skip-link fixed top-[12px] left-[12px] z-[100] -translate-y-[150%] rounded-[8px] border border-ring bg-card px-[20px] py-[12px] text-primary-text focus:translate-y-0"
+        href="#main-content"
+      >
         {p.labels.skipContent}
       </a>
       {m.sidebarEnabled && (
@@ -268,20 +271,20 @@ export function BusinessLayout(p: AppLayoutProps) {
               p.onSidebarInteractionChange?.('primary', 'focus', false);
           }}
         >
-          <div className="layout-logo">{p.logo}</div>
+          <div className="layout-logo flex shrink-0 items-center overflow-hidden px-[12px]">{p.logo}</div>
           <div className="layout-navigation-scroll">
             {m.primaryKind === 'rail'
               ? selectors(p.primaryNodes ?? [], p.labels.navigation, p.selectedPrimaryId, p.onSelectPrimary)
               : tree(p.primaryNodes ?? p.navigation, p.labels.navigation, 'vertical', m.sidebarVisuallyCollapsed)}
           </div>
-          <div className="sidebar-bottom">
+          <div className="sidebar-bottom shrink-0 overflow-hidden px-[12px] py-[8px]">
             {p.sidebarBottom}
-            <div className="sidebar-controls">
+            <div className="sidebar-controls flex items-center justify-between gap-[2px]">
               {controls?.showCollapse && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="sidebar-collapse-control"
+                  className="sidebar-collapse-control size-[24px] flex-[0_0_24px] rounded-[3px] bg-muted p-[4px] text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-accent"
                   aria-label={controls.collapsed ? p.labels.expand : p.labels.collapse}
                   aria-pressed={controls.collapsed}
                   onClick={() => {
@@ -300,7 +303,7 @@ export function BusinessLayout(p: AppLayoutProps) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="sidebar-fixed-control"
+                  className="sidebar-fixed-control ml-auto size-[24px] flex-[0_0_24px] rounded-[3px] bg-muted p-[4px] text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-accent"
                   aria-label={controls.fixed ? p.labels.unpin : p.labels.pin}
                   aria-pressed={controls.fixed}
                   onClick={() => controls.onFixedChange(!controls.fixed)}
@@ -381,7 +384,7 @@ export function BusinessLayout(p: AppLayoutProps) {
         aria-hidden={(m.headerHidden && !outsideRecovery) || undefined}
         inert={(m.headerHidden && !outsideRecovery) || undefined}
       >
-        <div className="context-actions">
+        <div className="context-actions flex min-w-0 items-center gap-[8px]">
           {opener}
           {p.breadcrumbs}
           {m.recoveryRequired && (
@@ -392,7 +395,7 @@ export function BusinessLayout(p: AppLayoutProps) {
           {m.headerPlacement === 'full' && !m.sidebarEnabled && p.logo}
           {p.scopeSelector}
           {p.mode && (
-            <section className="workspace-page-context" aria-label={p.labels.pageContext}>
+            <section className="workspace-page-context relative min-w-0 shrink-0" aria-label={p.labels.pageContext}>
               {p.mode}
             </section>
           )}
@@ -407,7 +410,7 @@ export function BusinessLayout(p: AppLayoutProps) {
               ? tree(p.topNodes ?? p.navigation, p.labels.topNavigation, 'horizontal')
               : selectors(p.topNodes ?? [], p.labels.topNavigation, p.selectedTopId, p.onSelectTop))}
         </div>
-        <div className="header-actions">
+        <div className="header-actions flex min-w-0 items-center gap-[8px]">
           <div ref={setHeaderTarget} className="foundation-header-slot" />
           {p.topActions}
           {p.notifications}

@@ -1,3 +1,4 @@
+import { Button } from '@niubu/shadcn-ui/button';
 import { rowActivation } from './row-activation';
 import type { RowData } from '@tanstack/react-table';
 import { useMemo, type ReactElement } from 'react';
@@ -27,10 +28,13 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
   });
   const rows = table.getRowModel().rows;
   return (
-    <section className="pattern-data-table native-data-table" aria-label={props.caption}>
+    <section
+      className="pattern-data-table native-data-table [&_table]:border-separate [&_table]:border-spacing-0 [&_table]:text-start [&_th]:relative [&_th]:box-border [&_th]:h-[var(--row-height)] [&_th]:border-b [&_th]:border-border [&_th]:bg-secondary [&_th]:px-[var(--workspace-card-padding)] [&_th]:py-0 [&_th]:text-start [&_th]:text-[length:var(--workspace-caption-font-size)] [&_td]:box-border [&_td]:border-b [&_td]:border-border [&_td]:px-[var(--workspace-card-padding)] [&_td]:py-[var(--workspace-heading-gap)] [&_td]:text-[length:var(--workspace-body-font-size)] [&_td]:whitespace-normal [&_td]:[overflow-wrap:anywhere] [&_tr[tabindex]]:cursor-pointer [&_tr:focus-visible]:outline-2 [&_tr:focus-visible]:outline-primary [&_tr:focus-visible]:-outline-offset-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card"
+      aria-label={props.caption}
+    >
       <ReadMessage props={props} hasRows={rows.length > 0} />
       {props.readState === 'ready' && rows.length > 0 && (
-        <div className="native-table-scroll">
+        <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
           <table>
             <caption>{props.caption}</caption>
             <thead>
@@ -119,9 +123,10 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
       table={table}
       props={props}
       selectionSummary={
-        <div className="pattern-selection-bar">
+        <div className="pattern-selection-bar flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-body-font-size)]">
           <span>{props.selectionLabels.selected(Object.keys(selected).length)}</span>
-          <button
+          <Button
+            variant="outline"
             type="button"
             disabled={
               props.readState !== 'ready' ||
@@ -134,10 +139,15 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
             }}
           >
             {props.selectionLabels.selectAllResults(props.resultCount ?? 0)}
-          </button>
-          <button type="button" disabled={Object.keys(selected).length === 0} onClick={() => table.setRowSelection({})}>
+          </Button>
+          <Button
+            variant="outline"
+            type="button"
+            disabled={Object.keys(selected).length === 0}
+            onClick={() => table.setRowSelection({})}
+          >
             {props.selectionLabels.clearSelection}
-          </button>
+          </Button>
           {props.model.kind === 'server' && !props.onSelectAllResults && (
             <span>{props.selectionLabels.allResultsUnavailable}</span>
           )}
@@ -148,14 +158,14 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
           label={props.selectionLabels.selectPage}
           selected={table.getIsAllPageRowsSelected()}
           indeterminate={table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()}
-          onChange={table.getToggleAllPageRowsSelectedHandler()}
+          onChange={selected => table.toggleAllPageRowsSelected(selected)}
         />
       }
       selectionCell={row => (
         <SelectionCheckbox
           selected={selected[row.id] === true}
           label={props.selectionLabels.selectRow(row.id)}
-          onChange={row.getToggleSelectedHandler()}
+          onChange={selected => row.toggleSelected(selected)}
         />
       )}
     />

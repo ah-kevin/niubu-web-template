@@ -117,9 +117,7 @@ export function OverlayFrame({
             >
               ×
             </Button>
-            <div className="pattern-overlay-content" style={{ minHeight: 0, overflow: 'auto', flex: 1 }}>
-              {children}
-            </div>
+            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto">{children}</div>
             {actions !== null && actions !== false && <Footer>{actions}</Footer>}
           </Content>
         </Suspense>

@@ -77,7 +77,7 @@ export function TabMenu({
   ];
   return createPortal(
     <div
-      className="page-tab-menu"
+      className="page-tab-menu fixed z-[60] box-border flex min-w-[min(175px,calc(100vw_-_16px))] flex-col overflow-y-auto overscroll-contain rounded-[var(--radius)] border border-border bg-card p-[5px] text-foreground shadow-[0_8px_24px_#0003]"
       role="menu"
       aria-label={tab.label}
       style={{ position: 'fixed' }}
@@ -106,6 +106,7 @@ export function TabMenu({
         <button
           type="button"
           role="menuitem"
+          className="shrink-0 rounded-[4px] px-[10px] py-[7px] text-left text-[.8125rem] wrap-anywhere hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:opacity-40"
           key={command}
           disabled={disabled}
           onClick={() => {

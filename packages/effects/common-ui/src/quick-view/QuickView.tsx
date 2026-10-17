@@ -68,7 +68,7 @@ export function QuickView({
       >
         <SheetContent
           closeLabel={t('common:close')}
-          className="pattern-quick-view"
+          className="pattern-quick-view w-[min(100vw,640px)] max-w-[min(100vw,640px)] sm:max-w-[min(100vw,640px)] gap-0"
           onOpenAutoFocus={() => {
             previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           }}
@@ -80,19 +80,28 @@ export function QuickView({
             }
           }}
         >
-          <SheetHeader>
-            <SheetTitle className="pattern-title">{title ?? t('common:quick.title')}</SheetTitle>
-            <SheetDescription>{description ?? t('common:quick.description')}</SheetDescription>
+          <SheetHeader className="border-b border-border pt-[26px] pr-[42px] pb-[22px] pl-[24px] [@media(max-width:700px)]:pl-[20px]">
+            <SheetTitle className="text-[length:var(--workspace-title-font-size)] pattern-title min-w-0 [overflow-wrap:anywhere] break-normal leading-[1.35]">
+              {title ?? t('common:quick.title')}
+            </SheetTitle>
+            <SheetDescription className="mt-[8px] text-[length:var(--workspace-caption-font-size)] leading-[1.8]">
+              {description ?? t('common:quick.description')}
+            </SheetDescription>
           </SheetHeader>
-          <div className="pattern-quick-content">{children}</div>
-          <SheetFooter>
+          <div className="pattern-quick-content min-h-0 flex-1 overflow-y-auto p-[var(--workspace-card-padding)] [overflow-wrap:anywhere]">
+            {children}
+          </div>
+          <SheetFooter className="border-t border-border bg-card px-[24px] py-[18px]">
             {cannotPreserveDestination ? (
               <>
                 <Button disabled aria-describedby={unavailableReasonId}>
                   {t('common:quick.fullDetails')}
                   <ArrowUpRight size={16} aria-hidden="true" />
                 </Button>
-                <p id={unavailableReasonId} className="pattern-action-reason">
+                <p
+                  id={unavailableReasonId}
+                  className="pattern-action-reason mt-[7px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-muted-foreground [overflow-wrap:anywhere]"
+                >
                   {interaction ? t('common:quick.noNavigationDraft') : t('common:quick.noNavigationDiscard')}
                 </p>
               </>

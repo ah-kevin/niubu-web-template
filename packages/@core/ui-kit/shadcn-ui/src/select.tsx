@@ -49,26 +49,26 @@ export function Select({
         form={form}
         name={name}
         disabled={disabled}
-        className={cn('preference-select', className)}
+        className={cn('preference-select flex min-w-[145px] max-w-full items-center justify-between gap-[12px] rounded-lg border border-border bg-background px-[9px] py-[7px] text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50', className)}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
-        <SelectPrimitive.Icon aria-hidden className="preference-select-icon">
+        <SelectPrimitive.Icon aria-hidden className="preference-select-icon inline-flex shrink-0 items-center [&>svg]:shrink-0">
           <ChevronDown size={16} aria-hidden="true" />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       {portal.ready && <SelectPrimitive.Portal container={portal.container}>
         <BusinessPortalAdmission>
-        <BusinessPortalContent><SelectPrimitive.Content ref={boundaryRef} position="popper" className="preference-select-content">
+        <BusinessPortalContent><SelectPrimitive.Content ref={boundaryRef} position="popper" className="preference-select-content z-[80] max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-auto rounded-lg border border-border bg-card text-foreground shadow-lg">
           <SelectPrimitive.Viewport>
             {options.map(option => (
               <SelectPrimitive.Item
                 key={option.value}
                 value={option.value === '' ? emptyValue : option.value}
                 disabled={option.disabled}
-                className="preference-select-item"
+                className="preference-select-item flex justify-between gap-[12px] px-[12px] py-[7px] outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-foreground"
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
-                <SelectPrimitive.ItemIndicator aria-hidden className="preference-select-icon">
+                <SelectPrimitive.ItemIndicator aria-hidden className="preference-select-icon inline-flex shrink-0 items-center [&>svg]:shrink-0">
                   <Check size={16} aria-hidden="true" />
                 </SelectPrimitive.ItemIndicator>
               </SelectPrimitive.Item>
