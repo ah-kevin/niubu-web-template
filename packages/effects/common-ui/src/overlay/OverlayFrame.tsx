@@ -1,5 +1,6 @@
 import { Suspense, useRef, type CSSProperties } from 'react';
 import { Button } from '@niubu/shadcn-ui/button';
+import { X } from '@niubu/icons';
 import {
   Dialog,
   DialogContent,
@@ -87,7 +88,7 @@ export function OverlayFrame({
             className={
               variant === 'modal'
                 ? 'pattern-overlay pattern-overlay-modal flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0'
-                : 'pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-hidden sm:max-w-lg'
+                : 'pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-hidden sm:max-w-lg [@media(max-width:700px)]:w-full [@media(max-width:700px)]:max-w-full'
             }
             showCloseButton={false}
             data-fullscreen={fullscreen || undefined}
@@ -109,24 +110,25 @@ export function OverlayFrame({
               requestClose('outside');
             }}
           >
-            <Header className="shrink-0 border-b border-border p-6 pe-14 text-start">
+            <Header className="shrink-0 border-b border-border p-[var(--workspace-card-padding)] pe-14 text-start">
               <Title>{title}</Title>
               {hasDescription && <Description>{description}</Description>}
             </Header>
             <Button
               type="button"
               variant="ghost"
-              className="absolute top-2 right-2"
+              size="icon"
+              className="absolute top-2 right-2 size-8"
               aria-label={labels.close}
               onClick={() => requestClose('button')}
             >
-              ×
+              <X aria-hidden="true" size={16} />
             </Button>
-            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain p-6">
+            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain p-[var(--workspace-card-padding)]">
               {children}
             </div>
             {actions !== null && actions !== false && (
-              <Footer className="shrink-0 border-t border-border p-6">{actions}</Footer>
+              <Footer className="shrink-0 border-t border-border p-[var(--workspace-card-padding)]">{actions}</Footer>
             )}
           </Content>
         </Suspense>

@@ -1,9 +1,10 @@
+import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { Label } from '@niubu/shadcn-ui/label';
 import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
-import { ArrowDown, ArrowUp } from '@niubu/icons';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
 import { Fragment, memo, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
@@ -70,7 +71,7 @@ export const SelectionCheckbox = memo(function SelectionCheckbox({
 }) {
   return (
     <Checkbox
-      className="size-[24px]"
+      className="size-4"
       aria-label={label}
       checked={indeterminate ? 'indeterminate' : selected}
       onCheckedChange={checked => onChange(checked === true)}
@@ -90,7 +91,7 @@ function pinnedStyle<T extends RowData>(
     insetInlineStart: pin === 'start' ? column.getStart('start') : undefined,
     insetInlineEnd: pin === 'end' ? column.getAfter('end') : undefined,
     zIndex: pin ? 2 : undefined,
-    background: pin ? 'var(--card, Canvas)' : undefined,
+    background: pin ? 'var(--table-row-background, var(--card, Canvas))' : undefined,
   };
 }
 function ColumnWidthInput({
@@ -105,7 +106,7 @@ function ColumnWidthInput({
   const [draft, setDraft] = useState(String(value));
   return (
     <NumberInput
-      className="w-[65px]"
+      className="w-20 min-w-0 justify-self-end"
       valueMode="string"
       value={draft}
       onValueChange={setDraft}
@@ -132,18 +133,29 @@ function ColumnSettings<T extends RowData>({
 }) {
   const columns = table.getAllLeafColumns();
   return (
-    <details className="pattern-table-settings relative [&>summary]:min-h-[32px] [&>summary]:cursor-pointer">
-      <summary>{labels.settings}</summary>
-      <div className="pattern-column-settings absolute end-0 top-[calc(100%+8px)] z-10 max-h-[60dvh] w-[min(360px,calc(100vw-44px))] overflow-y-auto rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
+    <details className="pattern-table-settings group/table-settings relative ms-auto">
+      <Button asChild variant="outline" size="sm">
+        <summary className="list-none [&::-webkit-details-marker]:hidden">
+          {labels.settings}
+          <ChevronDown
+            className="pattern-table-settings-chevron group-open/table-settings:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+      </Button>
+      <div className="pattern-column-settings absolute end-0 top-[calc(100%+8px)] z-20 grid max-h-[60dvh] w-[min(360px,calc(100vw-44px))] gap-[var(--workspace-heading-gap)] overflow-y-auto rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-lg">
         {columns.map(column => {
           const name = labels.columnName(column.id);
           const visible = table.state.columnVisibility[column.id] !== false;
           return (
-            <fieldset className="flex flex-wrap gap-[10px] border border-border p-[9px]" key={column.id}>
-              <legend>{name}</legend>
-              <Label className="flex items-center gap-[5px]">
+            <fieldset
+              className="grid min-w-0 gap-[var(--workspace-heading-gap)] rounded-[var(--radius)] border border-border p-[var(--workspace-heading-gap)]"
+              key={column.id}
+            >
+              <legend className="px-1 text-[length:var(--workspace-caption-font-size)] font-semibold">{name}</legend>
+              <Label className="pattern-column-setting-toggle flex items-center gap-2">
                 <Checkbox
-                  className="size-[24px]"
+                  className="size-4"
                   checked={visible}
                   aria-label={labels.showColumn(name)}
                   disabled={!column.getCanHide() || (visible && table.getVisibleLeafColumns().length === 1)}
@@ -151,7 +163,7 @@ function ColumnSettings<T extends RowData>({
                 />
                 {labels.showColumn(name)}
               </Label>
-              <Label className="flex items-center gap-[5px]">
+              <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2">
                 {labels.columnWidth(name)}
                 <ColumnWidthInput
                   key={`${column.id}:${column.getSize()}`}
@@ -160,9 +172,10 @@ function ColumnSettings<T extends RowData>({
                   onCommit={value => table.setColumnSizing(old => ({ ...old, [column.id]: value }))}
                 />
               </Label>
-              <Label className="flex items-center gap-[5px]">
+              <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2">
                 {labels.pinColumn(name)}
                 <Select
+                  className="w-full min-w-0"
                   label={labels.pinColumn(name)}
                   value={column.getIsPinned() || 'none'}
                   onValueChange={value => column.pin(value === 'start' ? 'start' : value === 'end' ? 'end' : false)}
@@ -178,6 +191,8 @@ function ColumnSettings<T extends RowData>({
         })}
         <Button
           variant="outline"
+          size="sm"
+          className="w-full"
           type="button"
           onClick={() => {
             if (onResetColumns) {
@@ -306,12 +321,13 @@ function Pagination<T extends RowData>({
   const pagination = table.state.pagination;
   return (
     <nav
-      className="pattern-pagination flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-body-font-size)]"
+      className="pattern-pagination grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2 border-t border-border px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)] [@media(max-width:700px)]:grid-cols-[minmax(0,1fr)_auto_auto]"
       aria-label={caption}
     >
-      <Label className="flex items-center gap-[5px]">
+      <Label className="inline-flex min-w-0 flex-wrap items-center gap-2 text-muted-foreground [@media(max-width:700px)]:col-span-3">
         {labels.pageSize}
         <Select
+          className="pattern-page-size h-[var(--workspace-control-height)] w-20 min-w-0 px-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)]"
           label={labels.pageSize}
           value={String(pagination.pageSize)}
           onValueChange={value => table.setPageSize(Number(value))}
@@ -320,24 +336,32 @@ function Pagination<T extends RowData>({
             .map(size => ({ value: String(size), label: String(size) }))}
         />
       </Label>
-      <span aria-live="polite">{labels.page(pagination.pageIndex + 1, Math.max(1, table.getPageCount()))}</span>
+      <span className="col-start-2 text-muted-foreground [@media(max-width:700px)]:col-start-1" aria-live="polite">
+        {labels.page(pagination.pageIndex + 1, Math.max(1, table.getPageCount()))}
+      </span>
       <Button
         variant="outline"
         type="button"
+        size="icon-sm"
+        className="size-[32px]"
         aria-label={labels.previousPage}
+        title={labels.previousPage}
         disabled={!table.getCanPreviousPage()}
         onClick={() => table.previousPage()}
       >
-        {labels.previousPage}
+        <ChevronLeft aria-hidden="true" />
       </Button>
       <Button
         variant="outline"
         type="button"
+        size="icon-sm"
+        className="size-[32px]"
         aria-label={labels.nextPage}
+        title={labels.nextPage}
         disabled={!table.getCanNextPage()}
         onClick={() => table.nextPage()}
       >
-        {labels.nextPage}
+        <ChevronRight aria-hidden="true" />
       </Button>
     </nav>
   );
@@ -353,6 +377,7 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   selectionHeader,
   selectionCell,
   selectionSummary,
+  isRowSelected,
 }: {
   table: ListNativeTable<T>;
   props: BaseTableProps<T> & ListSlices;
@@ -363,16 +388,18 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   selectionHeader?: ReactNode;
   selectionCell?: (row: R) => ReactNode;
   selectionSummary?: ReactNode;
+  isRowSelected?: (row: R) => boolean;
 }) {
   const [initialPageSize] = useState(() => table.state.pagination.pageSize);
   return (
-    <section
-      className="pattern-data-table native-data-table [&_table]:border-separate [&_table]:border-spacing-0 [&_table]:text-start [&_th]:relative [&_th]:box-border [&_th]:h-[var(--row-height)] [&_th]:border-b [&_th]:border-border [&_th]:bg-secondary [&_th]:px-[var(--workspace-card-padding)] [&_th]:py-0 [&_th]:text-start [&_th]:text-[length:var(--workspace-caption-font-size)] [&_td]:box-border [&_td]:border-b [&_td]:border-border [&_td]:px-[var(--workspace-card-padding)] [&_td]:py-[var(--workspace-heading-gap)] [&_td]:text-[length:var(--workspace-body-font-size)] [&_td]:whitespace-normal [&_td]:[overflow-wrap:anywhere] [&_tr[tabindex]]:cursor-pointer [&_tr:focus-visible]:outline-2 [&_tr:focus-visible]:outline-primary [&_tr:focus-visible]:-outline-offset-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card"
-      aria-label={props.caption}
-    >
-      <div className="pattern-table-toolbar flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-body-font-size)]">
-        {props.resultCount !== null && <p>{props.labels.total(props.resultCount)}</p>}
-        {selectionSummary}
+    <section className={nativeTableClassName} aria-label={props.caption}>
+      <div className="pattern-table-toolbar flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)]">
+        <div className="pattern-table-summary flex min-w-0 flex-auto flex-wrap items-center gap-x-[var(--workspace-section-gap)] gap-y-[var(--workspace-heading-gap)] [&>p]:m-0">
+          {props.resultCount !== null && (
+            <p className="text-muted-foreground">{props.labels.total(props.resultCount)}</p>
+          )}
+          {selectionSummary}
+        </div>
         <ColumnSettings table={table} labels={props.labels} onResetColumns={props.onResetColumns} />
       </div>
       <ReadMessage props={props} hasRows={rows.length > 0} />
@@ -384,7 +411,7 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
               {headerGroups.map(group => (
                 <tr key={group.id}>
                   {selectionHeader && (
-                    <th scope="col" style={{ width: 44 }}>
+                    <th scope="col" className="pattern-selection-cell" style={{ width: 44 }}>
                       {selectionHeader}
                     </th>
                   )}
@@ -396,8 +423,13 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
             </thead>
             <tbody>
               {rows.map(row => (
-                <tr key={row.id} data-row-id={row.id} {...rowActivation(row.original, props.onRowActivate)}>
-                  {selectionCell && <td>{selectionCell(row)}</td>}
+                <tr
+                  key={row.id}
+                  data-row-id={row.id}
+                  aria-selected={isRowSelected?.(row)}
+                  {...rowActivation(row.original, props.onRowActivate)}
+                >
+                  {selectionCell && <td className="pattern-selection-cell">{selectionCell(row)}</td>}
                   {renderCells(row)}
                 </tr>
               ))}
@@ -461,6 +493,7 @@ export function SelectableView<T extends RowData>({
       selectionHeader={selectionHeader}
       selectionCell={selectionCell}
       selectionSummary={selectionSummary}
+      isRowSelected={selectionCell ? row => table.state.rowSelection[row.id] === true : undefined}
       renderHeader={header => (
         <HeaderView<T> header={header} labels={props.labels}>
           <table.FlexRender header={header} />

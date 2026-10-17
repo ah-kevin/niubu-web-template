@@ -13,7 +13,7 @@ export function RadioGroupItem({
       {...props}
       data-slot="radio-group-item"
       className={cn(
-        'flex size-4 items-center justify-center rounded-full border border-input outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
+        'flex size-4 items-center justify-center rounded-full border border-input bg-card outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:text-primary',
         className,
       )}
     >

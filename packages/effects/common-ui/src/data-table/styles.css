@@ -19,7 +19,7 @@
 }
 
 :root[data-density='compact'] .native-data-table td {
-  padding: 7px 12px;
+  padding: calc(var(--workspace-heading-gap) / 2) 12px;
 }
 
 :root[data-density='compact'] .pattern-list-workspace .pattern-table-toolbar {
@@ -27,4 +27,8 @@
 }
 :root[data-density='compact'] .pattern-list-workspace .pattern-selection-bar {
   padding-block: var(--workspace-table-inset);
+}
+
+:root[data-density='compact'] .pattern-list-workspace .pattern-table-toolbar .pattern-selection-bar {
+  padding: 0;
 }

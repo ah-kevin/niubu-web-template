@@ -146,12 +146,15 @@
   .pattern-schema-fields[data-label-layout='inline'] .schema-field {
     grid-template-columns: var(--schema-label-width, 120px) minmax(0, 1fr);
     align-items: start;
+    min-height: var(--workspace-control-height);
   }
   .pattern-schema-fields[data-label-layout='inline'] .schema-field > .schema-field-heading {
     grid-column: 1;
     grid-row: 1;
+    align-self: center;
   }
   .pattern-schema-fields[data-label-layout='inline'] .schema-field > :not(.schema-field-heading) {
     grid-column: 2;
+    align-self: center;
   }
 }

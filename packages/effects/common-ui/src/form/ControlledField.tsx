@@ -209,7 +209,12 @@ export function ControlledField<
           case 'checkbox-group': {
             const selected = Array.isArray(field.value) ? (field.value as string[]) : [];
             return (
-              <div role="group" aria-labelledby={shell['aria-labelledby']} aria-describedby={shell['aria-describedby']}>
+              <div
+                className="flex min-h-[var(--workspace-control-height)] flex-wrap items-center gap-x-4 gap-y-2"
+                role="group"
+                aria-labelledby={shell['aria-labelledby']}
+                aria-describedby={shell['aria-describedby']}
+              >
                 {options.map((option, index) => (
                   <Label className="flex items-center gap-2" key={option.value} htmlFor={`${shell.id}-${index}`}>
                     <Checkbox

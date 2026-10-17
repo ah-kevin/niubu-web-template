@@ -5,7 +5,7 @@ export function Switch(props: React.ComponentProps<typeof SwitchPrimitive.Root>)
   return (
     <SwitchPrimitive.Root
       {...props}
-      className={cn('preference-switch inline-flex h-[21px] items-center w-[36px] shrink-0 rounded-[20px] border border-border bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary', props.className)}
+      className={cn('preference-switch inline-flex h-[21px] items-center w-[36px] shrink-0 rounded-[20px] border border-input bg-muted outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary', props.className)}
       asChild={props.name ? true : props.asChild}
     >
       {props.name ? (

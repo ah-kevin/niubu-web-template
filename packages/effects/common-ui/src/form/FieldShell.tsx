@@ -30,7 +30,12 @@ export function FieldShell({
           {label}
         </Label>
         {unit && <span className="schema-field-unit text-xs text-muted-foreground">{unit}</span>}
-        {required && <span aria-hidden="true"> *</span>}
+        {required && (
+          <span aria-hidden="true" className="text-destructive">
+            {' '}
+            *
+          </span>
+        )}
       </div>
       {children({
         id,

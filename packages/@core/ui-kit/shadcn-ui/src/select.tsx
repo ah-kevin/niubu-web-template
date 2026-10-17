@@ -49,7 +49,7 @@ export function Select({
         form={form}
         name={name}
         disabled={disabled}
-        className={cn('preference-select flex min-w-[145px] max-w-full items-center justify-between gap-[12px] rounded-lg border border-border bg-background px-[9px] py-[7px] text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50', className)}
+        className={cn('preference-select flex h-[var(--workspace-control-height,36px)] min-w-[145px] max-w-full items-center justify-between gap-3 rounded-md border border-input bg-card px-3 py-1 text-[length:var(--workspace-body-font-size,0.875rem)] text-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 disabled:cursor-not-allowed disabled:opacity-50', className)}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon aria-hidden className="preference-select-icon inline-flex shrink-0 items-center [&>svg]:shrink-0">
@@ -58,7 +58,7 @@ export function Select({
       </SelectPrimitive.Trigger>
       {portal.ready && <SelectPrimitive.Portal container={portal.container}>
         <BusinessPortalAdmission>
-        <BusinessPortalContent><SelectPrimitive.Content ref={boundaryRef} position="popper" className="preference-select-content z-[80] max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-auto rounded-lg border border-border bg-card text-foreground shadow-lg">
+        <BusinessPortalContent><SelectPrimitive.Content ref={boundaryRef} position="popper" className="preference-select-content z-[80] max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-auto rounded-md border border-border bg-card text-[length:var(--workspace-body-font-size,0.875rem)] text-foreground shadow-lg">
           <SelectPrimitive.Viewport>
             {options.map(option => (
               <SelectPrimitive.Item
