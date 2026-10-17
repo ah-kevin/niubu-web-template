@@ -7,12 +7,14 @@ import { compilePlaygroundStyles, matchingRules, readCompiledRules, type Compile
 let rules: CompiledStyleRule[];
 beforeAll(async () => { rules = readCompiledRules(await compilePlaygroundStyles()); });
 
-it('keeps the real form example title at its fixed size and spacing', () => {
-  const view = render(<FormsPage />);
-  const heading = view.container.querySelector('.pattern-page > h1')!;
+it('keeps the real form example title at its fixed size and shared header spacing', () => {
+  render(<FormsPage />);
+  const heading = screen.getByRole('heading', { level: 1 });
   expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === '24px')).toBe(true);
   expect(matchingRules(rules, heading, 'font-weight').some(rule => ['600', 'var(--font-weight-semibold)'].includes(rule.style.getPropertyValue('font-weight')))).toBe(true);
-  expect(matchingRules(rules, heading, 'margin-bottom').some(rule => rule.style.getPropertyValue('margin-bottom') === '12px')).toBe(true);
+  const header = heading.closest('header');
+  expect(header).not.toBeNull();
+  expect(matchingRules(rules, header!, 'gap').some(rule => rule.style.getPropertyValue('gap') === '12px')).toBe(true);
 });
 
 it('retains the public CSS contract for bare business breadcrumbs and loading messages', () => {

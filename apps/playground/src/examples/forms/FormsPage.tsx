@@ -33,10 +33,15 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
   const Panel = active[2];
   return (
     <div className="pattern-page grid min-w-0 gap-4">
-      <h1 className="mb-[12px] text-[24px] font-semibold tracking-[-.025em]">{text('title')}</h1>
-      <DocumentationLink kind="forms" />
-      <p>{text('introduction')}</p>
-      <nav aria-label={text('title')} className="pattern-form-actions">
+      <header className="grid gap-[12px]">
+        <h1 className="text-[24px] font-semibold tracking-[-.025em]">{text('title')}</h1>
+        <DocumentationLink kind="forms" />
+        <p className="text-sm leading-relaxed text-muted-foreground">{text('introduction')}</p>
+      </header>
+      <nav
+        aria-label={text('title')}
+        className="flex min-w-0 flex-wrap items-center justify-start gap-2 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]"
+      >
         {cases.map(([id, label]) => (
           <Button
             key={id}
@@ -49,8 +54,16 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
           </Button>
         ))}
       </nav>
-      <section className="min-w-0 space-y-4" aria-label={`${active[0]} · ${text(active[1])}`}>
-        <h2>
+      <section
+        className={[
+          'min-w-0 space-y-4 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] sm:p-6',
+          active[0] === 'E44' || active[0] === 'E46' ? '' : '[&_form]:max-w-xl',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        aria-label={`${active[0]} · ${text(active[1])}`}
+      >
+        <h2 className="text-lg font-semibold">
           {active[0]} · {text(active[1])}
         </h2>
         {active[0] === 'E43' ? <ApiPanel saveName={saveName} /> : <Panel key={active[0]} />}
@@ -117,19 +130,28 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
   }
   return (
     <>
-      <p>{text('apiHelp')}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{text('apiHelp')}</p>
       <schema.Form showActions={false}>
         <ExampleFields form={schema.form} {...schema.presentation} />
       </schema.Form>
-      <div className="pattern-form-actions">
-        <Button type="button" onClick={() => schema.setValues({ name: 'Grace' }, { shouldDirty: true })}>
+      <div className="flex flex-wrap items-center justify-start gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => schema.setValues({ name: 'Grace' }, { shouldDirty: true })}
+        >
           {text('set')}
         </Button>
-        <Button type="button" onClick={() => setCurrent(schema.publicValues(schema.getValues()).name ?? '—')}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setCurrent(schema.publicValues(schema.getValues()).name ?? '—')}
+        >
           {text('read')}
         </Button>
         <Button
           type="button"
+          variant="outline"
           onClick={() => {
             schema.updateFields([{ name: 'name', label: 'lockedName', disabled: true }]);
             setLocked(true);
@@ -139,6 +161,7 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
         </Button>
         <Button
           type="button"
+          variant="outline"
           onClick={() => {
             schema.cancel();
             schema.form.reset();
@@ -148,6 +171,7 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
         </Button>
         <Button
           type="button"
+          variant="outline"
           onClick={() => {
             void schema.validate().then(result => {
               if (alive.current) setStatus(result.valid ? 'valid' : 'invalid');
@@ -167,6 +191,7 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
         </Button>
         <Button
           type="button"
+          variant="outline"
           onClick={() => {
             schema.cancel();
             setStatus('cancelled');
@@ -175,7 +200,7 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
           {text('cancel')}
         </Button>
         {finish && (
-          <Button type="button" onClick={finish}>
+          <Button type="button" variant="outline" onClick={finish}>
             {text('finish')}
           </Button>
         )}
@@ -564,19 +589,22 @@ function FormatPanel() {
       <schema.Form showActions={false}>
         <ExampleFields form={schema.form} {...schema.presentation} />
       </schema.Form>
-      <Button type="button" onClick={compare}>
-        {text('compare')}
-      </Button>
-      <Button
-        type="button"
-        onClick={() => {
-          schema.setValues({ name: '  Grace  ' }, { shouldDirty: true });
-          // Set the composite through the public form owner so its parent binding is notified.
-          schema.form.setValue('range', { start: '2026-11-01', end: '2026-11-30' }, { shouldDirty: true });
-        }}
-      >
-        {text('setRaw')}
-      </Button>
+      <div className="flex flex-wrap items-center justify-start gap-2">
+        <Button type="button" onClick={compare}>
+          {text('compare')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            schema.setValues({ name: '  Grace  ' }, { shouldDirty: true });
+            // Set the composite through the public form owner so its parent binding is notified.
+            schema.form.setValue('range', { start: '2026-11-01', end: '2026-11-30' }, { shouldDirty: true });
+          }}
+        >
+          {text('setRaw')}
+        </Button>
+      </div>
       <pre className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
         <output aria-label={text('rawFields')}>{raw}</output>
       </pre>

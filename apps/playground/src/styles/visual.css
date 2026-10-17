@@ -24,3 +24,8 @@
   margin-top: 16px;
   border: 0;
 }
+
+/* Match the unlayered public fallback without changing other form owners. */
+.playground-tables-query .pattern-form-actions {
+  justify-content: flex-start;
+}

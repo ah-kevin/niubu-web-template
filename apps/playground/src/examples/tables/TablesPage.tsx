@@ -1,5 +1,5 @@
 import { DocumentationLink } from '../DocumentationLink';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   DataTable,
   createDataTableLabels,
@@ -113,12 +113,14 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
     };
   }, [preferences]);
   return (
-    <section className="grid min-w-0 gap-6">
-      <h1>{t('examples.tables.title')}</h1>
-      <DocumentationLink kind="tables" />
-      <p>{t('examples.tables.synthetic')}</p>
-      <p>{t('examples.tables.boundary')}</p>
-      <label>
+    <section className="mx-auto w-full max-w-[82rem] min-w-0 space-y-6">
+      <header className="space-y-3">
+        <h1 className="text-2xl font-semibold">{t('examples.tables.title')}</h1>
+        <DocumentationLink kind="tables" />
+        <p className="max-w-[90ch] text-sm leading-relaxed text-muted-foreground">{t('examples.tables.synthetic')}</p>
+        <p className="max-w-[90ch] text-sm leading-relaxed text-muted-foreground">{t('examples.tables.boundary')}</p>
+      </header>
+      <label className="grid w-fit max-w-full gap-2 text-sm font-medium">
         {t('examples.tables.scope')}
         <Select
           label={t('examples.tables.scope')}
@@ -131,10 +133,21 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
         />
       </label>
       <PreferenceProvider manager={preferences.manager}>
-        <ClientExamples key={scope} scope={scope} t={t} />
-        <ServerExample scope={scope} load={load} t={t} />
+        <div className="grid min-w-0 items-start gap-6 xl:grid-cols-2">
+          <ClientExamples key={scope} scope={scope} t={t} />
+          <ServerExample scope={scope} load={load} t={t} />
+        </div>
       </PreferenceProvider>
     </section>
+  );
+}
+
+function ExampleGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="w-full max-w-[40rem] min-w-0 space-y-3 [&_caption]:sr-only">
+      <h2 className="text-base font-semibold">{title}</h2>
+      {children}
+    </div>
   );
 }
 
@@ -148,45 +161,51 @@ function ClientExamples({ scope, t }: { scope: string; t: TableTranslator }) {
   });
   return (
     <>
-      <DataTable
-        profile="read"
-        model={clientModel}
-        {...clientRead}
-        getRowId={getRowId}
-        columns={columns.read}
-        caption={t('examples.tables.read')}
-        labels={columns.labels}
-      />
-      <DataTable
-        profile="list"
-        model={clientModel}
-        {...clientRead}
-        getRowId={getRowId}
-        columns={columns.list}
-        caption={t('examples.tables.list')}
-        labels={columns.labels}
-        pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 2 } }}
-      />
-      <DataTable
-        profile="selectable-list"
-        model={clientModel}
-        {...clientRead}
-        getRowId={getRowId}
-        columns={columns.selectable}
-        caption={t('examples.tables.client')}
-        labels={columns.labels}
-        pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 2 } }}
-        rowSelection={{ kind: 'internal' }}
-        {...preferences}
-        selectionLabels={{
-          selectPage: t('common:table.selectPage'),
-          selectRow: id => t('common:table.selectRow', { id }),
-          selected: count => t('common:table.selected', { count }),
-          selectAllResults: count => t('common:table.selectAllResults', { count }),
-          clearSelection: t('common:table.clearSelection'),
-          allResultsUnavailable: t('common:table.allResultsUnavailable'),
-        }}
-      />
+      <ExampleGroup title={t('examples.tables.read')}>
+        <DataTable
+          profile="read"
+          model={clientModel}
+          {...clientRead}
+          getRowId={getRowId}
+          columns={columns.read}
+          caption={t('examples.tables.read')}
+          labels={columns.labels}
+        />
+      </ExampleGroup>
+      <ExampleGroup title={t('examples.tables.list')}>
+        <DataTable
+          profile="list"
+          model={clientModel}
+          {...clientRead}
+          getRowId={getRowId}
+          columns={columns.list}
+          caption={t('examples.tables.list')}
+          labels={columns.labels}
+          pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 2 } }}
+        />
+      </ExampleGroup>
+      <ExampleGroup title={t('examples.tables.client')}>
+        <DataTable
+          profile="selectable-list"
+          model={clientModel}
+          {...clientRead}
+          getRowId={getRowId}
+          columns={columns.selectable}
+          caption={t('examples.tables.client')}
+          labels={columns.labels}
+          pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 2 } }}
+          rowSelection={{ kind: 'internal' }}
+          {...preferences}
+          selectionLabels={{
+            selectPage: t('common:table.selectPage'),
+            selectRow: id => t('common:table.selectRow', { id }),
+            selected: count => t('common:table.selected', { count }),
+            selectAllResults: count => t('common:table.selectAllResults', { count }),
+            clearSelection: t('common:table.clearSelection'),
+            allResultsUnavailable: t('common:table.allResultsUnavailable'),
+          }}
+        />
+      </ExampleGroup>
     </>
   );
 }
@@ -209,20 +228,26 @@ function ServerExample({ scope, load, t }: { scope: string; load: SyntheticTable
     updateFields([{ name: 'term', label: t('examples.tables.term') }]);
   }, [t, updateFields]);
   return (
-    <div className="grid gap-3">
-      <table.queryForm.Form submitLabel={t('examples.tables.query')} resetLabel={t('examples.tables.reset')} />
-      <div className="flex gap-2">
-        <Button type="button" onClick={() => void table.reload()}>
-          {t('examples.tables.reload')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={table.tableState.readState !== 'pending'}
-          onClick={table.cancel}
-        >
-          {t('examples.tables.cancel')}
-        </Button>
+    <ExampleGroup title={t('examples.tables.server')}>
+      <div className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]">
+        <table.queryForm.Form
+          className="playground-tables-query min-w-0"
+          submitLabel={t('examples.tables.query')}
+          resetLabel={t('examples.tables.reset')}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" onClick={() => void table.reload()}>
+            {t('examples.tables.reload')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={table.tableState.readState !== 'pending'}
+            onClick={table.cancel}
+          >
+            {t('examples.tables.cancel')}
+          </Button>
+        </div>
       </div>
       <DataTable
         profile="list"
@@ -232,6 +257,6 @@ function ServerExample({ scope, load, t }: { scope: string; load: SyntheticTable
         caption={t('examples.tables.server')}
         labels={columns.labels}
       />
-    </div>
+    </ExampleGroup>
   );
 }
