@@ -1,12 +1,13 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineNitroPlugin } from 'nitropack/runtime';
 import { BodyError, readRequestBody } from '../src/body';
+import config from '../mock.config';
 import { createMockBackend, failureResponse } from '../src/dispatcher';
 import type { MockResponse } from '../src/dispatcher';
 import { sendMockResponse } from '../src/transfers/bridge';
 
 export default defineNitroPlugin(nitroApp => {
-  const backend = createMockBackend();
+  const backend = createMockBackend({ config });
   nitroApp.hooks.hook('close', () => backend.dispose());
 
   nitroApp.h3App.use(
@@ -20,16 +21,15 @@ export default defineNitroPlugin(nitroApp => {
         const url = new URL(req.originalUrl ?? `/api${req.url ?? '/'}`, 'http://localhost');
         const method = req.method ?? 'GET';
         // Do not destroy the IncomingMessage on overflow: the JSON 413 still needs its socket.
-        const body =
-          method === 'POST' || method === 'PUT'
-            ? await readRequestBody(req.iterator({ destroyOnReturn: false }))
-            : undefined;
+        const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+          ? await readRequestBody(req.iterator({ destroyOnReturn: false }))
+          : undefined;
         response = await backend.dispatch({
           method,
           path: url.pathname,
           query: url.searchParams,
           headers: req.headers,
-          body,
+          body: method === 'DELETE' && body === '' ? undefined : body,
         });
       } catch (error) {
         req.resume();

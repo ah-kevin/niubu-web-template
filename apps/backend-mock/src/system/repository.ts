@@ -1,6 +1,7 @@
 import { systemResources } from './contracts';
 import type { ListQuery, QueryPage, ResourceInput, ResourceRecords, SystemResource, WorkspaceId } from './contracts';
-import { createWorkspaceSeed } from './fixtures';
+import { createWorkspaceSeed, navigablePageIds as defaultPageIds } from './fixtures';
+import type { MockSystemSeed } from '../config';
 import { SystemError, validateInput } from './validation';
 
 type WorkspaceMaps = { [R in SystemResource]: Map<string, ResourceRecords[R]> };
@@ -10,8 +11,17 @@ const prefixes: Record<SystemResource, string> = {
   menus: 'menu',
   departments: 'department',
 };
-function workspaceMaps(workspace: WorkspaceId): WorkspaceMaps {
-  const seed = createWorkspaceSeed(workspace);
+function workspaceMaps(input: MockSystemSeed): WorkspaceMaps {
+  const seed = structuredClone(input);
+  for (const resource of systemResources) {
+    const rows = seed[resource];
+    if (
+      !Array.isArray(rows) ||
+      rows.some(row => !row || typeof row.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$/.test(row.id)) ||
+      new Set(rows.map(row => row.id)).size !== rows.length
+    )
+      throw new Error('Invalid mock config: systemSeeds records');
+  }
   return {
     users: new Map(seed.users.map(row => [row.id, row])),
     roles: new Map(seed.roles.map(row => [row.id, row])),
@@ -29,10 +39,14 @@ function compare(a: string | number, b: string | number) {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export function createSystemRepository() {
+export function createSystemRepository(
+  options: { seeds?: Readonly<Record<WorkspaceId, MockSystemSeed>>; navigablePageIds?: readonly string[] } = {},
+) {
+  const pageIds = [...(options.navigablePageIds ?? defaultPageIds)];
+  const seeds = options.seeds ?? { north: createWorkspaceSeed('north'), south: createWorkspaceSeed('south') };
   const workspaces = new Map<WorkspaceId, WorkspaceMaps>([
-    ['north', workspaceMaps('north')],
-    ['south', workspaceMaps('south')],
+    ['north', workspaceMaps(seeds.north)],
+    ['south', workspaceMaps(seeds.south)],
   ]);
   function maps(workspace: WorkspaceId): WorkspaceMaps {
     const data = workspaces.get(workspace);
@@ -83,6 +97,21 @@ export function createSystemRepository() {
         conflict('A parent menu must remain a group');
     }
   }
+  try {
+    for (const [workspace, data] of workspaces) {
+      for (const resource of systemResources) {
+        for (const row of data[resource].values()) {
+          const { id, ...body } = row;
+          const input = validateInput(resource, body, pageIds);
+          validateRelations(workspace, resource, id, input);
+          // Seed rows use the same variant-specific DTO projection as create/update.
+          getMap(workspace, resource).set(id, { ...input, id });
+        }
+      }
+    }
+  } catch {
+    throw new Error('Invalid mock config: systemSeeds input or relations');
+  }
   return {
     list<R extends SystemResource>(
       workspace: WorkspaceId,
@@ -125,7 +154,7 @@ export function createSystemRepository() {
       resource: R,
       body: Record<string, unknown>,
     ): ResourceRecords[R] {
-      const input = validateInput(resource, body);
+      const input = validateInput(resource, body, pageIds);
       const records = getMap(workspace, resource);
       let id: string;
       do {
@@ -143,7 +172,7 @@ export function createSystemRepository() {
       body: Record<string, unknown>,
     ): ResourceRecords[R] {
       current(workspace, resource, id);
-      const input = validateInput(resource, body);
+      const input = validateInput(resource, body, pageIds);
       validateRelations(workspace, resource, id, input);
       const row = { ...input, id } as unknown as ResourceRecords[R];
       getMap(workspace, resource).set(id, row);

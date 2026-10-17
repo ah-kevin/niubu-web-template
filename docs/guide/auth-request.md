@@ -10,6 +10,14 @@ scope 由 [ScopeSync](../../apps/playground/src/auth/ScopeSync.tsx) 在 Router l
 
 过期后的同用户登录由 [auth-session](../../packages/stores/src/auth-session.ts) 恢复 prior scope 并重新获取 grants，不销毁原 identity/scope owner，dirty 与草稿保留。普通登录或换人先 reset owners 再整页 reload；登出撤销本地授权、清理并 reload 登录页。不要用更新 identityKey 的方式在原 owner 上拼接新用户状态。
 
+## 接入独立开发 mock
+
+mock 在独立终端以 `pnpm dev:backend-mock` 启动。Playground 默认把 `/api` 代理至 `http://127.0.0.1:5320`；`MOCK_API_URL` 可配置无凭据、无路径/query/hash 的 HTTP(S) origin，例如 `MOCK_API_URL=http://127.0.0.1:5432 pnpm dev`。这个变量只供 Vite 服务器使用，不注入浏览器运行代码。
+
+新 app 采用同样的 Vite `server.proxy['/api'] = { target: 'http://127.0.0.1:5320', changeOrigin: false }`，公开运行配置 `apiURL` 保持 `/`，请求路径继续使用 `/api/...`。前端和后端的启动/关闭独立。跨 origin 直接配置 `apiURL` 时需要后端支持相应 CORS；默认 mock 不开放跨域，标准示例采用同源开发代理。生产 app 指向真实 API，不带 mock 后端代码。
+
+账号、菜单、pageId、CRUD 种子和扩展 API 的替换方式见 [backend-mock README](../../apps/backend-mock/README.md)。
+
 ## 请求边界
 
 业务代码使用 `@niubu/request` 的 `createRequestClient`，由 app 显式注入 fetch、credentialsProvider、activityReporter、errorNormalizer、getGeneration 与可选 renewal。protected baseRequest 经 [createSessionRequest](../../apps/playground/src/auth/request.ts) 绑定 auth signal；未 ready/已过期时拒绝业务请求。grant 请求必须由 adapter 的 `bindGrantRequest(baseRequest)` 接入同一受控续期协调器，不能另起不带绑定的客户端形成授权空窗。

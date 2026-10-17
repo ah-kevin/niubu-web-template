@@ -42,7 +42,9 @@ function workspace(runtime = false) {
   return root;
 }
 function runBuild(root: string) {
-  const result = spawnSync('pnpm', ['--config.verify-deps-before-run=false', '--dir', root, 'exec', 'turbo', 'run', 'build', '--filter', '@fixture/app', '--summarize'], { cwd: root, encoding: 'utf8', env: { ...process.env, pnpm_config_verify_deps_before_run: 'false', TURBO_TELEMETRY_DISABLED: '1' }, maxBuffer: 4 * 1024 * 1024 });
+  // Nested fixtures must not inherit the outer Turbo runner's cache controls.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('TURBO_')));
+  const result = spawnSync('pnpm', ['--config.verify-deps-before-run=false', '--dir', root, 'exec', 'turbo', 'run', 'build', '--filter', '@fixture/app', '--summarize'], { cwd: root, encoding: 'utf8', env: { ...env, pnpm_config_verify_deps_before_run: 'false', TURBO_TELEMETRY_DISABLED: '1' }, maxBuffer: 4 * 1024 * 1024 });
   expect(result.status, result.stdout + result.stderr).toBe(0);
   const runs = join(root, '.turbo/runs');
   const latest = readdirSync(runs).map(file => join(runs, file)).sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0];
@@ -55,6 +57,28 @@ async function currentContext(root: string, options: InlineConfig = {}) {
   return {appRoot:config.root,workspaceRoot:root,expectedInputHash,expectedRuntimeConfig:(config.plugins.find(plugin=>plugin.name==='niubu:build-provenance')?.api as nodeUtils.BuildProvenanceApi | undefined)?.getRuntimeConfig(),expectedBuildContext:nodeUtils.readBuildContext(root,expectedInputHash,{...config,outDir:config.build.outDir})};
 }
 describe('build inputs and real temporary workspace cache', () => {
+  it('restores a real fixture cache hit despite inherited Turbo controls', () => {
+    const root = workspace(), dist = join(root, 'apps/playground/dist');
+    const inherited = { TURBO_FORCE: 'true', TURBO_CACHE: 'local:rw', TURBO_TELEMETRY_DISABLED: '0', TURBO_FIXTURE_PARENT_PROBE: 'outside' };
+    const previous = Object.fromEntries(Object.keys(inherited).map(key => [key, process.env[key]]));
+    try {
+      Object.assign(process.env, inherited);
+      const first = runBuild(root);
+      expect(first.cache.status).toBe('MISS');
+      const provenance = readFileSync(join(dist, 'build-inputs.json'), 'utf8');
+      rmSync(dist, { recursive: true });
+      const restored = runBuild(root);
+      expect(restored.hash).toBe(first.hash);
+      expect(restored.cache.status).toBe('HIT');
+      expect(readFileSync(join(dist, 'build-inputs.json'), 'utf8')).toBe(provenance);
+      for (const [key, value] of Object.entries(inherited)) expect(process.env[key]).toBe(value);
+    } finally {
+      for (const [key, value] of Object.entries(previous)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  }, 120000);
   it('forwards mode/base from actual Node CLI and loads staging env into the emitted app', async () => {
     const root=workspace(), appRoot=join(root,'apps/playground');
     const config=join(appRoot,'vite.config.ts');

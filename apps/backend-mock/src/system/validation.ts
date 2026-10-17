@@ -1,4 +1,3 @@
-import { navigablePageIds } from './contracts';
 import type { ListQuery, MenuKind, ResourceInput, SystemResource, WorkspaceId } from './contracts';
 
 export class SystemError extends Error {
@@ -40,7 +39,7 @@ function boolean(value: unknown): boolean {
   return value;
 }
 function reference(value: unknown): string {
-  const result = text(value, 128);
+  const result = text(value, 120);
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(result)) invalid();
   return result;
 }
@@ -83,7 +82,11 @@ function rejectPrototypeKeys(value: unknown): void {
     // Do not recurse into rejected objects supplied in scalar fields.
   }
 }
-export function validateInput<R extends SystemResource>(resource: R, body: Record<string, unknown>): ResourceInput<R> {
+export function validateInput<R extends SystemResource>(
+  resource: R,
+  body: Record<string, unknown>,
+  navigablePageIds: readonly string[],
+): ResourceInput<R> {
   rejectPrototypeKeys(body);
   if (Object.keys(body).some(key => !inputKeys[resource].includes(key))) invalid('Unknown or immutable field');
   const enabled = boolean(body.enabled);
@@ -141,7 +144,7 @@ export function validateInput<R extends SystemResource>(resource: R, body: Recor
       };
       if (menuKind === 'page') {
         const pageId = text(body.pageId, 100);
-        if (!(navigablePageIds as readonly string[]).includes(pageId)) invalid('Unregistered page id');
+        if (!navigablePageIds.includes(pageId)) invalid('Unregistered page id');
         result = { ...common, pageId };
       } else if (menuKind === 'external') {
         result = {

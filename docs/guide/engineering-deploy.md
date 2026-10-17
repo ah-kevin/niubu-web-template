@@ -10,7 +10,7 @@
 SKIP_INSTALL_SIMPLE_GIT_HOOKS=1 pnpm install --frozen-lockfile --ignore-scripts
 ```
 
-下面的命令用于已授权的本地环境；命令示例不表示已经执行或通过。
+以下命令从仓库根目录执行。
 
 ## 开发与检查命令
 
@@ -23,11 +23,11 @@ pnpm --filter @niubu/playground build
 pnpm --filter @niubu/playground budget:check
 ```
 
-`dev:playground` 的开发插件会自动启动并管理 mock；如果要独立管理后端，改为分别在两个终端执行以下命令，避免同时占用 mock 端口：
+mock 是独立服务，前端通过开发代理接入。在两个终端分别执行：
 
 ```sh
 pnpm dev:backend-mock
-VITE_BACKEND_MOCK=0 pnpm dev:playground
+pnpm dev:playground
 ```
 
 接入说明见 [playground README](../../apps/playground/README.md) 与 [backend-mock README](../../apps/backend-mock/README.md)。生产构建不能包含 mock 运行代码。根 `dev/preview` 从实际前端 workspace 发现应用：当前唯一前端是 `@niubu/playground`，自动选择它；新增多个前端后应显式指定 `--app`，有歧义或显式应用不存在时失败。可执行 `pnpm dev --app @niubu/playground` 或 `pnpm preview --app @niubu/playground --port 5180`，参数以 argv 传递，不经过 shell 拼接。`preview` 只服务已有构建产物，不启动开发 mock；需要可访问的 API 后端与公开运行配置。
@@ -63,10 +63,10 @@ pnpm check
 根 [verify:playground script](../../package.json) 调用 [playground-runtime.ts](../../internal/scripts/src/playground-runtime.ts)。它不加入默认 check/test/CI；需要运行证明时，从根目录显式执行：
 
 ```sh
-VITE_BACKEND_MOCK=1 pnpm verify:playground
+pnpm verify:playground
 ```
 
-该入口创建自己的 Vite server，加载实际 playground 配置，并由开发插件管理自己的 Nitro mock。前端绑定 `127.0.0.1:5174`，mock 绑定 `127.0.0.1:5320`；端口冲突失败，不复用或关闭既有外部服务。仅检查 `/` 的 HTTP 200 与 HTML 入口、经同一 Vite 代理的 `/api/health` 和 `/api/demo/echo`：响应须为 HTTP 200、数字 code 0、字符串 message，health 状态为 ok，echo 值及重复 query 与请求一致。它不执行浏览器渲染、登录或业务操作，不是浏览器 E2E。
+该诊断入口创建自己的 Vite server，加载实际 Playground 配置，并显式注入仅供诊断的后端 owner 来管理临时 Nitro。该便利能力保留在 internal 工具中，便于诊断完成后可靠关闭两个自有服务；正常 app 配置不含后端启动器。手动开发服务需先关闭。前端绑定 `127.0.0.1:5174`，mock 绑定 `127.0.0.1:5320`；端口冲突失败，不复用或关闭既有外部服务。仅检查 `/` 的 HTTP 200 与 HTML 入口、经同一 Vite 代理的 `/api/health` 和 `/api/demo/echo`：响应须为 HTTP 200、数字 code 0、字符串 message，health 状态为 ok，echo 值及重复 query 与请求一致。它不执行浏览器渲染、登录或业务操作，不是浏览器 E2E。
 
 启动及所有 HTTP 操作共享同一个 30 秒截止时间，响应体读取也在该 deadline 内；不能为每个请求重新计时。finally 只清理本次创建的 owner；成功后也要等待 `owned server.close()` 完成，才能对外报告 `cleaned: true`。操作截止不表示可以略过清理等待；启动、请求、断言、超时或关闭失败均须失败退出，不能记作 PASS。
 

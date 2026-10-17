@@ -5,13 +5,13 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resolveConfig } from 'vite';
 import type { Plugin, ViteDevServer } from 'vite';
-import backendMockPlugin from './backend-mock';
-import type { BackendMockRuntime } from './backend-mock';
+import backendMockPlugin, { createBackendOwner } from './backend-process.ts';
+import type { BackendMockRuntime } from './backend-process.ts';
 
 const workspaceRoot = resolve(import.meta.dirname, '../../..');
 const healthy = () => new Response(JSON.stringify({ code: 0, data: { status: 'ok' }, message: 'ok' }));
 
-function harness() {
+function harness(announce = true) {
   const child = Object.assign(new EventEmitter(), { pid: 4242 });
   let groupAlive = false;
   let terminate = true;
@@ -23,8 +23,9 @@ function harness() {
   const runtime: BackendMockRuntime = {
     checkPortAvailable: vi.fn().mockResolvedValue(undefined),
     resolveCli: vi.fn().mockReturnValue('/published/nitropack/dist/cli/index.mjs'),
-    spawn: vi.fn(() => {
+    spawn: vi.fn((_command, args) => {
       groupAlive = true;
+      if (announce) queueMicrotask(() => child.emit('message', { type: 'mock:listening', host: args[args.indexOf('--host') + 1], port: Number(args[args.indexOf('--port') + 1]) }));
       return child as unknown as ChildProcess;
     }),
     fetch: vi.fn().mockImplementation(async () => healthy()),
@@ -64,6 +65,24 @@ async function settle() {
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
+it('reports a late owned backend failure to a standalone supervisor', async () => {
+  const { runtime, child } = harness();
+  const onFailure = vi.fn();
+  const owner = createBackendOwner({ workspaceRoot, enabled: true, onFailure } as Parameters<typeof createBackendOwner>[0], runtime);
+  await owner.start();
+  child.emit('exit', 7, null);
+  expect(onFailure).toHaveBeenCalledOnce();
+  expect(onFailure.mock.calls[0]![0]).toBeInstanceOf(Error);
+  await owner.close();
+});
+it('uses an IPv6 HTTP origin for an explicit IPv6 listen address', async () => {
+  const { runtime } = harness();
+  const owner = createBackendOwner({ workspaceRoot, enabled: true, host: '::1' }, runtime);
+  await owner.start();
+  expect(runtime.fetch).toHaveBeenCalledWith('http://[::1]:5320/api/health', expect.any(Object));
+  await owner.close();
+});
+
 describe('backendMockPlugin lifecycle', () => {
   it('is excluded by Vite build without probing or resolving Nitro', async () => {
     const { plugin, runtime } = harness();
@@ -84,13 +103,13 @@ describe('backendMockPlugin lifecycle', () => {
     const { plugin, runtime } = harness();
     await start(plugin);
     expect(plugin.apply).toBe('serve');
-    expect(runtime.checkPortAvailable).toHaveBeenCalledWith(5320);
+    expect(runtime.checkPortAvailable).toHaveBeenCalledWith(5320, '127.0.0.1');
     expect(vi.mocked(runtime.checkPortAvailable).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(runtime.spawn).mock.invocationCallOrder[0]!,
     );
     expect(runtime.resolveCli).toHaveBeenCalledWith(workspaceRoot);
     expect(runtime.spawn).toHaveBeenCalledWith(process.execPath,
-      ['/published/nitropack/dist/cli/index.mjs', 'dev', '--host', '127.0.0.1', '--port', '5320'],
+      ['/published/nitropack/dist/cli/index.mjs', '--host', '127.0.0.1', '--port', '5320'],
       expect.objectContaining({ cwd: resolve(workspaceRoot, 'apps/backend-mock'), detached: true }),
     );
     expect(runtime.fetch).toHaveBeenCalledWith('http://127.0.0.1:5320/api/health',
@@ -103,7 +122,7 @@ describe('backendMockPlugin lifecycle', () => {
     const { runtime } = harness();
     const plugin = backendMockPlugin({ workspaceRoot, enabled: true, port: 5432 }, runtime);
     await start(plugin);
-    expect(runtime.checkPortAvailable).toHaveBeenCalledWith(5432);
+    expect(runtime.checkPortAvailable).toHaveBeenCalledWith(5432, '127.0.0.1');
     expect(vi.mocked(runtime.spawn).mock.calls[0]![1]).toContain('5432');
     expect(vi.mocked(runtime.fetch).mock.calls[0]![0]).toBe('http://127.0.0.1:5432/api/health');
     await close(plugin);
@@ -276,4 +295,30 @@ describe('backendMockPlugin lifecycle', () => {
     await vi.advanceTimersByTimeAsync(4_000);
     await closing;
   });
+});
+
+it('does not accept even healthy HTTP before this child confirms the requested listen address', async () => {
+  const { runtime, child } = harness(false);
+  let settled = false;
+  const owner = createBackendOwner({ workspaceRoot, enabled: true }, runtime);
+  const started = owner.start().then(() => { settled = true; });
+  await settle();
+  expect(settled).toBe(false);
+  expect(runtime.fetch).not.toHaveBeenCalled();
+  child.emit('message', { type: 'mock:listening', host: '127.0.0.1', port: 5320 });
+  await started;
+  expect(runtime.fetch).toHaveBeenCalledOnce();
+  await owner.close();
+});
+
+it('propagates an explicit child cleanup failure instead of reporting clean shutdown', async () => {
+  const child = Object.assign(new EventEmitter(), {pid: 4242}); let alive = true;
+  const runtime: BackendMockRuntime = {
+    checkPortAvailable: async () => {}, resolveCli: () => '/fake/child.ts',
+    spawn: () => { queueMicrotask(()=>child.emit('message',{type:'mock:listening',host:'127.0.0.1',port:5320}));return child as unknown as ChildProcess; },
+    fetch: async () => healthy(),
+    kill: (_pid, signal) => { if (!alive) throw Object.assign(new Error('gone'),{code:'ESRCH'});if(signal==='SIGTERM'){alive=false;child.emit('exit',1,null);}return true; },
+  };
+  const owner=createBackendOwner({workspaceRoot,enabled:true},runtime);await owner.start();
+  await expect(owner.close()).rejects.toThrow(/cleanup|shutdown/i);
 });

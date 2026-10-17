@@ -59,8 +59,3 @@ export interface QueryPage<R> {
   rows: R[];
   rowCount: number;
 }
-export const navigablePageIds = [
-  'playground.home',
-  'playground.request',
-  ...systemResources.map(resource => `playground.system.${resource}`),
-] as const;

@@ -1,4 +1,4 @@
 {
   "extends": "@niubu-internal/tsconfig/node.json",
-  "include": ["src", "plugins", "*.config.ts"]
+  "include": ["src", "plugins", "*.config.ts", "dev-server.ts"]
 }

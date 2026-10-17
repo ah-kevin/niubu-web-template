@@ -16,4 +16,4 @@ Agent 从[根规则](../../AGENTS.md)进入；[packages](../../packages/AGENTS.m
 
 源码是接口依据，优先从 [playground 模块](../../apps/playground/src/modules/system.tsx)、[系统 CRUD](../../apps/playground/src/system/ResourcePage.tsx)、[显式启动入口](../../apps/playground/src/main.tsx) 查起。公开演示账户说明见 [backend-mock README](../../apps/backend-mock/README.md)，这里不复制登录信息。
 
-指南中的常规命令不表示已经执行。hooks、CI、Docker 的源码与运行证据分开验收，使用方法见[工程与部署](./engineering-deploy.md)；文档和静态检查不能代替运行结果。
+启动、hooks、CI 与 Docker 的使用方法见[工程与部署](./engineering-deploy.md)。mock 独立启动、接入和扩展方式见 [backend-mock README](../../apps/backend-mock/README.md)。

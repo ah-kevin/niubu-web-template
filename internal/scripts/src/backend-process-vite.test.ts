@@ -5,7 +5,7 @@ import { Server } from 'node:net';
 import { resolve } from 'node:path';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createServer, type ViteDevServer } from 'vite';
-import backendMockPlugin, { type BackendMockRuntime } from './backend-mock';
+import backendMockPlugin, { type BackendMockRuntime } from './backend-process.ts';
 
 const workspaceRoot = resolve(import.meta.dirname, '../../..');
 const servers: ViteDevServer[] = [];
@@ -21,9 +21,10 @@ function harness() {
   const runtime: BackendMockRuntime = {
     checkPortAvailable: vi.fn().mockResolvedValue(undefined),
     resolveCli: () => '/fake/nitro-cli.mjs',
-    spawn: vi.fn(() => {
+    spawn: vi.fn((_command, args) => {
       const child = Object.assign(new EventEmitter(), { pid: nextPid++ });
       groups.set(child.pid, child); events.push(`start:${child.pid}`);
+      queueMicrotask(() => child.emit('message', { type: 'mock:listening', host: args[args.indexOf('--host') + 1], port: Number(args[args.indexOf('--port') + 1]) }));
       return child as unknown as ChildProcess;
     }),
     fetch: async () => new Response(JSON.stringify({code:0,data:{status:'ok'},message:'OK'})),

@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createServer } from 'vite';
+import backendMockPlugin from './backend-process.ts';
 export type PlaygroundRuntimeOwner = { listen(): Promise<unknown>; close(): Promise<void> };
 export type PlaygroundRuntimePorts = {
   createServer(root: string): Promise<PlaygroundRuntimeOwner>;
@@ -21,11 +22,16 @@ export class PlaygroundRuntimeDeadlineError extends Error {
 const frontendURL = 'http://127.0.0.1:5174';
 const defaultPorts: PlaygroundRuntimePorts = {
   async createServer(root) {
-    if (process.env.VITE_BACKEND_MOCK === '0') throw Error('Runtime proof requires the owned mock plugin');
     return createServer({
       root: resolve(root, 'apps/playground'),
       configFile: resolve(root, 'apps/playground/vite.config.ts'),
-      server: { host: '127.0.0.1', port: 5174, strictPort: true },
+      plugins: [backendMockPlugin({ workspaceRoot: root, enabled: true, port: 5320 })],
+      server: {
+        host: '127.0.0.1',
+        port: 5174,
+        strictPort: true,
+        proxy: { '/api': { target: 'http://127.0.0.1:5320', changeOrigin: false } },
+      },
     });
   },
   fetch: (...args) => globalThis.fetch(...args),

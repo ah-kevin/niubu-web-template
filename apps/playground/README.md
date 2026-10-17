@@ -4,7 +4,7 @@
 
 公开合成账户、权限范围与 DTO 统一见 [backend-mock README](../backend-mock/README.md)，不使用真实凭据。
 
-`pnpm dev:playground` 提供 `127.0.0.1:5174`，自动等待当前启动器拥有的 mock `127.0.0.1:5320` 就绪；关闭与重启会等待其清理。端口已被占用会明确失败，不复用或关闭外部进程。`VITE_BACKEND_MOCK=0 pnpm dev:playground` 禁用自动 mock；单独 `pnpm dev:backend-mock` 的进程由启动者管理。
+在两个终端分别运行 `pnpm dev:backend-mock` 和 `pnpm dev:playground`。前端提供 `http://127.0.0.1:5174`，`/api` 代理到独立 mock `http://127.0.0.1:5320`。前端不启动、停止或管理后端；任意 app 都可按同一方式接入。自定义端口时，后端用 `pnpm dev:backend-mock --port 5432`，前端用 `MOCK_API_URL=http://127.0.0.1:5432 pnpm dev:playground`。分别用 Ctrl-C 停止各终端服务；后端端口冲突会失败，不借用或关闭其他服务。原 `VITE_BACKEND_MOCK` 开关已移除。
 
 main 显式创建 auth request/adapter/session，先恢复权威用户，再建立该身份的 stores/preferences/i18n/QueryClient/API/theme/Router。普通登录、登出、换人整页刷新；scope 切换原位撤销旧请求与权限，同人过期重登保留当前页和输入。正常 token refresh 保持当前 generation，只重放一次允许重放的请求。HTTP401 加明确过期码才续期。
 
@@ -23,10 +23,10 @@ Bearer 存储归本 app adapter，使用 `playground.auth.v1` 与独立的禁止
 从仓库根目录执行；第一次成功并关闭后，再执行同一命令，验证相同端口可重新绑定并再次清理：
 
 ```sh
-VITE_BACKEND_MOCK=1 pnpm verify:playground
-VITE_BACKEND_MOCK=1 pnpm verify:playground
+pnpm verify:playground
+pnpm verify:playground
 ```
 
-[运行入口](../../internal/scripts/src/playground-runtime.ts) 仅检查前端 HTML 与 Vite 代理的 health/echo，不涉及浏览器渲染、登录或业务操作，不加入默认 check/test/CI。启动及所有 HTTP 操作共用 30 秒截止时间；finally 只清理自己创建的 owner，成功路径也必须等待 `owned server.close()` 完成才报告 `cleaned: true`。任何断言、超时或关闭失败均不算通过。上述命令不表示已经真实运行或验收；完整协议和证据要求见[工程指南](../../docs/guide/engineering-deploy.md)。
+[运行入口](../../internal/scripts/src/playground-runtime.ts) 仅检查前端 HTML 与 Vite 代理的 health/echo，不涉及浏览器渲染、登录或业务操作，不加入默认 check/test/CI。启动及所有 HTTP 操作共用 30 秒截止时间；finally 只清理自己创建的 owner，成功路径也必须等待 `owned server.close()` 完成才报告 `cleaned: true`。任何断言、超时或关闭失败均不算通过。手动开发服务关闭后再执行；完整协议和使用方式见[工程指南](../../docs/guide/engineering-deploy.md)。
 
 模块、鉴权和表单的接入规范见[开发指南](../../docs/guide/README.md)，运行与产物约束见[工程与部署](../../docs/guide/engineering-deploy.md)。源码与注入测试不代表浏览器、无障碍人工、生产或用户最终验收。

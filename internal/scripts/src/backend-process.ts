@@ -1,20 +1,20 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { createServer } from 'node:net';
-import { dirname, resolve } from 'node:path';
+import { createServer, isIP } from 'node:net';
+import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
 export interface BackendMockOptions {
   workspaceRoot: string;
   enabled: boolean;
   port?: number;
+  host?: string;
+  onFailure?: (error: Error) => void;
 }
 
 /** OS/network boundaries are replaceable so unit tests never start a service. */
 export interface BackendMockRuntime {
-  checkPortAvailable: (port: number) => Promise<void>;
+  checkPortAvailable: (port: number, host: string) => Promise<void>;
   resolveCli: (workspaceRoot: string) => string;
   spawn: (command: string, args: string[], options: SpawnOptions) => ChildProcess;
   fetch: typeof globalThis.fetch;
@@ -22,20 +22,15 @@ export interface BackendMockRuntime {
 }
 
 const runtime: BackendMockRuntime = {
-  checkPortAvailable: port =>
+  checkPortAvailable: (port, host) =>
     new Promise((done, reject) => {
       const probe = createServer();
-      probe.once('error', cause => reject(new Error(`Backend mock port 127.0.0.1:${port} is unavailable`, { cause })));
-      probe.listen({ host: '127.0.0.1', port, exclusive: true }, () => {
+      probe.once('error', cause => reject(new Error(`Backend mock port ${host}:${port} is unavailable`, { cause })));
+      probe.listen({ host, port, exclusive: true }, () => {
         probe.close(error => (error ? reject(error) : done()));
       });
     }),
-  resolveCli: workspaceRoot => {
-    const backendRequire = createRequire(resolve(workspaceRoot, 'apps/backend-mock/package.json'));
-    const manifestPath = backendRequire.resolve('nitropack/package.json');
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { bin: { nitro: string } };
-    return resolve(dirname(manifestPath), manifest.bin.nitro);
-  },
+  resolveCli: workspaceRoot => resolve(workspaceRoot, 'apps/backend-mock/dev-server.ts'),
   spawn,
   fetch: (...args) => globalThis.fetch(...args),
   kill: (pid, signal) => process.kill(pid, signal),
@@ -47,10 +42,10 @@ function processMissing(error: unknown): boolean {
   return error instanceof Error && 'code' in error && error.code === 'ESRCH';
 }
 
-async function waitForHealth(port: number, signal: AbortSignal, adapters: BackendMockRuntime) {
+async function waitForHealth(port: number, host: string, signal: AbortSignal, adapters: BackendMockRuntime) {
   while (!signal.aborted) {
     try {
-      const response = await adapters.fetch(`http://127.0.0.1:${port}/api/health`, {
+      const response = await adapters.fetch(`http://${isIP(host) === 6 ? `[${host}]` : host}:${port}/api/health`, {
         signal,
         redirect: 'error',
         cache: 'no-store',
@@ -81,14 +76,22 @@ async function waitForHealth(port: number, signal: AbortSignal, adapters: Backen
 }
 
 /** One lifecycle per configured server, including restart with an inline plugin instance. */
-function createBackendOwner({ workspaceRoot, port = 5320 }: BackendMockOptions, adapters: BackendMockRuntime) {
+export function createBackendOwner(
+  { workspaceRoot, port = 5320, host = '127.0.0.1', onFailure }: BackendMockOptions,
+  adapters: BackendMockRuntime = runtime,
+) {
   let child: ChildProcess | undefined;
   let group: number | undefined;
   let closed = false;
+  let ready = false;
+  let shutdownFailure: Error | undefined;
+  let exited: Promise<void> | undefined;
+  let observeExit: (() => void) | undefined;
   let starting: Promise<void> | undefined;
   let stopping: Promise<void> | undefined;
   let controller: AbortController | undefined;
   let onError: ((error: Error) => void) | undefined;
+  let onMessage: ((message: unknown) => void) | undefined;
   let onExit: ((code: number | null, signal: NodeJS.Signals | null) => void) | undefined;
 
   function groupExists() {
@@ -132,8 +135,11 @@ function createBackendOwner({ workspaceRoot, port = 5320 }: BackendMockOptions, 
             }
           }
         }
+        if (group !== undefined) await exited;
+        if (shutdownFailure) throw shutdownFailure;
       } finally {
         if (onError) child?.off('error', onError);
+        if (onMessage) child?.off('message', onMessage);
         if (onExit) child?.off('exit', onExit);
       }
     })();
@@ -142,18 +148,18 @@ function createBackendOwner({ workspaceRoot, port = 5320 }: BackendMockOptions, 
 
   async function start() {
     if (closed) throw new Error('Backend mock plugin is closed');
-    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid backend mock port');
-    await adapters.checkPortAvailable(port);
+    parseBackendMockOptions([], { MOCK_HOST: host, MOCK_PORT: String(port) });
+    await adapters.checkPortAvailable(port, host);
     if (closed) throw new Error('Backend mock plugin closed during startup');
     controller = new AbortController();
     const signal = controller.signal;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const cli = adapters.resolveCli(workspaceRoot);
-      child = adapters.spawn(process.execPath, [cli, 'dev', '--host', '127.0.0.1', '--port', String(port)], {
+      child = adapters.spawn(process.execPath, [cli, '--host', host, '--port', String(port)], {
         cwd: resolve(workspaceRoot, 'apps/backend-mock'),
         detached: true,
-        stdio: ['ignore', 'inherit', 'inherit'],
+        stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
       });
       // A failed spawn has no pid. Never synthesize a PID or discover one by port.
       if (child.pid !== undefined) {
@@ -162,20 +168,57 @@ function createBackendOwner({ workspaceRoot, port = 5320 }: BackendMockOptions, 
         }
         group = child.pid;
       }
+      exited = new Promise<void>(resolve => {
+        observeExit = resolve;
+      });
       const failed = new Promise<never>((_, reject) => {
-        onError = reject;
-        onExit = (code, exitSignal) =>
-          reject(new Error(`Backend mock exited before readiness (code ${code}, signal ${exitSignal})`));
+        onError = error => {
+          reject(error);
+          if (ready && !closed) onFailure?.(error);
+        };
+        onExit = (code, exitSignal) => {
+          if (closed && code !== null && code !== 0)
+            shutdownFailure ??= new Error(`Owned mock cleanup failed (exit ${code})`);
+          observeExit?.();
+          onError!(new Error(`Backend mock exited (code ${code}, signal ${exitSignal})`));
+        };
         // Retain this listener until cleanup: errors can also arrive after health succeeds.
         child!.on('error', onError);
         child!.once('exit', onExit);
+      });
+      const listening = new Promise<void>((resolve, reject) => {
+        onMessage = message => {
+          if (typeof message === 'object' && message !== null && 'type' in message) {
+            if (message.type === 'mock:cleanup-failed') {
+              shutdownFailure ??= new Error('Owned mock child cleanup failed');
+              return;
+            }
+            if (message.type === 'mock:failed') {
+              onError?.(new Error('Owned mock child failed'));
+              return;
+            }
+          }
+          if (
+            typeof message !== 'object' ||
+            message === null ||
+            !('type' in message) ||
+            message.type !== 'mock:listening'
+          )
+            return;
+          if (!('host' in message) || message.host !== host || !('port' in message) || message.port !== port)
+            reject(new Error('Owned mock bound an unexpected address'));
+          else resolve();
+        };
+        child!.on('message', onMessage);
       });
       const aborted = new Promise<never>((_, reject) => {
         signal.addEventListener('abort', () => reject(signal.reason), { once: true });
       });
       timeout = setTimeout(() => controller!.abort(new Error(`Backend mock health timed out on port ${port}`)), 15_000);
-      await Promise.race([waitForHealth(port, signal, adapters), failed, aborted]);
+      await Promise.race([listening, failed, aborted]);
+      await Promise.race([waitForHealth(port, host, signal, adapters), failed, aborted]);
       if (signal.aborted) throw signal.reason;
+      ready = true;
     } catch (error) {
       controller.abort(error);
       try {
@@ -243,4 +286,31 @@ export default function backendMockPlugin(options: BackendMockOptions, adapters:
     );
   };
   return plugin;
+}
+
+export function parseBackendMockOptions(
+  args: readonly string[],
+  env: NodeJS.ProcessEnv = process.env,
+): { host: string; port: number } {
+  let host = env.MOCK_HOST ?? '127.0.0.1';
+  let portValue = env.MOCK_PORT ?? '5320';
+  const supplied = new Set<string>();
+  for (let index = 0; index < args.length; index += 2) {
+    const flag = args[index],
+      value = args[index + 1];
+    if ((flag !== '--host' && flag !== '--port') || !value || supplied.has(flag))
+      throw Error('Invalid mock startup option');
+    supplied.add(flag);
+    if (flag === '--host') host = value;
+    else portValue = value;
+  }
+  if (
+    host.length > 63 ||
+    (!isIP(host) && !/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(host))
+  )
+    throw Error('Invalid mock host');
+  if (!/^[0-9]+$/.test(portValue)) throw Error('Invalid mock port');
+  const port = Number(portValue);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('Invalid mock port');
+  return { host, port };
 }

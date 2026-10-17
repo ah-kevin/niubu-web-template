@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nitro dev --host 127.0.0.1 --port 5320",
+    "dev": "node ../../internal/scripts/src/dev-backend-mock.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --config ../../eslint.config.js"

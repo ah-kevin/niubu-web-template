@@ -1,6 +1,65 @@
 # Backend Mock
 
-仅用于本地开发的 Nitro 2 合成后端。无数据库、真实用户、JWT、磁盘持久化或生产 build 脚本；实例内资源保留到后续请求，重启即恢复种子并清空 token。服务生命周期由 playground 开发插件或独立启动者管理，默认绑定 `127.0.0.1:5320`。
+仅用于本地开发的 Nitro 2 合成后端。无数据库、真实用户、JWT、磁盘持久化或生产 build 脚本；实例内资源保留到后续请求，重启即恢复种子并清空 token。服务由独立启动者管理，默认绑定 `127.0.0.1:5320`。
+
+## 独立启动
+
+在仓库根目录运行：
+
+```sh
+pnpm dev:backend-mock
+# 使用其他本机端口
+pnpm dev:backend-mock --host 127.0.0.1 --port 5432
+# 环境变量也可配置；显式命令行优先
+MOCK_HOST=127.0.0.1 MOCK_PORT=5432 pnpm dev:backend-mock
+```
+
+默认绑定 `127.0.0.1:5320`。启动入口校验地址和端口，先独占检查端口再启动自己的 Nitro；占用时失败，不接管其他服务。Ctrl-C 关闭本次启动的后端进程组并等待清理。任何就绪前退出、就绪后异常退出或清理失败都报告错误。不要同时启动两个占用相同地址的 mock。
+
+## app 接入
+
+mock 独立运行后，另一个终端执行 `pnpm dev`。Playground 的 `/api` 开发代理默认指向 `http://127.0.0.1:5320`；后端自定义端口时使用 `MOCK_API_URL=http://127.0.0.1:5432 pnpm dev`。前端不会启动或关闭 mock。
+
+其他 app 在 Vite 中配置 `server.proxy['/api'] = { target: 'http://127.0.0.1:5320', changeOrigin: false }`，公开运行配置 `apiURL` 保持 `/` 即可。同源代理避免跨域；默认 mock 不开放 CORS。生产构建仅交付前端静态资源，使用真实 API。
+
+## 替换默认演示数据
+
+[源配置](./mock.config.ts)选择一份 `MockConfig`；默认值来自 [fixtures.ts](./src/fixtures.ts)，服务逻辑在 [dispatcher.ts](./src/dispatcher.ts)，不依赖 Playground 的前端源码。编辑配置后由 Nitro 重载，也可重启独立服务。
+
+`MockConfig` 定义在 [config.ts](./src/config.ts)：`accounts` 是合成账号及其用户/工作空间、各空间 menu/codes；`publicMenu` 是匿名菜单；`navigablePageIds` 是系统菜单 CRUD 可选页面；`systemSeeds` 提供各空间 users/roles/menus/departments 初始数据。替换整份配置可移除所有默认账号、菜单和资源；只覆盖部分字段时从 `defaultMockConfig` 展开，并显式替换相应字段。当前系统 CRUD/传输保留 `north`、`south` 两个空间 id，名称、用户、授权、菜单 pageId 与种子可替换；配置按实例快照，运行中资源修改不改变原始配置。
+
+```ts
+import type { MockConfig } from './src/config';
+import { defaultMockConfig } from './src/fixtures';
+
+export default {
+  ...defaultMockConfig,
+  publicMenu: [{ kind: 'page', id: 'home', pageId: 'my-app.home' }],
+  navigablePageIds: [...defaultMockConfig.navigablePageIds, 'my-app.home'],
+  // 这里保留原登录菜单和资源；需要时再替换 accounts 和 systemSeeds。
+} satisfies MockConfig;
+```
+
+账号仅使用本地合成数据，不放入真实凭据。用户身份、空间成员关系与 codes 由这份配置决定；系统资源 CRUD 不修改认证账号或授权。账号重复、非法配置和内置接口冲突在启动时失败，不回显账号内容。
+
+## 新增接口
+
+在 `mock.config.ts` 的 `endpoints` 数组登记固定 `/api/...` 路径、methods、access 和 handler。handler 返回 data，dispatcher 统一包装 `{code,data,message}`、状态和 no-store；它拿到 body/query 以及经验证的 user/scope，不接收原始 Authorization。
+
+```ts
+export default {
+  ...defaultMockConfig,
+  endpoints: [{
+    path: '/api/projects',
+    methods: ['GET'],
+    access: 'workspace',
+    requiredCodes: ['demo:read'],
+    handler: ({ user, scope }) => ({ owner: user!.id, workspace: scope!.id }),
+  }],
+} satisfies MockConfig;
+```
+
+`public` 为公开接口，`authenticated` 要求有效会话，`workspace` 另校验精确空间参数与全部 requiredCodes。扩展不能覆盖内置 auth/system/transfers/health/echo/user/menu 路径，重复路径和非法声明失败。请求仍受 JSON 对象及大小上限约束；新增能力用 dispatcher 单元测试验证，实际接入再执行本机 HTTP 检查。
 
 所有 API 返回 `{ code, data, message }`，仅数字 `code: 0` 表示成功。错误 `data: null`，并携带相应 HTTP 状态。响应使用 JSON 与 `Cache-Control: no-store`，不设置跨域放行或 Cookie。
 

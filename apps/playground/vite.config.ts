@@ -3,7 +3,24 @@ import { mergeConfig } from 'vite';
 import { createWebViteConfig } from '@niubu-internal/vite-config';
 import { appIdentity } from './src/app/config.ts';
 import { runtimeConfigDescriptor } from './src/runtime-config.ts';
-import backendMockPlugin from './plugins/backend-mock.ts';
+function mockOrigin(value = 'http://127.0.0.1:5320') {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw Error('MOCK_API_URL must be an HTTP(S) origin');
+  }
+  if (
+    !['http:', 'https:'].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.pathname !== '/' ||
+    url.search ||
+    url.hash
+  )
+    throw Error('MOCK_API_URL must be an HTTP(S) origin');
+  return url.origin;
+}
 
 const appRoot = fileURLToPath(new URL('.', import.meta.url));
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url));
@@ -47,12 +64,11 @@ export default mergeConfig(
     },
   }),
   {
-    plugins: [backendMockPlugin({ workspaceRoot, enabled: process.env.VITE_BACKEND_MOCK !== '0', port: 5320 })],
     server: {
       host: '127.0.0.1',
       port: 5174,
       strictPort: true,
-      proxy: { '/api': { target: 'http://127.0.0.1:5320', changeOrigin: false } },
+      proxy: { '/api': { target: mockOrigin(process.env.MOCK_API_URL), changeOrigin: false } },
     },
     preview: { host: '127.0.0.1', port: 5174, strictPort: true },
   },

@@ -1,11 +1,11 @@
-import type { AuthUser, BackendMenuItem, ScopeRef } from '@niubu/types';
+import type { BackendMenuItem } from '@niubu/types';
+import type { MockConfig, MockUser } from './config';
+import { createWorkspaceSeed, navigablePageIds } from './system/fixtures';
 
 // Intentionally public, synthetic examples. Never use real credentials here.
 export const MOCK_ONLY_SENTINEL = 'NIUBU_BACKEND_MOCK_ONLY_STAGE3';
 
-export interface User extends AuthUser<'workspace'> {
-  workspaces: readonly (ScopeRef<'workspace'> & { readonly name: string })[];
-}
+export type User = MockUser;
 
 export const demoAccount = { username: 'demo@playground.invalid', password: 'demo-only' } as const;
 export const secondAccount = { username: 'second@playground.invalid', password: 'demo-only' } as const;
@@ -104,3 +104,11 @@ export const syntheticAccounts = [
   { ...demoAccount, user: demoUser, scopes: scopedFixtures },
   { ...secondAccount, user: secondUser, scopes: secondScopedFixtures },
 ] as const;
+
+/** The Playground defaults are data; service machinery accepts a complete replacement. */
+export const defaultMockConfig = {
+  accounts: syntheticAccounts,
+  publicMenu,
+  navigablePageIds,
+  systemSeeds: { north: createWorkspaceSeed('north'), south: createWorkspaceSeed('south') },
+} satisfies MockConfig;

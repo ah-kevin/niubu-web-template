@@ -1,3 +1,4 @@
+import { systemResources } from './contracts';
 import type { ResourceRecords, SystemResource, WorkspaceId } from './contracts';
 
 export type WorkspaceSeed = { [R in SystemResource]: ResourceRecords[R][] };
@@ -62,3 +63,9 @@ export function createWorkspaceSeed(workspace: WorkspaceId): WorkspaceSeed {
     })),
   };
 }
+
+export const navigablePageIds = [
+  'playground.home',
+  'playground.request',
+  ...systemResources.map(resource => `playground.system.${resource}`),
+] as const;
