@@ -7,12 +7,14 @@ import { createMockBackend } from '../../apps/backend-mock/src/dispatcher';
 import { createPlaygroundAuthAdapter } from '../../apps/playground/src/auth/adapter';
 import { createSessionRequest } from '../../apps/playground/src/auth/request';
 import { createSystemApi, unwrapSystemResult } from '../../apps/playground/src/system/api';
-import type { InputByResource, ResourceKind, SystemPort } from '../../apps/playground/src/system/contracts';
+import type { InputByResource, RecordByResource, ResourceKind, SystemPage, SystemPort, SystemTreeSnapshot } from '../../apps/playground/src/system/contracts';
 
 async function fixture(viewer = false) {
   const backend = createMockBackend();
+  const calls: Array<{ path: string; method: string; query: URLSearchParams }> = [];
   const fetcher: typeof fetch = async (input, init) => {
     const url = new URL(String(input));
+    calls.push({ path: url.pathname, method: init?.method ?? 'GET', query: url.searchParams });
     const response = await backend.dispatch({
       method: init?.method ?? 'GET',
       path: url.pathname,
@@ -89,6 +91,7 @@ async function fixture(viewer = false) {
   const api = createSystemApi(client, context);
   return {
     api,
+    calls,
     auth,
     context: context()!,
     dispose() {
@@ -175,5 +178,64 @@ it('keeps direct writes forbidden for a read-only user and encodes nullable root
     expect(roots.rows.every(row => row.parentId === null)).toBe(true);
   } finally {
     f.dispose();
+  }
+});
+
+it.each(['menus', 'departments'] as const)('reads a complete %s hierarchy through the real tree wire while keeping list pagination', async kind => {
+  const f = await fixture();
+  try {
+    const snapshot = unwrapSystemResult<SystemTreeSnapshot<RecordByResource[typeof kind]>>(await f.api[kind].tree(f.context));
+    expect(snapshot.complete).toBe(true);
+    expect(snapshot.rowCount).toBe(snapshot.rows.length);
+    expect(snapshot.rows.some(row => row.parentId !== null)).toBe(true);
+    expect(snapshot.rows.every(row => row.parentId === null || snapshot.rows.some(parent => parent.id === row.parentId))).toBe(true);
+    const call = f.calls.findLast(call => call.path === `/api/system/${kind}` && call.query.get('mode') === 'tree');
+    expect(call?.method).toBe('GET');
+    expect(Object.fromEntries(call!.query)).toEqual({ scopeKind: 'workspace', scopeId: 'north', mode: 'tree' });
+    const page = unwrapSystemResult<SystemPage<RecordByResource[typeof kind]>>(await f.api[kind].list(f.context, { pageIndex: 0, pageSize: 1 }));
+    expect(page.rows).toHaveLength(1);
+    expect(page.rowCount).toBe(snapshot.rowCount);
+    expect(f.calls.at(-1)?.query.has('mode')).toBe(false);
+    const oldContext = f.context;
+    await f.auth.switchScope({ kind: 'workspace', id: 'south' });
+    const stale = await f.api[kind].tree(oldContext);
+    expect(stale.ok).toBe(false);
+    if (!stale.ok) expect(stale.error.kind).toBe('aborted');
+  } finally {
+    f.dispose();
+  }
+});
+
+it('reads disabled descendants in a single tree snapshot and keeps readonly writes forbidden', async () => {
+  const f = await fixture();
+  try {
+    const parent = unwrapSystemResult(await f.api.departments.create(f.context, {
+      name: 'Tree integration root', code: 'tree-integration-root', parentId: null, enabled: true,
+    }));
+    const child = unwrapSystemResult(await f.api.departments.create(f.context, {
+      name: 'Disabled descendant', code: 'tree-integration-child', parentId: parent.id, enabled: false,
+    }));
+    const snapshot = unwrapSystemResult(await f.api.departments.tree(f.context));
+    expect(snapshot.rows.find(row => row.id === child.id)).toMatchObject({ parentId: parent.id, enabled: false });
+    expect(snapshot.rowCount).toBe(snapshot.rows.length);
+    const deniedParentRemoval = await f.api.departments.remove(f.context, parent.id);
+    expect(deniedParentRemoval.ok).toBe(false);
+    if (!deniedParentRemoval.ok) expect(deniedParentRemoval.error.status).toBe(409);
+    expect((await f.api.departments.remove(f.context, child.id)).ok).toBe(true);
+    expect((await f.api.departments.remove(f.context, parent.id)).ok).toBe(true);
+  } finally {
+    f.dispose();
+  }
+  const viewer = await fixture(true);
+  try {
+    expect(unwrapSystemResult(await viewer.api.menus.tree(viewer.context)).complete).toBe(true);
+    expect(unwrapSystemResult(await viewer.api.departments.tree(viewer.context)).complete).toBe(true);
+    const denied = await viewer.api.departments.create(viewer.context, {
+      name: 'Denied tree node', code: 'denied-tree-node', parentId: null, enabled: true,
+    });
+    expect(denied.ok).toBe(false);
+    if (!denied.ok) expect(denied.error.status).toBe(403);
+  } finally {
+    viewer.dispose();
   }
 });

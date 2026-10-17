@@ -12,8 +12,9 @@ import { appDefaults, appIdentity, appPolicy } from '../app/config';
 import { createPlaygroundI18n } from '../locales';
 import type { LoginInput, PlaygroundUser } from '../auth/schemas';
 import type { PlaygroundApi } from '../api';
-import type { RecordByResource, ResourceKind, SystemPort } from './contracts';
+import type { RecordByResource, ResourceKind, SystemCrudPort, SystemTreePort, SystemTreeSnapshot, TreeResource } from './contracts';
 import { ResourcePage } from './ResourcePage';
+import { parseSystemRecord } from './schemas';
 import { ownerScopeKey, resourceDraftKey } from './resource-config';
 
 const north = { kind: 'workspace', id: 'north' } as const;
@@ -34,6 +35,20 @@ const rows: { [K in ResourceKind]: RecordByResource[K][] } = {
   menus: [{ id: 'menus-1', title: 'Group', kind: 'group', parentId: null, order: 0, enabled: true }],
   departments: [{ id: 'departments-1', name: 'Head office', code: 'head', parentId: null, enabled: true }],
 };
+const treeRows: { menus: RecordByResource['menus'][]; departments: RecordByResource['departments'][] } = {
+  menus: [
+    { id: 'menus-1', title: 'Group', kind: 'group', parentId: null, order: 0, enabled: true },
+    { id: 'menus-branch', title: 'Branch', kind: 'group', parentId: 'menus-1', order: 1, enabled: true },
+    { id: 'menus-leaf', title: 'Deep page', kind: 'page', pageId: 'playground.home', parentId: 'menus-branch', order: 2, enabled: true },
+  ],
+  departments: [
+    { id: 'departments-1', name: 'Head office', code: 'head', parentId: null, enabled: true },
+    { id: 'departments-branch', name: 'Branch', code: 'branch', parentId: 'departments-1', enabled: true },
+    { id: 'departments-leaf', name: 'Deep team', code: 'deep-team', parentId: 'departments-branch', enabled: true },
+  ],
+};
+function treeFixture(kind: TreeResource) { return kind === 'menus' ? { menus: treeRows.menus } : { departments: treeRows.departments }; }
+function treeNames(kind: TreeResource) { return { root: kind === 'menus' ? 'Group' : 'Head office', leaf: kind === 'menus' ? 'Deep page' : 'Deep team' }; }
 const disposers: (() => void)[] = [];
 afterEach(() => {
   cleanup();
@@ -74,9 +89,9 @@ afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-function stubPort<K extends ResourceKind>(kind: K, records = rows[kind]) {
+function stubPort<K extends ResourceKind>(kind: K, records: readonly RecordByResource[K][] = rows[kind]) {
   return {
-    list: vi.fn<SystemPort<K>['list']>(async (_context, query) => {
+    list: vi.fn<SystemCrudPort<K>['list']>(async (_context, query) => {
       const all = records.filter(
         row => !query.keyword || ('name' in row ? row.name : row.title).includes(query.keyword),
       );
@@ -88,18 +103,39 @@ function stubPort<K extends ResourceKind>(kind: K, records = rows[kind]) {
         },
       };
     }),
-    get: vi.fn<SystemPort<K>['get']>(async (_context, id) => ({ ok: true, data: records.find(row => row.id === id)! })),
-    create: vi.fn<SystemPort<K>['create']>(async (_context, input) => ({
+    get: vi.fn<SystemCrudPort<K>['get']>(async (_context, id) => ({ ok: true, data: records.find(row => row.id === id)! })),
+    create: vi.fn<SystemCrudPort<K>['create']>(async (_context, input) => ({
       ok: true,
       data: { ...input, id: `${kind}-new` } as RecordByResource[K],
     })),
-    update: vi.fn<SystemPort<K>['update']>(async (_context, id, input) => ({
+    update: vi.fn<SystemCrudPort<K>['update']>(async (_context, id, input) => ({
       ok: true,
       data: { ...input, id } as RecordByResource[K],
     })),
-    remove: vi.fn<SystemPort<K>['remove']>(async (_context, id) => ({ ok: true, data: { id } })),
+    remove: vi.fn<SystemCrudPort<K>['remove']>(async (_context, id) => ({ ok: true, data: { id } })),
   };
 }
+function stubTreePort<K extends TreeResource>(kind: K, initial: readonly RecordByResource[K][] = rows[kind]) {
+  let records: RecordByResource[K][] = [...initial];
+  let sequence = 0;
+  return {
+    ...stubPort(kind, initial),
+    tree: vi.fn<SystemTreePort<K>['tree']>(async () => ({ ok: true as const, data: { rows: records, rowCount: records.length, complete: true as const } })),
+    get: vi.fn<SystemCrudPort<K>['get']>(async (_context, id) => ({ ok: true, data: records.find(row => row.id === id)! })),
+    create: vi.fn<SystemCrudPort<K>['create']>(async (_context, input) => {
+      const record = parseSystemRecord(kind, { ...input, id: `${kind}-new-${++sequence}` });
+      records = [...records, record];
+      return { ok: true, data: record };
+    }),
+    update: vi.fn<SystemCrudPort<K>['update']>(async (_context, id, input) => {
+      const record = parseSystemRecord(kind, { ...input, id });
+      records = records.map(row => row.id === id ? record : row);
+      return { ok: true, data: record };
+    }),
+    remove: vi.fn<SystemCrudPort<K>['remove']>(async (_context, id) => { records = records.filter(row => row.id !== id); return { ok: true, data: { id } }; }),
+  };
+}
+
 function tableResizeObserver() {
     const OriginalResizeObserver = globalThis.ResizeObserver;
     const observers = new Set<ResizeObserverHarness>();
@@ -187,8 +223,8 @@ async function mount(kind: ResourceKind, writable = true, fixtures: Partial<type
   const system = {
     users: stubPort('users', fixtures.users),
     roles: stubPort('roles', fixtures.roles),
-    menus: stubPort('menus', fixtures.menus),
-    departments: stubPort('departments', fixtures.departments),
+    menus: stubTreePort('menus', fixtures.menus),
+    departments: stubTreePort('departments', fixtures.departments),
   };
   const getContext = (): AuthContext | null => {
     const s = auth.getSnapshot();
@@ -225,7 +261,7 @@ async function mount(kind: ResourceKind, writable = true, fixtures: Partial<type
     auth.dispose();
   });
   await screen.findByRole('heading', { name: titles[kind] });
-  await waitFor(() => expect(system[kind].list).toHaveBeenCalled());
+  await waitFor(() => expect(kind === 'menus' || kind === 'departments' ? system[kind].tree : system[kind].list).toHaveBeenCalled());
   return {
     system,
     auth,
@@ -259,6 +295,209 @@ async function confirmSave() {
 }
 
 describe('system UI with controlled API ports (not backend persistence)', () => {
+  describe.each(['menus', 'departments'] as const)('%s complete tree UI', kind => {
+    it('distinguishes an empty complete snapshot from an empty filtered result', async () => {
+      await mount(kind, true, kind === 'menus' ? { menus: [] } : { departments: [] });
+      expect(await screen.findByText('暂无来源记录')).toBeInTheDocument();
+      expect(screen.queryByText('来源总数未知')).not.toBeInTheDocument();
+    });
+    it('reports a filtered empty result from a nonempty complete snapshot', async () => {
+      await mount(kind, true, treeFixture(kind));
+      await userEvent.click(screen.getByRole('button', { name: '搜索', pressed: false }));
+      await userEvent.type(screen.getByRole('textbox', { name: '关键词' }), 'no-such-node');
+      await userEvent.click(screen.getByRole('button', { name: '查询' }));
+      expect(await screen.findByText('没有匹配记录')).toBeInTheDocument();
+      expect(screen.queryByText('来源总数未知')).not.toBeInTheDocument();
+    });
+    it('loads only the complete snapshot and offers no pagination', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      await screen.findByRole('button', { name: `查看 ${treeNames(kind).root}` });
+      expect(f.system[kind].tree).toHaveBeenCalled();
+      expect(f.system[kind].list).not.toHaveBeenCalled();
+      expect(screen.queryByRole('navigation', { name: titles[kind] })).not.toBeInTheDocument();
+    });
+    it('starts collapsed and reveals each level only through its disclosure', async () => {
+      await mount(kind, true, treeFixture(kind));
+      const names = treeNames(kind);
+      const expand = await screen.findByRole('button', { name: `展开 ${names.root}` });
+      expect(screen.queryByRole('button', { name: '查看 Branch' })).not.toBeInTheDocument();
+      await userEvent.click(expand);
+      expect(screen.getByRole('button', { name: `收起 ${names.root}` })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('button', { name: '查看 Branch' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: `查看 ${names.leaf}` })).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: '展开 Branch' }));
+      expect(screen.getByRole('button', { name: `查看 ${names.leaf}` })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: `展开 ${names.leaf}` })).not.toBeInTheDocument();
+      if (kind === 'menus') expect(screen.queryByRole('button', { name: `新增下级 ${names.leaf}` })).not.toBeInTheDocument();
+      else expect(screen.getByRole('button', { name: `新增下级 ${names.leaf}` })).toBeEnabled();
+    });
+    it('does not expand by row or row-action clicks', async () => {
+      await mount(kind, true, treeFixture(kind));
+      const { root } = treeNames(kind);
+      await screen.findByRole('button', { name: `展开 ${root}` });
+      fireEvent.click(within(screen.getByRole('row', { name: new RegExp(root) })).getAllByRole('cell')[0]!);
+      expect(screen.queryByRole('button', { name: '查看 Branch' })).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: `查看 ${root}` }));
+      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: '关闭' }));
+      expect(screen.getByRole('button', { name: `展开 ${root}` })).toHaveAttribute('aria-expanded', 'false');
+    });
+    it('keeps matching descendants with their ancestors and allows the user to collapse the query path', async () => {
+      await mount(kind, true, treeFixture(kind));
+      await userEvent.click(screen.getByRole('button', { name: '搜索', pressed: false }));
+      await userEvent.type(screen.getByRole('textbox', { name: '关键词' }), treeNames(kind).leaf);
+      await userEvent.click(screen.getByRole('button', { name: '查询' }));
+      expect(await screen.findByRole('button', { name: `查看 ${treeNames(kind).leaf}` })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `查看 ${treeNames(kind).root}` })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '查看 Branch' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: `收起 ${treeNames(kind).root}` }));
+      expect(screen.queryByRole('button', { name: `查看 ${treeNames(kind).leaf}` })).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: '刷新' }));
+      expect(await screen.findByRole('button', { name: `展开 ${treeNames(kind).root}` })).toBeInTheDocument();
+    });
+    it('blocks deletion of a parent using the full forest even when its children are filtered out', async () => {
+      await mount(kind, true, treeFixture(kind));
+      await userEvent.click(screen.getByRole('button', { name: '搜索', pressed: false }));
+      await userEvent.type(screen.getByRole('textbox', { name: '关键词' }), treeNames(kind).root);
+      await userEvent.click(screen.getByRole('button', { name: '查询' }));
+      expect(await screen.findByRole('button', { name: `删除 ${treeNames(kind).root}` })).toBeDisabled();
+    });
+    it('saves a child, expands its ancestors, refreshes parent choices and focuses the new row', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      const treeBefore = f.system[kind].tree.mock.calls.length;
+      await userEvent.click(await screen.findByRole('button', { name: `新增下级 ${treeNames(kind).root}` }));
+      await fill(kind, 'Created child');
+      await confirmSave();
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      const view = await screen.findByRole('button', { name: '查看 Created child' });
+      expect(f.system[kind].create).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ parentId: `${kind}-1` }), expect.any(AbortSignal));
+      await waitFor(() => expect(view).toHaveFocus());
+      expect(f.system[kind].tree.mock.calls.length).toBeGreaterThan(treeBefore + 1);
+      await userEvent.click(screen.getByRole('button', { name: `新增下级 ${treeNames(kind).root}` }));
+      await userEvent.click(screen.getByRole('combobox', { name: '父项' }));
+      expect(await screen.findByRole('option', { name: /Created child/ })).toBeInTheDocument();
+    });
+    it('keeps child drafts separate for each parent and for root creation', async () => {
+      await mount(kind, true, treeFixture(kind));
+      await userEvent.click(await screen.findByRole('button', { name: `新增下级 ${treeNames(kind).root}` }));
+      await fill(kind, 'Parent-specific draft');
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
+      await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '保留草稿并离开' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await userEvent.click(screen.getByRole('button', { name: `展开 ${treeNames(kind).root}` }));
+      await userEvent.click(screen.getByRole('button', { name: '新增下级 Branch' }));
+      expect(screen.queryByRole('button', { name: '恢复草稿' })).not.toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: kind === 'menus' ? '标题' : '名称' })).toHaveValue('');
+      expect(screen.getByRole('combobox', { name: '父项' })).toHaveTextContent('Branch');
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
+      await userEvent.click(screen.getByRole('button', { name: createLabels[kind] }));
+      expect(screen.queryByRole('button', { name: '恢复草稿' })).not.toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: '父项' })).toHaveTextContent('无父项');
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
+      await userEvent.click(screen.getByRole('button', { name: `新增下级 ${treeNames(kind).root}` }));
+      await userEvent.click(await screen.findByRole('button', { name: '恢复草稿' }));
+      expect(screen.getByRole('textbox', { name: kind === 'menus' ? '标题' : '名称' })).toHaveValue('Parent-specific draft');
+      expect(screen.getByRole('combobox', { name: '父项' })).toHaveTextContent(treeNames(kind).root);
+    });
+    it('excludes self and descendants from parent options and reveals a node moved to the root', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      await userEvent.click(await screen.findByRole('button', { name: `编辑 ${treeNames(kind).root}` }));
+      await userEvent.click(screen.getByRole('combobox', { name: '父项' }));
+      expect(screen.queryByRole('option', { name: 'Branch' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: treeNames(kind).leaf })).not.toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '关闭' }));
+      await userEvent.click(screen.getByRole('button', { name: `展开 ${treeNames(kind).root}` }));
+      await userEvent.click(screen.getByRole('button', { name: '编辑 Branch' }));
+      await choose('父项', '无父项');
+      await confirmSave();
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(await screen.findByRole('button', { name: '查看 Branch' })).toBeInTheDocument();
+      expect(f.system[kind].update).toHaveBeenCalledWith(expect.anything(), `${kind}-branch`, expect.objectContaining({ parentId: null }), expect.any(AbortSignal));
+      expect(screen.getByRole('button', { name: `删除 ${treeNames(kind).root}` })).toBeEnabled();
+    });
+    it('keeps a cancelled snapshot response from replacing a newer tree read', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      let resolve!: (outcome: RequestOutcome<SystemTreeSnapshot<never>>) => void;
+      const pending = new Promise<RequestOutcome<SystemTreeSnapshot<never>>>(release => { resolve = release; });
+      const port = f.system[kind];
+      port.tree.mockImplementationOnce(() => pending);
+      await userEvent.click(screen.getByRole('button', { name: '刷新' }));
+      await waitFor(() => expect(port.tree.mock.calls.at(-1)?.[1]).toBeDefined());
+      const signal = port.tree.mock.calls.at(-1)![1]!;
+      await userEvent.click(screen.getByRole('button', { name: '搜索', pressed: false }));
+      await userEvent.type(screen.getByRole('textbox', { name: '关键词' }), treeNames(kind).root);
+      await userEvent.click(screen.getByRole('button', { name: '查询' }));
+      expect(signal.aborted).toBe(true);
+      await screen.findByRole('button', { name: `查看 ${treeNames(kind).root}` });
+      await act(async () => resolve({ ok: true, data: { rows: [], rowCount: 0, complete: true } }));
+      expect(screen.getByRole('button', { name: `查看 ${treeNames(kind).root}` })).toBeInTheDocument();
+      expect(screen.queryByText('暂无来源记录')).not.toBeInTheDocument();
+    });
+    it('retries a failed tree lookup without replacing a live view trigger', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      const port = f.system[kind];
+      const trigger = await screen.findByRole('button', { name: `查看 ${treeNames(kind).root}` });
+      port.tree.mockResolvedValueOnce({ ok: false, error: { kind: 'transport', details: new Error('offline') } });
+      await act(async () => f.queryClient.invalidateQueries({ predicate: query => query.queryKey.at(-1) === 'tree' }));
+      await screen.findByText('引用数据加载失败，请重试。');
+      expect(screen.getByRole('button', { name: `编辑 ${treeNames(kind).root}` })).toBeDisabled();
+      await userEvent.click(screen.getByRole('button', { name: '重新加载' }));
+      await waitFor(() => expect(screen.queryByText('引用数据加载失败，请重试。')).not.toBeInTheDocument());
+      expect(screen.getByRole('button', { name: `查看 ${treeNames(kind).root}` })).toBe(trigger);
+      expect(screen.getByRole('button', { name: `编辑 ${treeNames(kind).root}` })).toBeEnabled();
+      await userEvent.click(trigger);
+      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: '关闭' }));
+      expect(trigger).toHaveFocus();
+    });
+    it('does not accept a snapshot from a retired login generation', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      const port = f.system[kind];
+      let resolve!: (outcome: RequestOutcome<SystemTreeSnapshot<never>>) => void;
+      const pending = new Promise<RequestOutcome<SystemTreeSnapshot<never>>>(release => { resolve = release; });
+      port.tree.mockImplementationOnce(() => pending);
+      await userEvent.click(screen.getByRole('button', { name: '刷新' }));
+      const signal = port.tree.mock.calls.at(-1)![1]!;
+      act(() => f.auth.markLoginExpired());
+      await act(async () => { await f.auth.login({ username: '', password: '' }, `/system/${kind}`); });
+      expect(signal.aborted).toBe(true);
+      await screen.findByRole('button', { name: `查看 ${treeNames(kind).root}` });
+      await act(async () => resolve({ ok: true, data: { rows: [], rowCount: 0, complete: true } }));
+      expect(screen.getByRole('button', { name: `查看 ${treeNames(kind).root}` })).toBeInTheDocument();
+      expect(screen.queryByText('暂无来源记录')).not.toBeInTheDocument();
+    });
+    it('deletes a leaf and returns focus to the surviving parent row', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      await userEvent.click(await screen.findByRole('button', { name: `展开 ${treeNames(kind).root}` }));
+      await userEvent.click(screen.getByRole('button', { name: '展开 Branch' }));
+      await userEvent.click(screen.getByRole('button', { name: `删除 ${treeNames(kind).leaf}` }));
+      await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '确定' }));
+      await waitFor(() => expect(screen.queryByRole('button', { name: `查看 ${treeNames(kind).leaf}` })).not.toBeInTheDocument());
+      expect(f.system[kind].remove).toHaveBeenCalledWith(expect.anything(), `${kind}-leaf`, expect.any(AbortSignal));
+      await waitFor(() => expect(screen.getByRole('button', { name: '查看 Branch' })).toHaveFocus());
+      expect(screen.getByRole('button', { name: '删除 Branch' })).toBeEnabled();
+    });
+    it('prefills the parent when creating a child without mutating the tree before confirmation', async () => {
+      const f = await mount(kind, true, treeFixture(kind));
+      await userEvent.click(await screen.findByRole('button', { name: `新增下级 ${treeNames(kind).root}` }));
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByRole('combobox', { name: '父项' })).toHaveTextContent(treeNames(kind).root);
+      expect(f.system[kind].create).not.toHaveBeenCalled();
+      await userEvent.click(within(dialog).getByRole('button', { name: '关闭' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(f.system[kind].create).not.toHaveBeenCalled();
+    });
+  });
+
+  it('orders menu siblings by their explicit order while retaining stable ties', async () => {
+    await mount('menus', true, { menus: [
+      ...treeRows.menus,
+      { id: 'early', title: 'Early', kind: 'group', parentId: 'menus-1', order: 0, enabled: true },
+      { id: 'tie', title: 'Tie', kind: 'group', parentId: 'menus-1', order: 1, enabled: true },
+    ] });
+    await userEvent.click(await screen.findByRole('button', { name: '展开 Group' }));
+    expect(screen.getAllByRole('row').slice(1).map(row => row.getAttribute('data-row-id'))).toEqual(['menus-1', 'early', 'menus-branch', 'tie']);
+  });
+
   it.each(kinds)('%s places its resource actions in the table toolbar and retains the accessible page name', async kind => {
     await mount(kind);
     const toolbar = within(screen.getByRole('toolbar', { name: titles[kind] }));
@@ -316,10 +555,12 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
     const f = await mount(kind, false);
     const toolbar = within(screen.getByRole('toolbar', { name: titles[kind] }));
     expect(screen.queryByRole('button', { name: createLabels[kind] })).not.toBeInTheDocument();
-    const before = f.system[kind].list.mock.calls.length;
+    const read = kind === 'menus' || kind === 'departments' ? f.system[kind].tree : f.system[kind].list;
+    const before = read.mock.calls.length;
     await userEvent.click(toolbar.getByRole('button', { name: '刷新' }));
-    await waitFor(() => expect(f.system[kind].list).toHaveBeenCalledTimes(before + 1));
-    expect(f.system[kind].list).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ pageIndex: 0, pageSize: 10 }), expect.any(AbortSignal));
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(before + 1));
+    if (kind === 'menus' || kind === 'departments') expect(f.system[kind].tree).toHaveBeenLastCalledWith(expect.anything(), expect.any(AbortSignal));
+    else expect(f.system[kind].list).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ pageIndex: 0, pageSize: 10 }), expect.any(AbortSignal));
   });
 
   it('shows the existing role description as a real table column', async () => {
@@ -473,6 +714,24 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
+  it.each(['menus', 'departments'] as const)('%s retains its original row trigger when narrowed under an open overlay', async kind => {
+    const observer = tableResizeObserver();
+    try {
+      await mount(kind, true, treeFixture(kind));
+      const table = await screen.findByRole('table', { name: titles[kind] });
+      observer.resize(table, 1206);
+      const trigger = screen.getByRole('button', { name: `查看 ${treeNames(kind).root}` });
+      await userEvent.click(trigger);
+      const dialog = await screen.findByRole('dialog');
+      observer.resize(table, 341);
+      await userEvent.click(within(dialog).getByRole('button', { name: '关闭' }));
+      expect(screen.getByRole('button', { name: `查看 ${treeNames(kind).root}` })).toBe(trigger);
+      await waitFor(() => expect(trigger).toHaveFocus());
+    } finally {
+      observer.restore();
+    }
+  });
+
   it('keeps the original row trigger available for overlay focus return after the container narrows', async () => {
     const observer = tableResizeObserver();
     try {
@@ -549,7 +808,11 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       if (kind === 'menus' || kind === 'departments') await userEvent.click(screen.getByRole('button', { name: '搜索', pressed: false }));
       fireEvent.change(screen.getByRole('textbox', { name: '关键词' }), { target: { value: 'missing' } });
       fireEvent.click(screen.getByRole('button', { name: '查询' }));
-      await waitFor(() =>
+      if (kind === 'menus' || kind === 'departments') {
+        await screen.findByText('没有匹配记录');
+        expect(f.system[kind].tree).toHaveBeenLastCalledWith(expect.anything(), expect.any(AbortSignal));
+        expect(port.list).not.toHaveBeenCalled();
+      } else await waitFor(() =>
         expect(port.list).toHaveBeenLastCalledWith(
           expect.anything(),
           expect.objectContaining({ keyword: 'missing', pageIndex: 0 }),
@@ -589,7 +852,7 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
         ),
       );
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      fireEvent.click(screen.getByRole('button', { name: `删除 ${entity}` }));
+      fireEvent.click(screen.getByRole('button', { name: `删除 ${kind === 'menus' || kind === 'departments' ? 'Updated' : entity}` }));
       const deletion = await screen.findByRole('alertdialog');
       expect(port.remove).not.toHaveBeenCalled();
       fireEvent.click(within(deletion).getByRole('button', { name: '确定' }));

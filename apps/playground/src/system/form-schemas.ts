@@ -37,7 +37,11 @@ export type QueryCriteria = {
   parentId?: string | null;
 };
 const queryLayout = { columns: 3, labelWidth: '100px' };
-export function editorDefaults<K extends ResourceKind>(resource: K, record?: RecordByResource[K]): EditorValues {
+export function editorDefaults<K extends ResourceKind>(
+  resource: K,
+  record?: RecordByResource[K],
+  initialParentId?: string,
+): EditorValues {
   const defaults: EditorValues = {
     name: '',
     email: '',
@@ -47,7 +51,7 @@ export function editorDefaults<K extends ResourceKind>(resource: K, record?: Rec
     description: '',
     title: '',
     kind: 'group',
-    parentId: '',
+    parentId: initialParentId ?? '',
     order: 0,
     pageId: '',
     href: '',
@@ -69,6 +73,7 @@ export function createEditorOptions<K extends ResourceKind>(
   lookups: Lookups,
   record?: RecordByResource[K],
   current = editorDefaults(resource, record),
+  initialParentId?: string,
 ): SchemaFormOptions<EditorValues, InputByResource[K]> {
   const message = t('system.invalidField');
   const text = z.string().trim().min(1, message).max(80, message);
@@ -208,9 +213,9 @@ export function createEditorOptions<K extends ResourceKind>(
   fields.push(field('enabled', 'switch', z.boolean()));
   return {
     fields,
-    defaultValues: editorDefaults(resource, record),
+    defaultValues: editorDefaults(resource, record, initialParentId),
     groups: [{ id: 'record', title: t('system.recordFields') }],
-    layout: { columns: 1, labelWidth: 'auto' },
+    layout: { columns: resource === 'menus' ? 2 : 1, labelWidth: resource === 'menus' ? '100px' : 'auto' },
     transform: values => {
       let output: InputByResource[ResourceKind];
       if (resource === 'users')

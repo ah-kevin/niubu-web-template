@@ -36,6 +36,16 @@
 
 系统列表的 [ResourcePage](../../apps/playground/src/system/ResourcePage.tsx) 将 `tableState` 交给 `DataTable profile="list"`，通过 QueryClient 接入缓存。query key 用 [playgroundScopeQueryKey](../../apps/playground/src/auth/query-context.ts)：namespace、identity、scope kind/id、generation 后接资源与条件。合并 wrapper/session/Query signal，重复查询前取消旧 exact key，防止去重到已取消读。旧 scope 清理仅清 `generation <= previous.generation`，不能把重新进入该 scope 的新查询一起删掉。
 
+### 完整树列表
+
+菜单、部门使用 `DataTable profile="tree-list"`；用户、角色继续使用分页列表。树 profile 接收完整 client 层级结果的根节点、`getSubRows`、`treeColumnId` 和 `getRowLabel`，列用 `createTreeColumnHelper` 定义。原生 TanStack 行模型负责展开，不传分页，也不在 app 里手工截取可见行。`resultCount` 是当前结果的全部层级节点数，不是根节点数；`sourceCount` 是完整来源节点数。非 ready 状态仍必须清空行并保持未知计数。
+
+`expanded` 沿用 `SliceOwner<ExpandedState>`，支持内部或受控 owner；刷新和过滤时允许保留暂未出现在当前结果中的展开 ID。身份、scope 与资源变更由 app 隔离。层级列不能隐藏；按钮提供展开状态和行名称，只有箭头按钮切换，普通文字与行操作不会触发展开。完整示例见 [TablesPage](../../apps/playground/src/examples/tables/TablesPage.tsx)，系统接入见 [ResourcePage](../../apps/playground/src/system/ResourcePage.tsx)。
+
+`system.menus.tree(context, signal)` 和 `system.departments.tree(context, signal)` 请求原 collection 的 `mode=tree`：参数仅 scope 与 mode，响应为 `{ rows, rowCount, complete: true }` 的单次完整 flat 快照。不要循环拼分页，也不要把过滤后的子项当完整来源。decoder 验证记录、总数、唯一 ID、父节点和环；app 用根数组与 children 索引保持原 DTO 引用，过滤结果保留必要祖先。现有 `list` 协议保持，用户和角色没有 `tree` 端口。
+
+新增下级沿用原编辑器与写入端口，父级作为初始值，并将创建草稿按父节点隔离。父级选择排除自身与后代；有子项不能删除，服务端继续校验依赖，不能改为隐式级联删除。成功后重载完整快照并保持必要展开路径，焦点恢复仍须检查 owner、请求代次、当前活动控件和弹层。
+
 ## 系统 CRUD、dirty 与 late leases
 
 [createSystemApi(client, getContext)](../../apps/playground/src/system/api.ts) 提供 `users/roles/menus/departments` 四个端口，各含 `list/get/create/update/remove`；签名和输入见 [contracts.ts](../../apps/playground/src/system/contracts.ts)。端口接收 captured `AuthContext` 与可选 signal，经唯一请求客户端发起调用、校验 DTO 和响应；页面不直接 fetch。

@@ -1,0 +1,6 @@
+/* OverlayFrame has no className forwarding; this app-only ancestor selector sets
+   the menu editor geometry without changing shared drawers or fullscreen. */
+.pattern-overlay-drawer:not([data-fullscreen='true']):has([data-resource='menus']) {
+  width: min(800px, 100vw);
+  max-width: 100vw;
+}

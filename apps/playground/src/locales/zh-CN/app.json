@@ -217,7 +217,7 @@
   "examples.forms.formatHelp": "toOutput 为单向输出；setValues 接收原值，不解码 DTO。",
   "examples.tables.title": "DataTable 示例",
   "examples.tables.synthetic": "全部记录均为合成数据；服务器由本页私有 fixture 模拟，不访问业务 API。列偏好仅保存在本页会话内。",
-  "examples.tables.boundary": "现有 DataTable 能力：只读、列表、选择、自定义单元格、列设置及查询。未实现 VXE API、单元格/行编辑、固定表头、树表、已读追踪或虚拟滚动。",
+  "examples.tables.boundary": "现有 DataTable 能力：只读、列表、树表、选择、自定义单元格、列设置及查询。未实现 VXE API、单元格/行编辑、固定表头、已读追踪或虚拟滚动。",
   "examples.tables.scope": "演示作用域",
   "examples.tables.north": "North（合成）",
   "examples.tables.south": "South（合成）",
@@ -525,5 +525,8 @@
   "system.create.roles": "新增角色",
   "system.create.menus": "新增菜单",
   "system.create.departments": "新增部门",
-  "system.demoExplanation": "演示说明"
+  "system.demoExplanation": "演示说明",
+  "system.append": "新增下级",
+  "system.appendAction": "新增下级 {{name}}",
+  "examples.tables.tree": "三层树表"
 }

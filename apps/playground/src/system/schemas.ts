@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { registry } from '../modules/demo';
-import type { InputByResource, RecordByResource, ResourceKind, SystemPage, QueryByResource } from './contracts';
+import type {
+  InputByResource,
+  RecordByResource,
+  ResourceKind,
+  SystemPage,
+  QueryByResource,
+  TreeResource,
+  SystemTreeSnapshot,
+} from './contracts';
 export const systemId = z
   .string()
   .min(1)
@@ -125,4 +133,47 @@ export function parseSystemPage<K extends ResourceKind>(kind: K, value: unknown)
   if (page.rowCount < rows.length || new Set(rows.map(row => row.id)).size !== rows.length)
     throw new Error('Inconsistent system page');
   return { rows, rowCount: page.rowCount };
+}
+
+export function parseSystemTree<K extends TreeResource>(
+  kind: K,
+  value: unknown,
+): SystemTreeSnapshot<RecordByResource[K]> {
+  try {
+    const data = z
+      .object({
+        rows: z.array(z.unknown()),
+        rowCount: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+        complete: z.literal(true),
+      })
+      .strict()
+      .parse(value);
+    const rows = data.rows.map(row => parseSystemRecord(kind, row));
+    if (data.rowCount !== rows.length) throw new Error('count mismatch');
+    // Tree expansion/row dictionaries reserve prototype names; keep legacy record IDs unchanged.
+    const unsafeTreeIds = new Set([...Object.getOwnPropertyNames(Object.prototype), 'prototype']);
+    if (rows.some(row => unsafeTreeIds.has(row.id))) throw new Error('unsafe tree id');
+    const index = new Map(rows.map(row => [row.id, row]));
+    if (index.size !== rows.length) throw new Error('duplicate ids');
+    for (const row of rows) {
+      if (row.parentId === null) continue;
+      const parent = index.get(row.parentId);
+      if (!parent) throw new Error('missing parent');
+      if ('kind' in parent && parent.kind !== 'group') throw new Error('non-group parent');
+    }
+    const visited = new Set<string>();
+    for (const row of rows) {
+      const path = new Set<string>();
+      let current: RecordByResource[K] | undefined = row;
+      while (current && !visited.has(current.id)) {
+        if (path.has(current.id)) throw new Error('parent cycle');
+        path.add(current.id);
+        current = current.parentId === null ? undefined : index.get(current.parentId);
+      }
+      for (const id of path) visited.add(id);
+    }
+    return { rows, rowCount: rows.length, complete: true };
+  } catch {
+    throw new Error('Invalid complete system tree snapshot');
+  }
 }

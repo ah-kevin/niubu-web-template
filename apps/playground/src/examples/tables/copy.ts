@@ -4,10 +4,11 @@ export const tablesCopy = {
   'examples.tables.synthetic':
     '全部记录均为合成数据；服务器由本页私有 fixture 模拟，不访问业务 API。列偏好仅保存在本页会话内。',
   'examples.tables.boundary':
-    '现有 DataTable 能力：只读、列表、选择、自定义单元格、列设置及查询。未实现 VXE API、单元格/行编辑、固定表头、树表、已读追踪或虚拟滚动。',
+    '现有 DataTable 能力：只读、列表、树表、选择、自定义单元格、列设置及查询。未实现 VXE API、单元格/行编辑、固定表头、已读追踪或虚拟滚动。',
   'examples.tables.scope': '演示作用域',
   'examples.tables.north': 'North（合成）',
   'examples.tables.south': 'South（合成）',
+  'examples.tables.tree': '三层树表',
   'examples.tables.read': '只读数据',
   'examples.tables.list': '普通列表',
   'examples.tables.client': '客户端可选列表',

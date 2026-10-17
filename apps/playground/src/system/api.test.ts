@@ -65,3 +65,19 @@ it('rejects a stale captured context before dispatch and before publishing a lat
   release({ rows: [], rowCount: 0 });
   expect(await pending).toMatchObject({ ok: false, error: { kind: 'aborted' } });
 });
+
+it.each(['menus', 'departments'] as const)('reads a complete %s snapshot through the collection mode without paging or filters', async resource => {
+  const context: AuthContext = { identityKey: 'demo', scope: { kind: 'workspace', id: 'north' }, generation: 3 };
+  const specs: RequestSpec<unknown>[] = [];
+  const client: RequestClient = {
+    mode: 'enabled',
+    async execute<T>(spec: RequestSpec<T>) { specs.push(spec as RequestSpec<unknown>); return { ok: true, data: await spec.decode({ rows: [], rowCount: 0, complete: true }) }; },
+    dispose() {},
+  };
+  const api = createSystemApi(client, () => context);
+  expect(await api[resource].tree(context)).toEqual({ ok: true, data: { rows: [], rowCount: 0, complete: true } });
+  expect(specs[0]).toMatchObject({ path: `/api/system/${resource}`, method: 'GET', query: { scopeKind: 'workspace', scopeId: 'north', mode: 'tree' } });
+  expect(Object.keys(specs[0]!.query!)).toEqual(['scopeKind', 'scopeId', 'mode']);
+  expect(api.users).not.toHaveProperty('tree');
+  expect(api.roles).not.toHaveProperty('tree');
+});

@@ -3,9 +3,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   createDataTableLabels,
   createListColumnHelper,
+  createTreeColumnHelper,
+  functionalUpdate,
+  type ExpandedState,
   DataTable,
   useQueryDataTable,
   type ListColumnDef,
+  type TreeColumnDef,
   type QueryRequest,
 } from '@niubu/common-ui/data-table';
 import { Modal, Drawer, useOverlay } from '@niubu/common-ui/overlay';
@@ -19,7 +23,7 @@ import { usePlaygroundApi } from '../app/api-context';
 import { useAuthSnapshot, usePlaygroundAuth } from '../auth/context';
 import { playgroundScopeQueryKey } from '../auth/query-context';
 import { unwrapSystemResult } from './api';
-import type { QueryByResource, RecordByResource, ResourceKind, SystemRecord } from './contracts';
+import type { QueryByResource, RecordByResource, ResourceKind, SystemRecord, SystemTreeSnapshot } from './contracts';
 import { createQueryOptions, type QueryCriteria, type QueryValues } from './form-schemas';
 import {
   ownerScopeKey,
@@ -40,14 +44,22 @@ import {
   writeWithRecovery,
 } from './resource-runtime';
 import { ResourceEditor } from './ResourceEditor';
+import { ancestorPath, isResourceRecord, isTreeResource, projectTreeRows, type TreeRecord } from './tree-model';
 
-type RowActionKind = 'detail' | 'edit' | 'delete';
+type RowActionKind = 'detail' | 'edit' | 'delete' | 'append';
 type PendingRowAction = { rowId: string; kind: RowActionKind };
-const RowActionContext = createContext<{ pending: PendingRowAction | null; lookupReady: boolean }>({
+const RowActionContext = createContext<{
+  pending: PendingRowAction | null;
+  lookupReady: boolean;
+  tree: boolean;
+  parents: ReadonlySet<string>;
+}>({
   pending: null,
   lookupReady: false,
+  tree: false,
+  parents: new Set(),
 });
-const rowActionIcons = { detail: Eye, edit: Pencil, delete: Trash2 };
+const rowActionIcons = { detail: Eye, edit: Pencil, delete: Trash2, append: Plus };
 
 function RowActionButton({
   rowId,
@@ -62,7 +74,7 @@ function RowActionButton({
   accessibleLabel: string;
   onClick: () => void;
 }) {
-  const { pending, lookupReady } = useContext(RowActionContext);
+  const { pending, lookupReady, tree, parents } = useContext(RowActionContext);
   const busy = pending?.rowId === rowId && pending.kind === kind;
   const Icon = busy ? LoaderCircle : rowActionIcons[kind];
   return (
@@ -70,17 +82,33 @@ function RowActionButton({
       type="button"
       variant="link"
       size="sm"
-      className="gap-1"
+      className={tree ? 'relative gap-1 px-0' : 'relative gap-1'}
+      data-row-action={kind}
       data-action={kind === 'delete' ? 'delete' : undefined}
       aria-label={accessibleLabel}
       aria-busy={busy || undefined}
-      disabled={kind === 'edit' && !lookupReady}
+      disabled={
+        ((kind === 'edit' || kind === 'append') && !lookupReady) || (tree && kind === 'delete' && parents.has(rowId))
+      }
       onClick={onClick}
     >
-      <span className="inline-flex size-[1em] shrink-0 items-center justify-center" aria-hidden="true">
-        <Icon className={busy ? 'size-[1em] animate-spin motion-reduce:animate-none' : 'size-[1em]'} />
-      </span>
-      {label}
+      {tree ? (
+        <>
+          <span className={busy ? 'invisible' : undefined}>{label}</span>
+          {busy && (
+            <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+              <LoaderCircle className="size-[1em] animate-spin motion-reduce:animate-none" />
+            </span>
+          )}
+        </>
+      ) : (
+        <>
+          <span className="inline-flex size-[1em] shrink-0 items-center justify-center" aria-hidden="true">
+            <Icon className={busy ? 'size-[1em] animate-spin motion-reduce:animate-none' : 'size-[1em]'} />
+          </span>
+          {label}
+        </>
+      )}
     </Button>
   );
 }
@@ -91,6 +119,8 @@ type Panel<K extends ResourceKind> = {
   record?: RecordByResource[K];
   owner: AuthContext;
   ownerKey: string;
+  initialParentId?: string;
+  trigger: HTMLElement | null;
 };
 function detailValue(name: string, record: SystemRecord, lookups: Lookups, t: Translate): string {
   const value = name in record ? record[name as keyof typeof record] : undefined;
@@ -153,11 +183,60 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const sessionSignal = auth.requestContext().signal;
   const lookup = useResourceLookups(api, resource, context, sessionSignal, readable);
   const queryOptions = useMemo(() => createQueryOptions(resource, t, lookup.lookups), [resource, t, lookup.lookups]);
+  const treeResource = isTreeResource(resource);
+  const [fullTree, setFullTree] = useState<{ owner: string; rows: readonly TreeRecord[] }>({ owner: '', rows: [] });
+  const [expanded, setExpanded] = useState<ExpandedState>({});
+  const baseExpanded = useRef<ExpandedState>({});
+  const treeCriteria = useRef('');
+  const reveal = useRef<{ owner: string; ids: string[]; origin: HTMLElement | null; revealId?: string } | null>(null);
   const [queryVisible, setQueryVisible] = useState(resource === 'users' || resource === 'roles');
   async function load({ query, pagination, sorting, signal: wrapperSignal }: QueryRequest<QueryCriteria>) {
     const captured = api.getContext();
     if (!captured || ownerScopeKey(captured.identityKey, captured.scope) !== ownerKey) throw cancelled();
     const signal = AbortSignal.any([wrapperSignal, auth.requestContext().signal]);
+    if (isTreeResource(resource)) {
+      const queryKey = playgroundScopeQueryKey(captured, 'system', resource, 'tree-table', query);
+      await queryClient.cancelQueries({ queryKey, exact: true });
+      requireLease(api, captured, signal);
+      const snapshot = await queryClient.fetchQuery<SystemTreeSnapshot<TreeRecord>>({
+        queryKey,
+        retry: false,
+        queryFn: async ({ signal: querySignal }) => {
+          const merged = AbortSignal.any([signal, querySignal]);
+          const result = unwrapSystemResult<SystemTreeSnapshot<TreeRecord>>(
+            await (resource === 'menus'
+              ? api.system.menus.tree(captured, merged)
+              : api.system.departments.tree(captured, merged)),
+          );
+          requireLease(api, captured, merged);
+          return result;
+        },
+      });
+      requireLease(api, captured, signal);
+      const rows = snapshot.rows.filter((row): row is RecordByResource[K] & TreeRecord =>
+        isResourceRecord(resource, row),
+      );
+      if (rows.length !== snapshot.rows.length) throw new Error('Unexpected tree resource record');
+      const result = projectTreeRows(rows, query);
+      const criteria = JSON.stringify(query);
+      setFullTree({ owner: actionKey, rows: snapshot.rows });
+      if (treeCriteria.current !== criteria) {
+        treeCriteria.current = criteria;
+        setExpanded(
+          Object.keys(query).length
+            ? Object.fromEntries([...result.ancestorIds].map(id => [id, true]))
+            : baseExpanded.current,
+        );
+      }
+      const focus = reveal.current;
+      if (focus?.owner === actionKey && focus.revealId && result.rows.some(row => row.id === focus.revealId)) {
+        const ancestors = ancestorPath(snapshot.rows, focus.revealId);
+        setExpanded(previous =>
+          previous === true ? true : { ...previous, ...Object.fromEntries([...ancestors].map(id => [id, true])) },
+        );
+      }
+      return { rows: result.rows, rowCount: result.rows.length };
+    }
     const sort = sorting[0];
     const queryInput = {
       ...query,
@@ -188,6 +267,19 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     enabled: readable,
     initialPageSize: 10,
   });
+  const treeRows = useMemo(
+    () => table.tableState.model.rows.filter((row): row is RecordByResource[K] & TreeRecord => 'parentId' in row),
+    [table.tableState.model.rows],
+  );
+  const treeModel = useMemo(() => projectTreeRows(treeRows), [treeRows]);
+  const treeReadState =
+    table.tableState.readState === 'ready'
+      ? {
+          readState: 'ready' as const,
+          sourceCount: fullTree.owner === actionKey ? fullTree.rows.length : null,
+          resultCount: treeRows.length,
+        }
+      : { readState: table.tableState.readState, sourceCount: null, resultCount: null };
   const retryButton = useRef<HTMLButtonElement>(null);
   const lastTableFocus = useRef<{ element: HTMLElement; owner: string } | null>(null);
   useEffect(() => {
@@ -238,6 +330,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     cancelEditor.current = cancel;
   }, []);
   function beginAction(kind: RowActionKind, rowId: string) {
+    reveal.current = null;
     action.current?.abort();
     const local = new AbortController();
     action.current = local;
@@ -256,23 +349,52 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     if (!captured || !writable || !lookup.ready) return;
     action.current?.abort();
     setActionState(null);
-    setPanel({ mode: 'create', session: ++sequence.current, owner: captured, ownerKey });
+    reveal.current = null;
+    setPanel({
+      mode: 'create',
+      session: ++sequence.current,
+      owner: captured,
+      ownerKey,
+      trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    });
+  }
+  function append(id: string) {
+    const captured = api.getContext();
+    const parent = fullTree.owner === actionKey ? fullTree.rows.find(row => row.id === id) : undefined;
+    if (!captured || !writable || !lookup.ready || !parent || ('kind' in parent && parent.kind !== 'group')) return;
+    action.current?.abort();
+    setActionState(null);
+    reveal.current = null;
+    setPanel({
+      mode: 'create',
+      session: ++sequence.current,
+      owner: captured,
+      ownerKey,
+      initialParentId: id,
+      trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    });
   }
   async function openRecord(mode: 'edit' | 'detail', id: string) {
     let lease: ReturnType<typeof beginAction> | undefined;
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     try {
       lease = beginAction(mode, id);
       const record = unwrapSystemResult(await api.system[resource].get(lease.context, id, lease.signal));
       if (!lease.current()) return;
       setActionState(null);
-      setPanel({ mode, session: ++sequence.current, record, owner: lease.context, ownerKey });
+      setPanel({ mode, session: ++sequence.current, record, owner: lease.context, ownerKey, trigger });
     } catch (error) {
       if (lease?.current())
         setActionState({ requestKey: actionKey, rowId: id, kind: mode, error: systemErrorCopy(error, t) });
     }
   }
   async function remove(record: RecordByResource[K]) {
-    if (!writable) return;
+    if (
+      !writable ||
+      (treeResource && fullTree.owner === actionKey && fullTree.rows.some(row => row.parentId === record.id))
+    )
+      return;
+    const origin = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     let lease: ReturnType<typeof beginAction> | undefined;
     try {
       lease = beginAction('delete', record.id);
@@ -294,6 +416,16 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
       await invalidateResource(queryClient, lease.context, resource);
       if (!lease.current()) return;
       lookup.retry();
+      if (treeResource && 'parentId' in record) {
+        const siblings = fullTree.rows
+          .filter(row => row.parentId === record.parentId && row.id !== record.id)
+          .map(row => row.id);
+        reveal.current = {
+          owner: actionKey,
+          ids: [...siblings, ...(record.parentId ? [record.parentId] : [])],
+          origin,
+        };
+      }
       await table.reload();
       if (lease.current()) setActionState(null);
     } catch (error) {
@@ -305,9 +437,9 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     }
   }
   // Keep cell component types stable while events use the latest committed owner and leases.
-  const rowActions = useRef({ openRecord, remove });
+  const rowActions = useRef({ openRecord, remove, append });
   useLayoutEffect(() => {
-    rowActions.current = { openRecord, remove };
+    rowActions.current = { openRecord, remove, append };
   });
   const tableContainer = useRef<HTMLDivElement>(null);
   const [tableWidth, setTableWidth] = useState(0);
@@ -328,91 +460,150 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     return () => observer.disconnect();
   }, []);
   const tableFields = useMemo(
-    () => config.fields.filter(name => !['href', 'pageId', 'openInNewWindow'].includes(name)),
-    [config],
+    () =>
+      resource === 'menus'
+        ? ['title', 'kind', 'href', 'pageId', 'enabled']
+        : resource === 'departments'
+          ? ['name', 'code', 'enabled']
+          : config.fields.filter(name => !['href', 'pageId', 'openInNewWindow'].includes(name)),
+    [config, resource],
   );
   // Defaults fill the card; TanStack keeps explicit user sizing authoritative.
-  const columnSize = Math.min(640, Math.max(180, (tableWidth - 2 - 256) / tableFields.length));
+  const defaultColumnSize = (tableWidth - 2 - (treeResource ? 192 : 256)) / tableFields.length;
+  const columnSize = Math.min(640, Math.max(180, defaultColumnSize));
+  // A narrow fixed hierarchy column leaves all four text actions reachable at the scroll end.
+  const treeColumnSize = Math.min(640, Math.max(140, defaultColumnSize));
   const headers = useMemo(
     () => Object.fromEntries([...config.fields, 'actions'].map(name => [name, t(`system.field.${name}`)])),
     [config, t],
   );
   // Width and lookup data can change under an open overlay without replacing its trigger.
-  const actionColumn = useMemo(() => {
-    const helper = createListColumnHelper<RecordByResource[K]>();
-    return helper.display({
-      id: 'actions',
-      header: headers.actions,
-      enableSorting: false,
-      size: 256,
-      minSize: 256,
-      cell: info => {
-        const record = info.row.original,
-          name = recordName(record);
-        return (
-          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-action=delete]]:text-destructive">
-            <RowActionButton
-              rowId={record.id}
-              kind="detail"
-              label={t('system.view')}
-              accessibleLabel={t('system.viewAction', { name })}
-              onClick={() => void rowActions.current.openRecord('detail', record.id)}
-            />
-            {writable && (
-              <>
+  const actionCell = useMemo(
+    () => (info: { row: { original: RecordByResource[K] } }) => {
+      const record = info.row.original,
+        name = recordName(record);
+      return (
+        <div className="system-row-actions flex flex-nowrap items-center gap-0.5 [&>[data-action=delete]:not(:disabled)]:text-destructive">
+          <RowActionButton
+            rowId={record.id}
+            kind="detail"
+            label={t('system.view')}
+            accessibleLabel={t('system.viewAction', { name })}
+            onClick={() => void rowActions.current.openRecord('detail', record.id)}
+          />
+          {writable && (
+            <>
+              <RowActionButton
+                rowId={record.id}
+                kind="edit"
+                label={t('system.edit')}
+                accessibleLabel={t('system.editAction', { name })}
+                onClick={() => void rowActions.current.openRecord('edit', record.id)}
+              />
+              {treeResource && 'parentId' in record && (!('kind' in record) || record.kind === 'group') && (
                 <RowActionButton
                   rowId={record.id}
-                  kind="edit"
-                  label={t('system.edit')}
-                  accessibleLabel={t('system.editAction', { name })}
-                  onClick={() => void rowActions.current.openRecord('edit', record.id)}
+                  kind="append"
+                  label={t('system.append')}
+                  accessibleLabel={t('system.appendAction', { name })}
+                  onClick={() => rowActions.current.append(record.id)}
                 />
-                <RowActionButton
-                  rowId={record.id}
-                  kind="delete"
-                  label={t('system.delete')}
-                  accessibleLabel={t('system.deleteAction', { name })}
-                  onClick={() => void rowActions.current.remove(record)}
-                />
-              </>
-            )}
-          </div>
-        );
-      },
-    });
-  }, [headers.actions, t, writable]);
+              )}
+              <RowActionButton
+                rowId={record.id}
+                kind="delete"
+                label={t('system.delete')}
+                accessibleLabel={t('system.deleteAction', { name })}
+                onClick={() => void rowActions.current.remove(record)}
+              />
+            </>
+          )}
+        </div>
+      );
+    },
+    [t, writable, treeResource],
+  );
+  const actionColumn = useMemo(
+    () =>
+      createListColumnHelper<RecordByResource[K]>().display({
+        id: 'actions',
+        header: headers.actions,
+        enableSorting: false,
+        size: 256,
+        minSize: 256,
+        cell: actionCell,
+      }),
+    [headers.actions, actionCell],
+  );
+
   // One server model from useQueryDataTable owns all paging, metadata and sorting.
   const columns = useMemo(() => {
     const helper = createListColumnHelper<RecordByResource[K]>();
     const result: ListColumnDef<RecordByResource[K], unknown>[] = tableFields.map(name =>
-      helper.accessor((row): unknown => detailValue(name, row, lookup.lookups, t), {
-        id: name,
-        header: headers[name],
-        size: columnSize,
-        enableSorting: (config.sortable as readonly string[]).includes(name),
-        cell: info =>
-          name === 'enabled' ? (
-            <Badge
-              variant="secondary"
-              className={
-                info.row.original.enabled
-                  ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
-                  : 'border-border text-muted-foreground'
-              }
-            >
-              {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
-            </Badge>
-          ) : (
-            info.getValue()
-          ),
-      }),
+      helper.accessor(
+        (row): unknown =>
+          (name === 'href' || name === 'pageId') && !(name in row) ? '' : detailValue(name, row, lookup.lookups, t),
+        {
+          id: name,
+          header: headers[name],
+          size: columnSize,
+          enableSorting: !treeResource && (config.sortable as readonly string[]).includes(name),
+          cell: info =>
+            name === 'enabled' ? (
+              <Badge
+                variant="secondary"
+                className={
+                  info.row.original.enabled
+                    ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
+                    : 'border-border text-muted-foreground'
+                }
+              >
+                {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
+              </Badge>
+            ) : (
+              info.getValue()
+            ),
+        },
+      ),
     );
     return [...result, actionColumn];
-  }, [tableFields, headers, columnSize, config, lookup.lookups, t, actionColumn]);
+  }, [tableFields, headers, columnSize, config, lookup.lookups, t, actionColumn, treeResource]);
+  const treeColumns = useMemo(() => {
+    const helper = createTreeColumnHelper<RecordByResource[K]>();
+    const result: TreeColumnDef<RecordByResource[K], unknown>[] = tableFields.map(name =>
+      helper.accessor(
+        (row): unknown =>
+          (name === 'href' || name === 'pageId') && !(name in row) ? '' : detailValue(name, row, lookup.lookups, t),
+        {
+          id: name,
+          header: headers[name],
+          size: name === 'title' || name === 'name' ? treeColumnSize : columnSize,
+          enableSorting: false,
+          cell: info =>
+            name === 'enabled' ? (
+              <Badge variant="secondary">{t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}</Badge>
+            ) : (
+              info.getValue()
+            ),
+        },
+      ),
+    );
+    result.push(
+      helper.display({
+        id: 'actions',
+        header: headers.actions,
+        size: 192,
+        minSize: 192,
+        enableSorting: false,
+        cell: actionCell,
+      }),
+    );
+    return result;
+  }, [tableFields, headers, columnSize, treeColumnSize, lookup.lookups, t, actionCell]);
   function closePanel(session: number) {
     if (panelRef.current?.session === session) setPanel(null);
   }
-  function submitted(opened: Panel<K>) {
+  function submitted(opened: Panel<K>, saved: RecordByResource[K]) {
     const current = api.getContext();
     if (
       !current ||
@@ -420,12 +611,56 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
       ownerScopeKey(current.identityKey, current.scope) !== opened.ownerKey
     )
       return;
+    if (treeResource && 'parentId' in saved) {
+      reveal.current = {
+        owner: actionKey,
+        ids: [
+          saved.id,
+          ...(saved.parentId ? [saved.parentId] : []),
+          ...(opened.initialParentId ? [opened.initialParentId] : []),
+        ],
+        origin: opened.trigger,
+        revealId: saved.id,
+      };
+    }
     setPanel(null);
     lookup.retry();
     void table.reload();
   }
+  useEffect(() => {
+    const intent = reveal.current;
+    if (!intent || intent.owner !== actionKey || table.tableState.readState !== 'ready' || panel) return;
+    if (document.querySelector('[role="dialog"][data-state="open"],[role="alertdialog"][data-state="open"]')) return;
+    if (document.activeElement !== document.body && document.activeElement !== intent.origin) {
+      reveal.current = null;
+      return;
+    }
+    const rows = [...(tableContainer.current?.querySelectorAll<HTMLTableRowElement>('[data-row-id]') ?? [])];
+    const target =
+      intent.ids
+        .map(id =>
+          rows
+            .find(row => row.getAttribute('data-row-id') === id)
+            ?.querySelector<HTMLButtonElement>('button[data-row-action="detail"]'),
+        )
+        .find(Boolean) ??
+      tableContainer.current?.querySelector<HTMLButtonElement>(
+        'button[aria-label="' + t('common:table.refresh') + '"]',
+      );
+    if (target) {
+      reveal.current = null;
+      target.focus({ preventScroll: true });
+    }
+  }, [actionKey, table.tableState.readState, fullTree, expanded, panel, t]);
   const shown = panel?.ownerKey === ownerKey ? panel : null;
-  const Overlay = shown?.mode === 'create' ? Modal : Drawer;
+  const Overlay =
+    resource === 'menus'
+      ? Drawer
+      : resource === 'departments' && shown?.mode !== 'detail'
+        ? Modal
+        : shown?.mode === 'create'
+          ? Modal
+          : Drawer;
   return (
     <section className="system-resource-page grid min-w-0 gap-3 p-4 [margin:calc(-1*max(var(--workspace-card-padding),var(--layout-content-padding,0px)))] [&_form]:max-w-none">
       <h1 className="sr-only">{t(config.titleKey)}</h1>
@@ -471,31 +706,80 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           value={{
             pending: actionState?.requestKey === actionKey && actionState.pending ? actionState : null,
             lookupReady: lookup.ready,
+            tree: treeResource,
+            parents: new Set(
+              (fullTree.owner === actionKey ? fullTree.rows : []).flatMap(row =>
+                row.parentId === null ? [] : [row.parentId],
+              ),
+            ),
           }}
         >
-          <DataTable<RecordByResource[K]>
-            profile="list"
-            columns={columns}
-            getRowId={row => row.id}
-            caption={t(config.titleKey)}
-            labels={createDataTableLabels(t, headers)}
-            {...table.tableState}
-            columnPinning={{ kind: 'internal', initial: { start: [], end: ['actions'] } }}
-            toolbar={{
-              title: config.listTitleKey ? t(config.listTitleKey) : null,
-              actions: writable ? (
-                <Button type="button" disabled={!lookup.ready} onClick={create}>
-                  <Plus aria-hidden="true" />
-                  {t(config.createKey)}
-                </Button>
-              ) : undefined,
-              search: { visible: queryVisible, onVisibleChange: setQueryVisible },
-              onRefresh: () => {
-                void table.reload();
-              },
-              allowMaximize: true,
-            }}
-          />
+          {treeResource ? (
+            <DataTable<RecordByResource[K]>
+              profile="tree-list"
+              columns={treeColumns}
+              model={{ kind: 'client', rows: treeModel.roots }}
+              {...treeReadState}
+              treeColumnId={resource === 'menus' ? 'title' : 'name'}
+              getRowLabel={recordName}
+              getSubRows={row => treeModel.children.get(row.id)}
+              expanded={{
+                kind: 'controlled',
+                value: expanded,
+                onChange: update =>
+                  setExpanded(previous => {
+                    const next = functionalUpdate(update, previous);
+                    if (treeCriteria.current === '{}') baseExpanded.current = next;
+                    return next;
+                  }),
+              }}
+              getRowId={row => row.id}
+              caption={t(config.titleKey)}
+              labels={createDataTableLabels(t, headers)}
+              columnPinning={{
+                kind: 'internal',
+                initial: { start: [resource === 'menus' ? 'title' : 'name'], end: [] },
+              }}
+              toolbar={{
+                title: config.listTitleKey ? t(config.listTitleKey) : null,
+                actions: writable ? (
+                  <Button type="button" disabled={!lookup.ready} onClick={create}>
+                    <Plus aria-hidden="true" />
+                    {t(config.createKey)}
+                  </Button>
+                ) : undefined,
+                search: { visible: queryVisible, onVisibleChange: setQueryVisible },
+                onRefresh: () => {
+                  void table.reload();
+                },
+                allowMaximize: true,
+              }}
+            />
+          ) : (
+            <DataTable<RecordByResource[K]>
+              profile="list"
+              columns={columns}
+              getRowId={row => row.id}
+              caption={t(config.titleKey)}
+              labels={createDataTableLabels(t, headers)}
+              {...table.tableState}
+              columnPinning={{ kind: 'internal', initial: { start: [], end: ['actions'] } }}
+              toolbar={{
+                title: config.listTitleKey ? t(config.listTitleKey) : null,
+                actions: writable ? (
+                  <Button type="button" disabled={!lookup.ready} onClick={create}>
+                    <Plus aria-hidden="true" />
+                    {t(config.createKey)}
+                  </Button>
+                ) : undefined,
+                search: { visible: queryVisible, onVisibleChange: setQueryVisible },
+                onRefresh: () => {
+                  void table.reload();
+                },
+                allowMaximize: true,
+              }}
+            />
+          )}
         </RowActionContext.Provider>
       </div>
       {table.tableState.readState === 'error' && (
@@ -534,12 +818,13 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
             <ResourceEditor
               resource={resource}
               record={shown.record}
+              initialParentId={shown.initialParentId}
               owner={shown.owner}
               lookups={lookup.lookups}
               lookupReady={lookup.ready}
               onCancel={() => closePanel(shown.session)}
               onCancelReady={registerCancel}
-              onSubmitted={() => submitted(shown)}
+              onSubmitted={saved => submitted(shown, saved)}
             />
           )}
         </Overlay>

@@ -1,6 +1,7 @@
 import { mockFetchResponse } from './mock-response';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router-dom';
 import { createRequestClient } from '@niubu/request';
 import { createMockBackend } from '../../apps/backend-mock/src/dispatcher';
@@ -144,7 +145,7 @@ async function fixture(resource: ResourceKind, viewer = false) {
       if (response.kind !== 'json') throw new Error('Expected JSON system records');
       const body = response.body as {
         code: number;
-        data: { rows: Array<{ id: string; name?: string; title?: string }> };
+        data: { rows: Array<{ id: string; name?: string; title?: string; parentId?: string | null }> };
       };
       expect(body.code).toBe(0);
       return body.data.rows;
@@ -179,6 +180,51 @@ async function query(keyword: string) {
     fireEvent.click(screen.getByRole('button', { name: '查询' }));
   });
 }
+
+const hierarchyCases = [
+  { resource: 'menus', parent: 'Examples', child: 'Home', parentId: 'menu-north-group' },
+  { resource: 'departments', parent: 'Head office', child: 'Operations', parentId: 'department-north-root' },
+] as const;
+
+it.each(hierarchyCases)('uses a complete $resource tree with collapsed descendants and no paginator', async ({ resource, parent, child }) => {
+  const f = await fixture(resource);
+  expect(screen.queryByRole('button', { name: '下一页' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: `查看 ${child}` })).not.toBeInTheDocument();
+  const expand = screen.getByRole('button', { name: new RegExp(`展开.*${parent}`) });
+  expect(expand).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(expand);
+  expect(await screen.findByRole('button', { name: `查看 ${child}` })).toBeVisible();
+  expect(expand).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByRole('button', { name: `删除 ${parent}` })).toBeDisabled();
+  const treeReads = f.calls.filter(call => call.path === `/api/system/${resource}` && call.query.get('mode') === 'tree');
+  expect(treeReads.length).toBeGreaterThan(0);
+  expect(treeReads.every(call => !call.query.has('pageIndex') && !call.query.has('pageSize'))).toBe(true);
+  await userEvent.click(screen.getByRole('button', { name: `查看 ${child}` }));
+  const detail = await screen.findByRole('dialog');
+  fireEvent.click(within(detail).getByRole('button', { name: '关闭' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: `查看 ${child}` })).toHaveFocus());
+  expect(expand).toHaveAttribute('aria-expanded', 'true');
+});
+
+it.each(hierarchyCases)('creates a $resource child with the selected parent and reveals it after saving', async ({ resource, parent, parentId }) => {
+  const f = await fixture(resource);
+  const createChild = await screen.findByRole('button', { name: new RegExp(`新增下级.*${parent}`) });
+  await waitFor(() => expect(createChild).toBeEnabled());
+  await userEvent.click(createChild);
+  const editor = await screen.findByRole('dialog');
+  expect(within(editor).getByRole('combobox', { name: '父项' })).toHaveTextContent(parent);
+  await fill(resource, 'Nested integration example');
+  await confirmSave();
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(await screen.findByRole('button', { name: '查看 Nested integration example' })).toBeVisible();
+  const rows = await f.rows('Nested integration example');
+  expect(rows).toHaveLength(1);
+  expect(rows[0]?.parentId).toBe(parentId);
+  const writes = f.calls.filter(call => call.path === `/api/system/${resource}` && call.method === 'POST');
+  expect(writes).toHaveLength(1);
+  expect(writes[0]?.body).toMatchObject({ parentId });
+});
+
 it.each(['users', 'roles', 'menus', 'departments'] as const)(
   'persists complete %s CRUD through actual app, schema form, client and dispatcher',
   async resource => {

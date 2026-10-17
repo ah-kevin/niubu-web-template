@@ -1,7 +1,14 @@
 import type { AuthContext } from '@niubu/types';
 import type { RequestClient, RequestError, RequestOutcome, RequestSpec } from '@niubu/request';
-import { systemId, parseSystemInput, parseSystemPage, parseSystemQuery, parseSystemRecord } from './schemas';
-import type { ResourceKind, SystemApi, SystemPort } from './contracts';
+import {
+  systemId,
+  parseSystemInput,
+  parseSystemPage,
+  parseSystemQuery,
+  parseSystemRecord,
+  parseSystemTree,
+} from './schemas';
+import type { ResourceKind, SystemApi, SystemCrudPort, SystemTreePort, TreeResource } from './contracts';
 
 const aborted = (): RequestOutcome<never> => ({ ok: false, error: { kind: 'aborted' } });
 const ownContext = (value: AuthContext): AuthContext =>
@@ -45,7 +52,7 @@ export function createSystemApi(client: RequestClient, getContext: () => AuthCon
     });
     return active() ? outcome : aborted();
   }
-  function port<K extends ResourceKind>(kind: K): SystemPort<K> {
+  function port<K extends ResourceKind>(kind: K): SystemCrudPort<K> {
     const base = `/api/system/${kind}`;
     const scope = (context: AuthContext) => ({ scopeKind: context.scope!.kind, scopeId: context.scope!.id });
     const path = (id: string) => `${base}/${encodeURIComponent(systemId.parse(id))}`;
@@ -108,11 +115,23 @@ export function createSystemApi(client: RequestClient, getContext: () => AuthCon
         })),
     };
   }
+  function treePort<K extends TreeResource>(kind: K): SystemCrudPort<K> & SystemTreePort<K> {
+    return {
+      ...port(kind),
+      tree: (context, signal) =>
+        send(context, signal, captured => ({
+          path: `/api/system/${kind}`,
+          method: 'GET',
+          query: { scopeKind: captured.scope!.kind, scopeId: captured.scope!.id, mode: 'tree' },
+          decode: data => parseSystemTree(kind, data),
+        })),
+    };
+  }
   return Object.freeze({
     users: port('users'),
     roles: port('roles'),
-    menus: port('menus'),
-    departments: port('departments'),
+    menus: treePort('menus'),
+    departments: treePort('departments'),
   });
 }
 export class SystemRequestError extends Error {

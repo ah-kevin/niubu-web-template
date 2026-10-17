@@ -6,6 +6,7 @@ import {
   createDataTableLabels,
   createReadColumnHelper,
   createListColumnHelper,
+  createTreeColumnHelper,
   createSelectableColumnHelper,
   useQueryDataTable,
   useTablePreferences,
@@ -131,6 +132,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
         <div className="grid min-w-0 items-start gap-[var(--workspace-section-gap)] xl:grid-cols-2">
           <ClientExamples key={scope} scope={scope} t={t} />
           <ServerExample scope={scope} load={load} t={t} />
+          <TreeExample key={`tree:${scope}`} scope={scope} t={t} />
         </div>
       </PreferenceProvider>
       <ExampleDetails title={t('examples.ui.details')}>
@@ -163,6 +165,46 @@ function ExampleGroup({
       </header>
       <div className="min-w-0 [&>.native-data-table]:rounded-none [&>.native-data-table]:border-0">{children}</div>
     </div>
+  );
+}
+
+type TreeSample = { id: string; name: string; children?: readonly TreeSample[] };
+const treeHelper = createTreeColumnHelper<TreeSample>();
+function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
+  const columns = useMemo(
+    () =>
+      treeHelper.columns([
+        treeHelper.accessor('name', { id: 'name', header: t('examples.tables.name'), enableSorting: false }),
+      ]),
+    [t],
+  );
+  const roots = useMemo<readonly TreeSample[]>(
+    () => [
+      {
+        id: 'tree-root',
+        name: scope === 'north' ? 'North' : 'South',
+        children: [{ id: 'tree-branch', name: 'Branch', children: [{ id: 'tree-leaf', name: 'Leaf' }] }],
+      },
+    ],
+    [scope],
+  );
+  return (
+    <ExampleGroup title={t('examples.tables.tree')}>
+      <DataTable
+        profile="tree-list"
+        model={{ kind: 'client', rows: roots }}
+        readState="ready"
+        sourceCount={3}
+        resultCount={3}
+        getRowId={row => row.id}
+        getSubRows={row => row.children}
+        getRowLabel={row => row.name}
+        treeColumnId="name"
+        columns={columns}
+        caption={t('examples.tables.tree')}
+        labels={createDataTableLabels(t, { name: t('examples.tables.name') })}
+      />
+    </ExampleGroup>
   );
 }
 

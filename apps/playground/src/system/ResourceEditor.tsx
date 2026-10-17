@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useSchemaForm } from '@niubu/common-ui/form';
 import { FormFrame } from '@niubu/common-ui/form-frame';
 import { Button } from '@niubu/shadcn-ui/button';
+import './ResourceEditor.css';
 import { useTranslation } from '@niubu/locales/react';
 import { useInteractionState } from '@niubu/stores';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,7 +10,7 @@ import type { AuthContext } from '@niubu/types';
 import { usePlaygroundApi } from '../app/api-context';
 import { useAuthSnapshot, usePlaygroundAuth } from '../auth/context';
 import type { InputByResource, RecordByResource, ResourceKind } from './contracts';
-import { createEditorOptions, type EditorValues } from './form-schemas';
+import { createEditorOptions, editorDefaults, type EditorValues } from './form-schemas';
 import { ownerScopeKey, resourceConfig, resourceDraftKey, type Lookups } from './resource-config';
 import {
   cancelled,
@@ -23,16 +24,18 @@ import {
 export type ResourceEditorProps<K extends ResourceKind> = {
   resource: K;
   record?: RecordByResource[K];
+  initialParentId?: string;
   owner: AuthContext;
   lookups: Lookups;
   lookupReady: boolean;
   onCancel: () => void;
-  onSubmitted: () => void;
+  onSubmitted: (record: RecordByResource[K]) => void;
   onCancelReady: (cancel: (() => void) | null) => void;
 };
 export function ResourceEditor<K extends ResourceKind>({
   resource,
   record,
+  initialParentId,
   owner,
   lookups,
   lookupReady,
@@ -47,10 +50,22 @@ export function ResourceEditor<K extends ResourceKind>({
   const queryClient = useQueryClient(),
     interaction = useInteractionState();
   const scopeKey = ownerScopeKey(owner.identityKey, owner.scope),
-    draftKey = resourceDraftKey(resource, record?.id);
+    draftKey = resourceDraftKey(resource, record?.id, initialParentId);
   const [draft] = useState(() => interaction.readDraft(scopeKey, draftKey));
   const [recovering, setRecovering] = useState(() => draft !== undefined);
-  const options = useMemo(() => createEditorOptions(resource, t, lookups, record), [resource, t, lookups, record]);
+  const options = useMemo(
+    () =>
+      createEditorOptions(
+        resource,
+        t,
+        lookups,
+        record,
+        editorDefaults(resource, record, initialParentId),
+        initialParentId,
+      ),
+    [resource, t, lookups, record, initialParentId],
+  );
+  const savedRecord = useRef<RecordByResource[K] | null>(null);
   const schema = useSchemaForm<EditorValues, InputByResource[K]>(options);
   const { updateFields, getValues, filterDraft } = schema;
   useEffect(() => {
@@ -81,16 +96,19 @@ export function ResourceEditor<K extends ResourceKind>({
     const signal = AbortSignal.any([operationSignal, auth.requestContext().signal]);
     const input = schema.toOutput(values);
     const port = api.system[resource];
-    await writeWithRecovery(api, port, context, signal, () =>
+    savedRecord.current = null;
+    const saved = await writeWithRecovery(api, port, context, signal, () =>
       record ? port.update(context, record.id, input, signal) : port.create(context, input, signal),
     );
     requireLease(api, context, signal);
     await invalidateResource(queryClient, context, resource);
     requireLease(api, context, signal);
+    savedRecord.current = saved;
   }
   if (recovering)
     return (
       <section
+        data-resource={resource}
         className="system-draft-recovery flex flex-wrap items-center gap-2 [&>p]:basis-full"
         aria-label={t('system.draftAvailable')}
       >
@@ -118,7 +136,10 @@ export function ResourceEditor<K extends ResourceKind>({
       </section>
     );
   return (
-    <div className="system-record-editor [&_.pattern-page-header]:hidden [&_.pattern-form-group]:rounded-none [&_.pattern-form-group]:border-0 [&_.pattern-form-group]:p-0 [&_.pattern-form-group>legend]:sr-only">
+    <div
+      data-resource={resource}
+      className="system-record-editor [&_.pattern-page-header]:hidden [&_.pattern-form-group]:rounded-none [&_.pattern-form-group]:border-0 [&_.pattern-form-group]:p-0 [&_.pattern-form-group>legend]:sr-only"
+    >
       <FormFrame
         form={schema.form}
         title={t(record ? 'system.editTitle' : 'system.createTitle', {
@@ -134,7 +155,9 @@ export function ResourceEditor<K extends ResourceKind>({
         reviewReady={writable}
         operationKey={JSON.stringify([schema.configVersion, state.generation, state.status, state.loginExpired])}
         onSubmit={submit}
-        onSubmitted={onSubmitted}
+        onSubmitted={() => {
+          if (savedRecord.current) onSubmitted(savedRecord.current);
+        }}
         submitLabel={t('common:save')}
         resolveSubmitError={error => systemErrorCopy(error, t)}
       >

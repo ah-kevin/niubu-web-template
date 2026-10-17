@@ -1,6 +1,7 @@
 import type { AuthContext } from '@niubu/types';
 import type { RequestOutcome } from '@niubu/request';
 export type ResourceKind = 'users' | 'roles' | 'menus' | 'departments';
+export type TreeResource = 'menus' | 'departments';
 export type ResourceBase = { id: string };
 export type UserInput = { name: string; email: string; roleId: string; departmentId: string; enabled: boolean };
 export type RoleInput = { name: string; code: string; description: string; enabled: boolean };
@@ -35,7 +36,7 @@ export type QueryByResource = {
   menus: CommonQuery & { kind?: MenuInput['kind'] };
   departments: CommonQuery & { parentId?: string | null };
 };
-export type SystemPort<K extends ResourceKind> = {
+export type SystemCrudPort<K extends ResourceKind> = {
   list(
     context: AuthContext,
     query: QueryByResource[K],
@@ -55,4 +56,10 @@ export type SystemPort<K extends ResourceKind> = {
   ): Promise<RequestOutcome<RecordByResource[K]>>;
   remove(context: AuthContext, id: string, signal?: AbortSignal): Promise<RequestOutcome<{ id: string }>>;
 };
+export type SystemTreeSnapshot<Row> = { rows: readonly Row[]; rowCount: number; complete: true };
+export type SystemTreePort<K extends TreeResource> = {
+  tree(context: AuthContext, signal?: AbortSignal): Promise<RequestOutcome<SystemTreeSnapshot<RecordByResource[K]>>>;
+};
+export type SystemPort<K extends ResourceKind> = SystemCrudPort<K> &
+  (K extends TreeResource ? SystemTreePort<K> : object);
 export type SystemApi = { readonly [K in ResourceKind]: SystemPort<K> };

@@ -87,7 +87,7 @@ Human confirmed 2026-10-17: existing capabilities and explicitly available parti
 | E67 | `examples/vxe-table/fixed.vue`<br>固定表头/列 | `@niubu/common-ui/data-table`：`DataTable`, `useTablePreferences` | DataTable/列固定与列设置 | 部分 | 现有表头position:relative，无公开固定表头契约；VXE API不存在 |
 | E68 | `examples/vxe-table/form.vue`<br>查询表单与表格 | `@niubu/common-ui/data-table`：`QueryDataTable`, `useQueryDataTable`；`@niubu/common-ui/form`：`useSchemaForm` | DataTable/查询、重置与作用域取消 | 部分 | VXE表单/导出/zoom工具条API不在现有组件中 |
 | E69 | `examples/vxe-table/remote.vue`<br>远程加载 | `@niubu/common-ui/data-table`：`useQueryDataTable`, `DataTable` | DataTable/远程、取消与刷新 | 部分 | VXE proxy/keepSource/export/zoom接口缺口；不直接复制工具条 |
-| E70 | `examples/vxe-table/tree.vue`<br>树形表格 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable`, `createListColumnHelper` | 树形表格暂不建页 | 缺口 | 公开profiles无tree/expanded/getSubRows；TreeNavigation不是TreeTable |
+| E70 | `examples/vxe-table/tree.vue`<br>树形表格 | `@niubu/common-ui/data-table`：`DataTable profile="tree-list"`, `createTreeColumnHelper`, `ExpandedState` | 表格页三层树示例；系统菜单/部门树 | 部分 | 2026-10-18按用户新授权补齐完整同步树列表、原生展开/层级列与受控owner，系统两页使用完整快照；不据此宣称覆盖Vben其它树扩展。原冻结统计为历史基线。 |
 | E71 | `examples/vxe-table/viewed.vue`<br>已读行标记 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable` | 已读行追踪暂不建页 | 缺口 | 无viewedRows/markKeysAsViewed/持久化契约；ReadColumnHelper意为只读列 |
 | E72 | `examples/vxe-table/virtual.vue`<br>虚拟滚动 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable`, `createListColumnHelper` | 虚拟表格暂不建页 | 缺口 | 当前渲染rows.map，无Virtualizer/窗口化profile；滚动容器不等价 |
 

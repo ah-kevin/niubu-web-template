@@ -52,8 +52,8 @@ export function recordName(record: SystemRecord) {
 export function ownerScopeKey(identity: string, scope: { kind: string; id: string } | null) {
   return JSON.stringify([identity, scope?.kind ?? null, scope?.id ?? null]);
 }
-export function resourceDraftKey(resource: ResourceKind, id?: string) {
-  return JSON.stringify(['system', resource, id ?? null]);
+export function resourceDraftKey(resource: ResourceKind, id?: string, initialParentId?: string) {
+  return JSON.stringify(['system', resource, id ?? null, ...(!id && initialParentId ? [initialParentId] : [])]);
 }
 export function excludedDescendants(
   records: readonly { id: string; parentId: string | null }[],

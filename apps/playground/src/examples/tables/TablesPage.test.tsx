@@ -28,6 +28,24 @@ function deferredServer() {
 }
 
 describe('DataTable existing-capability examples', () => {
+  it('demonstrates three real tree levels with disclosure-only expansion and resets at a scope change', async () => {
+    render(<TablesPage />);
+    const tree = () => region('三层树表');
+    expect(ids(tree())).toEqual(['tree-root']);
+    expect(tree().queryByRole('navigation')).not.toBeInTheDocument();
+    fireEvent.click(tree().getByRole('cell', { name: 'North' }));
+    expect(ids(tree())).toEqual(['tree-root']);
+    fireEvent.click(tree().getByRole('button', { name: '展开 North' }));
+    expect(ids(tree())).toEqual(['tree-root', 'tree-branch']);
+    fireEvent.click(tree().getByRole('button', { name: '展开 Branch' }));
+    expect(ids(tree())).toEqual(['tree-root', 'tree-branch', 'tree-leaf']);
+    expect(tree().queryByRole('button', { name: '展开 Leaf' })).not.toBeInTheDocument();
+    await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'South（合成）');
+    expect(ids(tree())).toEqual(['tree-root']);
+    expect(tree().getByRole('button', { name: '展开 South' })).toBeInTheDocument();
+    await screen.findByText('South · Cedar');
+  });
+
   it.each(['client', 'server'])('keeps the initial page size available after choosing a larger size in %s data', async kind => {
     render(<TablesPage />);
     await screen.findByText('North · Cedar');

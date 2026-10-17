@@ -5,7 +5,7 @@ import type { RequestOutcome } from '@niubu/request';
 import type { PlaygroundApi } from '../api';
 import { playgroundScopeQueryKey } from '../auth/query-context';
 import { SystemRequestError, unwrapSystemResult } from './api';
-import type { RecordByResource, ResourceKind, SystemPort } from './contracts';
+import type { RecordByResource, ResourceKind, SystemCrudPort } from './contracts';
 import { resourceConfig, type Translate } from './resource-config';
 
 export const cancelled = () => new DOMException('System operation cancelled', 'AbortError');
@@ -25,7 +25,7 @@ export class ReconfirmSystemWrite extends Error {}
 /** Expiry recovery uses the existing idempotent coordinator. Never retries a write. */
 export async function writeWithRecovery<K extends ResourceKind, T>(
   api: PlaygroundApi,
-  port: SystemPort<K>,
+  port: SystemCrudPort<K>,
   context: AuthContext,
   signal: AbortSignal,
   write: () => Promise<RequestOutcome<T>>,
@@ -61,15 +61,14 @@ export async function invalidateResource(client: QueryClient, context: AuthConte
     refetchType: 'none',
   });
 }
-async function loadLookup<K extends 'roles' | 'departments' | 'menus'>(
+async function loadRolesLookup(
   api: PlaygroundApi,
-  kind: K,
   context: AuthContext,
   signal: AbortSignal,
-): Promise<readonly RecordByResource[K][]> {
-  const all: RecordByResource[K][] = [];
+): Promise<readonly RecordByResource['roles'][]> {
+  const all: RecordByResource['roles'][] = [];
   for (let pageIndex = 0; ; pageIndex++) {
-    const page = unwrapSystemResult(await api.system[kind].list(context, { pageIndex, pageSize: 100 }, signal));
+    const page = unwrapSystemResult(await api.system.roles.list(context, { pageIndex, pageSize: 100 }, signal));
     requireLease(api, context, signal);
     all.push(...page.rows);
     if (all.length >= page.rowCount) return all;
@@ -85,20 +84,37 @@ export function useResourceLookups(
 ) {
   const client = useQueryClient();
   const needed: readonly string[] = resourceConfig[resource].lookups;
-  function options<K extends 'roles' | 'departments' | 'menus'>(kind: K) {
+  function options<T>(
+    kind: 'roles' | 'departments' | 'menus',
+    load: (captured: AuthContext, signal: AbortSignal) => Promise<readonly T[]>,
+  ) {
     return {
-      queryKey: context ? playgroundScopeQueryKey(context, 'system', kind, 'lookup') : ['system', kind, 'inactive'],
+      queryKey: context
+        ? playgroundScopeQueryKey(context, 'system', kind, kind === 'roles' ? 'lookup' : 'tree')
+        : ['system', kind, 'inactive'],
       enabled: enabled && context !== null && needed.includes(kind),
       retry: false as const,
       queryFn: ({ signal }: { signal: AbortSignal }) => {
         if (!context) throw cancelled();
-        return loadLookup(api, kind, context, AbortSignal.any([signal, sessionSignal]));
+        return load(context, AbortSignal.any([signal, sessionSignal]));
       },
     };
   }
-  const roles = useQuery(options('roles')),
-    departments = useQuery(options('departments')),
-    menus = useQuery(options('menus'));
+  const roles = useQuery(options('roles', (captured, signal) => loadRolesLookup(api, captured, signal))),
+    departments = useQuery(
+      options('departments', async (captured, signal) => {
+        const snapshot = unwrapSystemResult(await api.system.departments.tree(captured, signal));
+        requireLease(api, captured, signal);
+        return snapshot.rows;
+      }),
+    ),
+    menus = useQuery(
+      options('menus', async (captured, signal) => {
+        const snapshot = unwrapSystemResult(await api.system.menus.tree(captured, signal));
+        requireLease(api, captured, signal);
+        return snapshot.rows;
+      }),
+    );
   const results = { roles, departments, menus };
   const lookups = useMemo(
     () => ({ roles: roles.data ?? [], departments: departments.data ?? [], menus: menus.data ?? [] }),
@@ -111,7 +127,9 @@ export function useResourceLookups(
     retry: () => {
       for (const kind of needed)
         void client.invalidateQueries({
-          queryKey: context ? playgroundScopeQueryKey(context, 'system', kind, 'lookup') : [],
+          queryKey: context
+            ? playgroundScopeQueryKey(context, 'system', kind, kind === 'roles' ? 'lookup' : 'tree')
+            : [],
         });
     },
   };

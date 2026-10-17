@@ -217,7 +217,7 @@
   "examples.forms.formatHelp": "toOutput is one-way. setValues accepts raw values, never decodes a DTO.",
   "examples.tables.title": "DataTable examples",
   "examples.tables.synthetic": "Synthetic records and a private simulated server; no business API. Column preferences remain in this scene.",
-  "examples.tables.boundary": "Existing read/list/selectable/query profiles only. VXE, editing, fixed headers, tree, viewed rows and virtualization remain gaps.",
+  "examples.tables.boundary": "DataTable supports read-only tables, lists, tree tables, selection, custom cells, column settings and queries. VXE APIs, cell/row editing, fixed headers, read tracking and virtual scrolling are not implemented.",
   "examples.tables.scope": "Example scope",
   "examples.tables.north": "North (synthetic)",
   "examples.tables.south": "South (synthetic)",
@@ -525,5 +525,8 @@
   "system.create.roles": "Create role",
   "system.create.menus": "Create menu",
   "system.create.departments": "Create department",
-  "system.demoExplanation": "Demo notes"
+  "system.demoExplanation": "Demo notes",
+  "system.append": "Create child",
+  "system.appendAction": "Create child of {{name}}",
+  "examples.tables.tree": "Three-level tree"
 }
