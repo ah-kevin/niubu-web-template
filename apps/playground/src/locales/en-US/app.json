@@ -510,5 +510,12 @@
   "home.service": "Development service status",
   "request.description": "Try request echo, file uploads and downloads.",
   "request.echo": "Request echo",
-  "request.echoHelp": "Send some text and inspect the development service response."
+  "request.echoHelp": "Send some text and inspect the development service response.",
+  "examples.feedback.quickTitle": "Quick view",
+  "examples.feedback.quickHelp": "Edit a synthetic draft and check the close confirmation.",
+  "examples.feedback.quickOpen": "Open quick view",
+  "examples.feedback.draftName": "Draft name",
+  "examples.feedback.previewTitle": "Action preview",
+  "examples.feedback.previewHelp": "Review a synthetic action without sending a service request.",
+  "examples.feedback.previewOpen": "Open action preview"
 }

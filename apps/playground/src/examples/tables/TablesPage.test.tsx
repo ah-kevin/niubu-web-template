@@ -1,5 +1,6 @@
 import { selectOption } from '../../tests/select-option';
 import { StrictMode } from 'react';
+import userEvent from '@testing-library/user-event';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { QueryPage, QueryRequest } from '@niubu/common-ui/data-table';
@@ -164,4 +165,69 @@ describe('DataTable existing-capability examples', () => {
     expect(screen.getByRole('button', { name: '取消加载' })).toBeDisabled();
     expect(remote().queryByRole('alert')).not.toBeInTheDocument();
   });
+});
+
+
+it('recovers lost pagination focus to the stable reload action after a server error', async () => {
+  const server = deferredServer();
+  render(<TablesPage load={server.load} />);
+  await waitFor(() => expect(server.calls).toHaveLength(1));
+  await server.reply(0, 'first', 'First page', 8);
+  const reload = screen.getByRole('button', { name: '刷新已应用查询' });
+  await userEvent.click(remote().getByRole('button', { name: '下一页' }));
+  await waitFor(() => expect(server.calls).toHaveLength(2));
+  await act(async () => server.calls[1]!.reject(new Error('Page failed')));
+  expect(remote().getByRole('alert')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '刷新已应用查询' })).toBe(reload);
+  await waitFor(() => expect(reload).toHaveFocus());
+});
+
+
+it.each(['query', 'other table'])('does not steal focus after a failed page read when the user moved to %s', async destination => {
+  const server = deferredServer();
+  render(<TablesPage load={server.load} />);
+  await waitFor(() => expect(server.calls).toHaveLength(1));
+  await server.reply(0, 'first', 'First page', 8);
+  await userEvent.click(remote().getByRole('button', { name: '下一页' }));
+  await waitFor(() => expect(server.calls).toHaveLength(2));
+  const target = destination === 'query' ? screen.getByRole('textbox', { name: '名称包含' }) : client().getByRole('button', { name: '下一页' });
+  await userEvent.click(target);
+  await act(async () => server.calls[1]!.reject(new Error('Page failed')));
+  expect(remote().getByRole('alert')).toBeInTheDocument();
+  expect(target).toHaveFocus();
+});
+
+
+it.each(['page', 'query'])('restores successful remote pagination to %s focus without stealing active input focus', async destination => {
+  const server = deferredServer();
+  render(<TablesPage load={server.load} />);
+  await waitFor(() => expect(server.calls).toHaveLength(1));
+  await server.reply(0, 'first', 'First page', 4);
+  await userEvent.click(remote().getByRole('button', { name: '下一页' }));
+  await waitFor(() => expect(server.calls).toHaveLength(2));
+  const query = screen.getByRole('textbox', { name: '名称包含' });
+  if (destination === 'query') await userEvent.click(query);
+  await server.reply(1, 'last', 'Last page', 4);
+  const currentPage = remote().getByRole('button', { name: '第 2 页' });
+  expect(remote().getByRole('button', { name: '下一页' })).toBeDisabled();
+  await waitFor(() => expect(destination === 'query' ? query : currentPage).toHaveFocus());
+});
+
+it('retires pagination focus intent on a scope change and ignores the old scoped reply', async () => {
+  const server = deferredServer();
+  render(<TablesPage load={server.load} />);
+  await waitFor(() => expect(server.calls).toHaveLength(1));
+  await server.reply(0, 'north-first', 'North first', 8);
+  await userEvent.click(remote().getByRole('button', { name: '下一页' }));
+  await waitFor(() => expect(server.calls).toHaveLength(2));
+  await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'South（合成）');
+  await waitFor(() => expect(server.calls).toHaveLength(3));
+  (document.activeElement as HTMLElement).blur();
+  expect(document.body).toHaveFocus();
+  await server.reply(2, 'south-first', 'South first', 8);
+  expect(remote().getByText('South first')).toBeInTheDocument();
+  expect(document.body).toHaveFocus();
+  await server.reply(1, 'north-late', 'North late', 8);
+  expect(document.body).toHaveFocus();
+  expect(screen.queryByText('North late')).not.toBeInTheDocument();
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   createDataTableLabels,
@@ -10,7 +10,7 @@ import {
 } from '@niubu/common-ui/data-table';
 import { Modal, Drawer, useOverlay } from '@niubu/common-ui/overlay';
 import { ExamplePage } from '../examples/ExamplePage';
-import { Plus } from '@niubu/icons';
+import { Eye, LoaderCircle, Pencil, Plus, Trash2 } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Badge } from '@niubu/shadcn-ui/badge';
 import { useTranslation } from '@niubu/locales/react';
@@ -40,6 +40,50 @@ import {
   writeWithRecovery,
 } from './resource-runtime';
 import { ResourceEditor } from './ResourceEditor';
+
+type RowActionKind = 'detail' | 'edit' | 'delete';
+type PendingRowAction = { rowId: string; kind: RowActionKind };
+const RowActionContext = createContext<{ pending: PendingRowAction | null; lookupReady: boolean }>({
+  pending: null,
+  lookupReady: false,
+});
+const rowActionIcons = { detail: Eye, edit: Pencil, delete: Trash2 };
+
+function RowActionButton({
+  rowId,
+  kind,
+  label,
+  accessibleLabel,
+  onClick,
+}: {
+  rowId: string;
+  kind: RowActionKind;
+  label: string;
+  accessibleLabel: string;
+  onClick: () => void;
+}) {
+  const { pending, lookupReady } = useContext(RowActionContext);
+  const busy = pending?.rowId === rowId && pending.kind === kind;
+  const Icon = busy ? LoaderCircle : rowActionIcons[kind];
+  return (
+    <Button
+      type="button"
+      variant="link"
+      size="sm"
+      className="gap-1"
+      data-action={kind === 'delete' ? 'delete' : undefined}
+      aria-label={accessibleLabel}
+      aria-busy={busy || undefined}
+      disabled={kind === 'edit' && !lookupReady}
+      onClick={onClick}
+    >
+      <span className="inline-flex size-[1em] shrink-0 items-center justify-center" aria-hidden="true">
+        <Icon className={busy ? 'size-[1em] animate-spin motion-reduce:animate-none' : 'size-[1em]'} />
+      </span>
+      {label}
+    </Button>
+  );
+}
 
 type Panel<K extends ResourceKind> = {
   mode: 'create' | 'edit' | 'detail';
@@ -143,6 +187,31 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     enabled: readable,
     initialPageSize: 10,
   });
+  const retryButton = useRef<HTMLButtonElement>(null);
+  const lastTableFocus = useRef<{ element: HTMLElement; owner: string } | null>(null);
+  useEffect(() => {
+    if (table.tableState.readState === 'cancelled') {
+      lastTableFocus.current = null;
+      return;
+    }
+    const intent = lastTableFocus.current,
+      previous = intent?.element;
+    if (
+      !previous ||
+      intent.owner !== actionKey ||
+      (previous.isConnected && !previous.matches(':disabled,[aria-disabled="true"]')) ||
+      document.activeElement !== document.body ||
+      document.querySelector('[role="dialog"][data-state="open"],[role="alertdialog"][data-state="open"]')
+    )
+      return;
+    const target =
+      table.tableState.readState === 'error'
+        ? retryButton.current
+        : table.tableState.readState === 'ready'
+          ? tableContainer.current?.querySelector<HTMLButtonElement>('button[aria-current="page"]')
+          : null;
+    target?.focus({ preventScroll: true });
+  }, [table.tableState.readState, actionKey]);
   const { updateFields, getValues } = table.queryForm;
   useEffect(() => {
     updateFields(createQueryOptions(resource, t, lookup.lookups, getValues()).fields);
@@ -152,9 +221,9 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     sequence = useRef(0),
     action = useRef<AbortController | null>(null);
   const cancelEditor = useRef<(() => void) | null>(null);
-  const [actionState, setActionState] = useState<{ requestKey: string; pending?: boolean; error?: string } | null>(
-    null,
-  );
+  const [actionState, setActionState] = useState<
+    (PendingRowAction & { requestKey: string; pending?: boolean; error?: string }) | null
+  >(null);
   useLayoutEffect(() => {
     panelRef.current = panel;
   }, [panel]);
@@ -167,14 +236,14 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const registerCancel = useCallback((cancel: (() => void) | null) => {
     cancelEditor.current = cancel;
   }, []);
-  function beginAction() {
+  function beginAction(kind: RowActionKind, rowId: string) {
     action.current?.abort();
     const local = new AbortController();
     action.current = local;
     const captured = api.getContext();
     if (!captured || ownerScopeKey(captured.identityKey, captured.scope) !== ownerKey) throw cancelled();
     const signal = AbortSignal.any([local.signal, auth.requestContext().signal]);
-    setActionState({ requestKey: actionKey, pending: true });
+    setActionState({ requestKey: actionKey, rowId, kind, pending: true });
     return {
       context: captured,
       signal,
@@ -191,20 +260,21 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   async function openRecord(mode: 'edit' | 'detail', id: string) {
     let lease: ReturnType<typeof beginAction> | undefined;
     try {
-      lease = beginAction();
+      lease = beginAction(mode, id);
       const record = unwrapSystemResult(await api.system[resource].get(lease.context, id, lease.signal));
       if (!lease.current()) return;
       setActionState(null);
       setPanel({ mode, session: ++sequence.current, record, owner: lease.context, ownerKey });
     } catch (error) {
-      if (lease?.current()) setActionState({ requestKey: actionKey, error: systemErrorCopy(error, t) });
+      if (lease?.current())
+        setActionState({ requestKey: actionKey, rowId: id, kind: mode, error: systemErrorCopy(error, t) });
     }
   }
   async function remove(record: RecordByResource[K]) {
     if (!writable) return;
     let lease: ReturnType<typeof beginAction> | undefined;
     try {
-      lease = beginAction();
+      lease = beginAction('delete', record.id);
       const approved = await overlay.confirm({
         title: t('system.deleteTitle', { name: recordName(record) }),
         description: t('system.deleteDescription'),
@@ -228,8 +298,9 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     } catch (error) {
       if (!lease?.current()) return;
       if (error instanceof ReconfirmSystemWrite)
-        setActionState({ requestKey: actionKey, error: t('system.reconfirmDelete') });
-      else setActionState({ requestKey: actionKey, error: systemErrorCopy(error, t) });
+        setActionState({ requestKey: actionKey, rowId: record.id, kind: 'delete', error: t('system.reconfirmDelete') });
+      else
+        setActionState({ requestKey: actionKey, rowId: record.id, kind: 'delete', error: systemErrorCopy(error, t) });
     }
   }
   // Keep cell component types stable while events use the latest committed owner and leases.
@@ -265,6 +336,50 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
     () => Object.fromEntries([...config.fields, 'actions'].map(name => [name, t(`system.field.${name}`)])),
     [config, t],
   );
+  // Width and lookup data can change under an open overlay without replacing its trigger.
+  const actionColumn = useMemo(() => {
+    const helper = createListColumnHelper<RecordByResource[K]>();
+    return helper.display({
+      id: 'actions',
+      header: headers.actions,
+      enableSorting: false,
+      size: 256,
+      minSize: 256,
+      cell: info => {
+        const record = info.row.original,
+          name = recordName(record);
+        return (
+          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-action=delete]]:text-destructive">
+            <RowActionButton
+              rowId={record.id}
+              kind="detail"
+              label={t('system.view')}
+              accessibleLabel={t('system.viewAction', { name })}
+              onClick={() => void rowActions.current.openRecord('detail', record.id)}
+            />
+            {writable && (
+              <>
+                <RowActionButton
+                  rowId={record.id}
+                  kind="edit"
+                  label={t('system.edit')}
+                  accessibleLabel={t('system.editAction', { name })}
+                  onClick={() => void rowActions.current.openRecord('edit', record.id)}
+                />
+                <RowActionButton
+                  rowId={record.id}
+                  kind="delete"
+                  label={t('system.delete')}
+                  accessibleLabel={t('system.deleteAction', { name })}
+                  onClick={() => void rowActions.current.remove(record)}
+                />
+              </>
+            )}
+          </div>
+        );
+      },
+    });
+  }, [headers.actions, t, writable]);
   // One server model from useQueryDataTable owns all paging, metadata and sorting.
   const columns = useMemo(() => {
     const helper = createListColumnHelper<RecordByResource[K]>();
@@ -291,58 +406,8 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           ),
       }),
     );
-    result.push(
-      helper.display({
-        id: 'actions',
-        header: headers.actions,
-        enableSorting: false,
-        size: 256,
-        minSize: 256,
-        cell: info => {
-          const record = info.row.original,
-            name = recordName(record);
-          return (
-            <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-action=delete]]:text-destructive">
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                aria-label={t('system.viewAction', { name })}
-                onClick={() => void rowActions.current.openRecord('detail', record.id)}
-              >
-                {t('system.view')}
-              </Button>
-              {writable && (
-                <>
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    aria-label={t('system.editAction', { name })}
-                    disabled={!lookup.ready}
-                    onClick={() => void rowActions.current.openRecord('edit', record.id)}
-                  >
-                    {t('system.edit')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    data-action="delete"
-                    aria-label={t('system.deleteAction', { name })}
-                    onClick={() => void rowActions.current.remove(record)}
-                  >
-                    {t('system.delete')}
-                  </Button>
-                </>
-              )}
-            </div>
-          );
-        },
-      }),
-    );
-    return result;
-  }, [tableFields, headers, columnSize, config, lookup.lookups, lookup.ready, t, writable]);
+    return [...result, actionColumn];
+  }, [tableFields, headers, columnSize, config, lookup.lookups, t, actionColumn]);
   function closePanel(session: number) {
     if (panelRef.current?.session === session) setPanel(null);
   }
@@ -397,26 +462,36 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
         </div>
       )}
       {actionState?.requestKey === actionKey && actionState.error && <p role="alert">{actionState.error}</p>}
-      <div ref={tableContainer} className="relative min-w-0 max-w-full">
+      <div
+        ref={tableContainer}
+        className="relative min-w-0 max-w-full"
+        onFocusCapture={event => {
+          if (event.target instanceof HTMLElement) lastTableFocus.current = { element: event.target, owner: actionKey };
+        }}
+      >
         {actionState?.requestKey === actionKey && actionState.pending && (
-          <p
-            role="status"
-            className="pointer-events-none absolute start-4 top-3 z-10 text-[length:var(--workspace-caption-font-size)] text-muted-foreground"
-          >
+          <p role="status" className="sr-only">
             {t('pending')}
           </p>
         )}
-        <DataTable<RecordByResource[K]>
-          profile="list"
-          columns={columns}
-          getRowId={row => row.id}
-          caption={t(config.titleKey)}
-          labels={createDataTableLabels(t, headers)}
-          {...table.tableState}
-        />
+        <RowActionContext.Provider
+          value={{
+            pending: actionState?.requestKey === actionKey && actionState.pending ? actionState : null,
+            lookupReady: lookup.ready,
+          }}
+        >
+          <DataTable<RecordByResource[K]>
+            profile="list"
+            columns={columns}
+            getRowId={row => row.id}
+            caption={t(config.titleKey)}
+            labels={createDataTableLabels(t, headers)}
+            {...table.tableState}
+          />
+        </RowActionContext.Provider>
       </div>
       {table.tableState.readState === 'error' && (
-        <Button type="button" variant="outline" onClick={() => void table.reload()}>
+        <Button ref={retryButton} type="button" variant="outline" onClick={() => void table.reload()}>
           {t('retry')}
         </Button>
       )}

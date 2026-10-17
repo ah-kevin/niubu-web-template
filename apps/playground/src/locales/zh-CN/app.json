@@ -510,5 +510,12 @@
   "home.service": "开发服务状态",
   "request.description": "体验请求回显、文件上传与下载。",
   "request.echo": "请求回显",
-  "request.echoHelp": "输入内容并发送，查看开发服务返回的结果。"
+  "request.echoHelp": "输入内容并发送，查看开发服务返回的结果。",
+  "examples.feedback.quickTitle": "快速查看",
+  "examples.feedback.quickHelp": "编辑合成草稿，体验关闭时的确认。",
+  "examples.feedback.quickOpen": "打开快速查看",
+  "examples.feedback.draftName": "草稿名称",
+  "examples.feedback.previewTitle": "操作预览",
+  "examples.feedback.previewHelp": "查看合成操作内容，不发送服务请求。",
+  "examples.feedback.previewOpen": "打开操作预览"
 }

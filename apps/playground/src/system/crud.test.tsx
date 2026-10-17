@@ -98,6 +98,56 @@ function stubPort<K extends ResourceKind>(kind: K, records = rows[kind]) {
     remove: vi.fn<SystemPort<K>['remove']>(async (_context, id) => ({ ok: true, data: { id } })),
   };
 }
+function tableResizeObserver() {
+    const OriginalResizeObserver = globalThis.ResizeObserver;
+    const observers = new Set<ResizeObserverHarness>();
+    class ResizeObserverHarness implements ResizeObserver {
+      readonly targets = new Set<Element>();
+      readonly callback: ResizeObserverCallback;
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+        observers.add(this);
+      }
+      observe(target: Element) {
+        this.targets.add(target);
+      }
+      unobserve(target: Element) {
+        this.targets.delete(target);
+      }
+      disconnect() {
+        this.targets.clear();
+        observers.delete(this);
+      }
+    }
+    vi.stubGlobal('ResizeObserver', ResizeObserverHarness);
+      const resize = (table: HTMLElement, width: number) =>
+        act(() => {
+          for (const observer of observers) {
+            for (const target of observer.targets) {
+              if (!target.contains(table)) continue;
+              const size = [{ inlineSize: width, blockSize: 500 }];
+              observer.callback(
+                [
+                  {
+                    target,
+                    contentRect: new DOMRect(0, 0, width, 500),
+                    contentBoxSize: size,
+                    borderBoxSize: size,
+                    devicePixelContentBoxSize: size,
+                  },
+                ],
+                observer,
+              );
+            }
+          }
+        });
+  return {
+    resize,
+    targets: () => [...observers].flatMap(observer => [...observer.targets]),
+    restore: () => vi.stubGlobal('ResizeObserver', OriginalResizeObserver),
+  };
+}
+
 async function mount(kind: ResourceKind, writable = true, fixtures: Partial<typeof rows> = {}) {
   const user: PlaygroundUser = { id: 'ui-owner', name: 'UI owner', roles: [], workspaces: [north] };
   let grants = kinds.flatMap(resource => [
@@ -225,6 +275,8 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       expect(screen.getByRole('button', { name: `${actionLabel} Operator` })).toBe(trigger);
       expect(trigger.isConnected).toBe(true);
       expect(trigger).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-busy', 'true');
+      expect(trigger).toHaveTextContent(actionLabel);
 
       await act(async () => release({ ok: true, data: rows.roles[0]! }));
       const panel = await screen.findByRole('dialog');
@@ -239,52 +291,143 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
     },
   );
 
-  it('fills the available desktop table width while preserving manual column widths after container resize', async () => {
-    const OriginalResizeObserver = globalThis.ResizeObserver;
-    const observers = new Set<ResizeObserverHarness>();
-    class ResizeObserverHarness implements ResizeObserver {
-      readonly targets = new Set<Element>();
-      readonly callback: ResizeObserverCallback;
-      constructor(callback: ResizeObserverCallback) {
-        this.callback = callback;
-        observers.add(this);
-      }
-      observe(target: Element) {
-        this.targets.add(target);
-      }
-      unobserve(target: Element) {
-        this.targets.delete(target);
-      }
-      disconnect() {
-        this.targets.clear();
-        observers.delete(this);
-      }
+  it('moves busy feedback to the newest row action and keeps stale replies from clearing it', async () => {
+    const f = await mount('roles');
+    const requests: { signal: AbortSignal; resolve: (outcome: RequestOutcome<RecordByResource['roles']>) => void }[] = [];
+    f.system.roles.get.mockImplementation((_context, _id, signal) => {
+      if (!signal) throw new Error('Expected an action abort signal');
+      return new Promise(resolve => requests.push({ signal, resolve }));
+    });
+    const view = await screen.findByRole('button', { name: '查看 Operator' });
+    const edit = screen.getByRole('button', { name: '编辑 Operator' });
+    const viewText = view.textContent, editText = edit.textContent;
+    await userEvent.click(view);
+    expect(view).toHaveAttribute('aria-busy', 'true');
+    expect(view.textContent).toBe(viewText);
+    expect(edit).not.toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('请求中');
+    await userEvent.click(edit);
+    expect(requests[0]!.signal.aborted).toBe(true);
+    expect(view).not.toHaveAttribute('aria-busy', 'true');
+    expect(edit).toHaveAttribute('aria-busy', 'true');
+    await act(async () => requests[0]!.resolve({ ok: true, data: rows.roles[0]! }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(edit).toHaveAttribute('aria-busy', 'true');
+    await act(async () => requests[1]!.resolve({ ok: false, error: { kind: 'http', status: 403 } }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(edit).not.toHaveAttribute('aria-busy', 'true');
+    expect(edit.textContent).toBe(editText);
+    expect(screen.getByRole('button', { name: '编辑 Operator' })).toBe(edit);
+    expect(edit).toHaveFocus();
+    expect(screen.queryByText('请求中')).not.toBeInTheDocument();
+  });
+
+  it('keeps delete feedback in the same trigger through confirmation cancellation and a failed write', async () => {
+    const f = await mount('roles');
+    const trigger = await screen.findByRole('button', { name: '删除 Operator' });
+    const text = trigger.textContent;
+    await userEvent.click(trigger);
+    const cancelled = await screen.findByRole('alertdialog');
+    expect(trigger).toHaveAttribute('aria-busy', 'true');
+    await userEvent.click(within(cancelled).getByRole('button', { name: '取消' }));
+    await waitFor(() => expect(trigger).not.toHaveAttribute('aria-busy', 'true'));
+    expect(f.system.roles.remove).not.toHaveBeenCalled();
+    await waitFor(() => expect(trigger).toHaveFocus());
+    let release!: (outcome: RequestOutcome<{ id: string }>) => void;
+    f.system.roles.remove.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    await userEvent.click(trigger);
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '确定' }));
+    await waitFor(() => expect(f.system.roles.remove).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: '删除 Operator' })).toBe(trigger);
+    expect(trigger).toHaveAttribute('aria-busy', 'true');
+    expect(trigger.textContent).toBe(text);
+    await act(async () => release({ ok: false, error: { kind: 'http', status: 409 } }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(trigger).not.toHaveAttribute('aria-busy', 'true');
+    expect(trigger.textContent).toBe(text);
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it('returns successful system pagination focus to the current page after its old trigger was removed', async () => {
+    const f = await mount('users');
+    let release!: (outcome: Awaited<ReturnType<typeof f.system.users.list>>) => void;
+    f.system.users.list.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    await userEvent.click(await screen.findByRole('button', { name: '下一页' }));
+    await waitFor(() => expect(f.system.users.list).toHaveBeenCalledTimes(2));
+    await act(async () => release({ ok: true, data: { rows: rows.users.slice(10), rowCount: 12 } }));
+    const currentPage = await screen.findByRole('button', { name: '第 2 页' });
+    expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled();
+    await waitFor(() => expect(currentPage).toHaveFocus());
+  });
+
+  it('recovers pagination focus to retry after a failed system page without stealing query focus', async () => {
+    const f = await mount('users');
+    let reject!: (error: Error) => void;
+    f.system.users.list.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; }));
+    await userEvent.click(await screen.findByRole('button', { name: '下一页' }));
+    await waitFor(() => expect(f.system.users.list).toHaveBeenCalledTimes(2));
+    await act(async () => reject(new Error('Page failed')));
+    const retry = await screen.findByRole('button', { name: '重新加载' });
+    await waitFor(() => expect(retry).toHaveFocus());
+    await userEvent.click(retry);
+    const previous = await screen.findByRole('button', { name: '上一页' });
+    f.system.users.list.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; }));
+    await userEvent.click(previous);
+    await waitFor(() => expect(f.system.users.list).toHaveBeenCalledTimes(4));
+    const query = screen.getByRole('textbox', { name: '关键词' });
+    await userEvent.click(query);
+    await act(async () => reject(new Error('Another failed page')));
+    expect(await screen.findByRole('button', { name: '重新加载' })).not.toHaveFocus();
+    expect(query).toHaveFocus();
+  });
+
+  it('keeps the view trigger through a delayed lookup becoming ready after same-user reauthentication', async () => {
+    const f = await mount('users');
+    let resolveLookup!: (outcome: Awaited<ReturnType<typeof f.system.roles.list>>) => void;
+    f.system.roles.list.mockImplementationOnce(() => new Promise(resolve => { resolveLookup = resolve; }));
+    act(() => f.auth.markLoginExpired());
+    await act(async () => { await f.auth.login({ username: '', password: '' }, '/system/users'); });
+    await waitFor(() => expect(f.system.users.list).toHaveBeenLastCalledWith(expect.objectContaining({ generation: f.auth.getSnapshot().generation }), expect.anything(), expect.any(AbortSignal)));
+    const trigger = await screen.findByRole('button', { name: '查看 User 1' });
+    const edit = screen.getByRole('button', { name: '编辑 User 1' });
+    expect(edit).toBeDisabled();
+    await userEvent.click(trigger);
+    const dialog = await screen.findByRole('dialog');
+    await act(async () => resolveLookup({ ok: true, data: { rows: rows.roles, rowCount: rows.roles.length } }));
+    await waitFor(() => expect(screen.getByLabelText('编辑 User 1')).toBeEnabled());
+    expect(screen.getByLabelText('编辑 User 1')).toBe(edit);
+    expect(edit).toBeEnabled();
+    await userEvent.click(within(dialog).getByRole('button', { name: '关闭' }));
+    expect(screen.getByRole('button', { name: '查看 User 1' })).toBe(trigger);
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it('keeps the original row trigger available for overlay focus return after the container narrows', async () => {
+    const observer = tableResizeObserver();
+    try {
+      await mount('roles');
+      const table = await screen.findByRole('table', { name: '角色管理' });
+      observer.resize(table, 1206);
+      const trigger = screen.getByRole('button', { name: '查看 Operator' });
+      await userEvent.click(trigger);
+      const dialog = await screen.findByRole('dialog');
+      observer.resize(table, 375);
+      expect(table).toHaveStyle({ width: '796px' });
+      await userEvent.click(within(dialog).getByRole('button', { name: '关闭' }));
+      const restored = screen.getByRole('button', { name: '查看 Operator' });
+      await waitFor(() => expect(restored).toHaveFocus());
+      expect(restored).toBe(trigger);
+    } finally {
+      observer.restore();
     }
-    vi.stubGlobal('ResizeObserver', ResizeObserverHarness);
+  });
+
+  it('fills the available desktop table width while preserving manual column widths after container resize', async () => {
+    const observer = tableResizeObserver();
     try {
       const fixture = await mount('roles');
       let table = await screen.findByRole('table', { name: '角色管理' });
-      const resize = (width: number) =>
-        act(() => {
-          for (const observer of observers) {
-            for (const target of observer.targets) {
-              if (!target.contains(table)) continue;
-              const size = [{ inlineSize: width, blockSize: 500 }];
-              observer.callback(
-                [
-                  {
-                    target,
-                    contentRect: new DOMRect(0, 0, width, 500),
-                    contentBoxSize: size,
-                    borderBoxSize: size,
-                    devicePixelContentBoxSize: size,
-                  },
-                ],
-                observer,
-              );
-            }
-          }
-        });
+      const resize = (width: number) => observer.resize(table, width);
       expect(table).toHaveStyle({ width: '796px' });
       resize(1206);
       expect(table).toHaveStyle({ width: '1204px' });
@@ -318,13 +461,11 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
       }
       resize(1206);
       expect(screen.getByRole('columnheader', { name: /名称/ })).toHaveStyle({ width: '80px' });
-      const measuredTargets = [...observers]
-        .flatMap(observer => [...observer.targets])
-        .filter(target => target.contains(table));
+      const measuredTargets = observer.targets().filter(target => target.contains(table));
       fixture.view.unmount();
-      expect([...observers].some(observer => measuredTargets.some(target => observer.targets.has(target)))).toBe(false);
+      expect(observer.targets().some(target => measuredTargets.includes(target))).toBe(false);
     } finally {
-      vi.stubGlobal('ResizeObserver', OriginalResizeObserver);
+      observer.restore();
     }
   });
 
@@ -660,6 +801,8 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
     await act(async () => release({ ok: true, data: rows.roles[0]! }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByText('请求中')).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '查看 Operator' })).not.toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: '编辑 Operator' })).not.toHaveAttribute('aria-busy', 'true');
   });
   it('expired delete performs GET recovery and needs a new deletion confirmation', async () => {
     const f = await mount('roles');

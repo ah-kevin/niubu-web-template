@@ -1,9 +1,14 @@
 import { DocumentationLink } from '../DocumentationLink';
 import { useFeedbackText } from './copy';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { z } from 'zod';
 import { ControlledField, useSchemaForm } from '@niubu/common-ui/form';
 import { Drawer, Modal, OverlayProvider, useOverlay } from '@niubu/common-ui/overlay';
+import { QuickView } from '@niubu/common-ui/quick-view';
+import { ReturnPathProvider } from '@niubu/common-ui/return-path';
+import { ActionPreview } from '@niubu/common-ui/action-preview';
+import { Input } from '@niubu/shadcn-ui/input';
+import { Label } from '@niubu/shadcn-ui/label';
 import { ReadState } from '@niubu/common-ui/read-state';
 import { SystemStatePage } from '@niubu/common-ui/system-state';
 import { RouteErrorBoundary, RoutePending } from '@niubu/layouts/routing';
@@ -193,6 +198,48 @@ function FeedbackMessage({ source }: { source: string }) {
   return <>{localize(source)}</>;
 }
 
+function SupplementalOverlays() {
+  const { t } = useFeedbackText();
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [draftName, setDraftName] = useState(initialRecord.name);
+  const quickTrigger = useRef<HTMLButtonElement>(null);
+  const draftId = useId();
+  // This synthetic record resolves only to its existing demo route and current scope query.
+  const detailHref = '/examples/feedback' + window.location.search;
+  return (
+    <>
+      <ExampleSection title={t('quickTitle')} description={t('quickHelp')}>
+        <Button ref={quickTrigger} type="button" variant="outline" onClick={() => setQuickOpen(true)}>
+          {t('quickOpen')}
+        </Button>
+        <ReturnPathProvider resolveReturnPath={() => detailHref}>
+          <QuickView
+            open={quickOpen}
+            onOpenChange={setQuickOpen}
+            title={t('quickTitle')}
+            description={t('quickHelp')}
+            detailHref={detailHref}
+            returnFocusRef={quickTrigger}
+            dirty={draftName !== initialRecord.name}
+          >
+            <Label htmlFor={draftId} className="mb-2">
+              {t('draftName')}
+            </Label>
+            <Input id={draftId} value={draftName} onChange={event => setDraftName(event.target.value)} />
+          </QuickView>
+        </ReturnPathProvider>
+      </ExampleSection>
+      <ExampleSection title={t('previewTitle')} description={t('previewHelp')}>
+        <ActionPreview valid label={t('previewOpen')} title={t('previewTitle')}>
+          <p>
+            {initialRecord.name} · {initialRecord.id}
+          </p>
+        </ActionPreview>
+      </ExampleSection>
+    </>
+  );
+}
+
 function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
   const { t, localize } = useFeedbackText();
   const [kind, setKind] = useState<Kind | null>(null);
@@ -307,6 +354,7 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
             </output>
           </div>
         </ExampleSection>
+        <SupplementalOverlays />
         <ExampleSection title={t('reading')}>
           <div className="flex flex-wrap gap-2">
             {(['loading', 'error', 'empty'] as const).map(value => (

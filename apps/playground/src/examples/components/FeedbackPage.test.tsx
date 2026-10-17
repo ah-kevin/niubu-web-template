@@ -168,3 +168,32 @@ describe('feedback and state examples', () => {
     expect(document.title).toBe(previous);
   });
 });
+
+it('keeps a quick-view draft through its nested stay decision and returns to its opener', async () => {
+  mount();
+  const opener = screen.getByRole('button', { name: 'Open quick view' });
+  await userEvent.click(opener);
+  expect(within(screen.getByRole('dialog', { name: 'Quick view' })).getByRole('link', { name: '打开完整详情' })).toHaveAttribute('href', '/examples/feedback');
+  const input = screen.getByRole('textbox', { name: 'Draft name' });
+  await userEvent.clear(input);
+  await userEvent.type(input, 'Grace');
+  await userEvent.keyboard('{Escape}');
+  expect(screen.getByRole('alertdialog')).toBeVisible();
+  await userEvent.click(screen.getByRole('button', { name: '继续编辑' }));
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  expect(input).toHaveValue('Grace');
+  await userEvent.clear(input);
+  await userEvent.type(input, 'Ada');
+  await userEvent.click(within(screen.getByRole('dialog', { name: 'Quick view' })).getByRole('button', { name: '关闭' }));
+  await waitFor(() => expect(opener).toHaveFocus());
+});
+
+it('opens the public action-preview and returns focus without submitting a service request', async () => {
+  mount();
+  const opener = screen.getByRole('button', { name: 'Open action preview' });
+  await userEvent.click(opener);
+  expect(screen.getByRole('alertdialog', { name: 'Action preview' })).toHaveTextContent('demo-7');
+  await userEvent.click(screen.getByRole('button', { name: '返回修改' }));
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  expect(opener).toHaveFocus();
+});

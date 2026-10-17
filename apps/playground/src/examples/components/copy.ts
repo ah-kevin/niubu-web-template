@@ -57,6 +57,13 @@ export function useComponentsText() {
 }
 
 const feedbackCopy = {
+  quickTitle: 'Quick view',
+  quickHelp: 'Edit a synthetic draft and check the close confirmation.',
+  quickOpen: 'Open quick view',
+  draftName: 'Draft name',
+  previewTitle: 'Action preview',
+  previewHelp: 'Review a synthetic action without sending a service request.',
+  previewOpen: 'Open action preview',
   pageDescription: 'Try modal forms, confirmation queues and common page states.',
   overlaysHelp: 'Edit the same record in a modal or drawer and save your changes.',
   queueHelp: 'Complete a confirmation, followed by an alert, in sequence.',

@@ -1,6 +1,6 @@
 import { DocumentationLink } from '../DocumentationLink';
 import { ExampleDetails, ExamplePage } from '../ExamplePage';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FocusEventHandler, type RefObject, type ReactNode } from 'react';
 import {
   DataTable,
   createDataTableLabels,
@@ -141,9 +141,23 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
   );
 }
 
-function ExampleGroup({ title, children }: { title: string; children: ReactNode }) {
+function ExampleGroup({
+  title,
+  children,
+  onFocusCapture,
+  regionRef,
+}: {
+  title: string;
+  children: ReactNode;
+  onFocusCapture?: FocusEventHandler<HTMLDivElement>;
+  regionRef?: RefObject<HTMLDivElement | null>;
+}) {
   return (
-    <div className="min-w-0 rounded-[var(--radius)] border border-border bg-card [&_caption]:sr-only">
+    <div
+      ref={regionRef}
+      onFocusCapture={onFocusCapture}
+      className="min-w-0 rounded-[var(--radius)] border border-border bg-card [&_caption]:sr-only"
+    >
       <header className="flex min-h-14 items-center border-b border-border px-[var(--workspace-card-padding)] py-3">
         <h2 className="text-base font-semibold">{title}</h2>
       </header>
@@ -224,12 +238,44 @@ function ServerExample({ scope, load, t }: { scope: string; load: SyntheticTable
     initialPageSize: 2,
     load: request => load(request, scope),
   });
+  const reloadButton = useRef<HTMLButtonElement>(null);
+  const tableRegion = useRef<HTMLDivElement>(null);
+  const lastFocused = useRef<{ element: HTMLElement; scope: string } | null>(null);
+  useEffect(() => {
+    if (table.tableState.readState === 'cancelled') {
+      lastFocused.current = null;
+      return;
+    }
+    const intent = lastFocused.current,
+      previous = intent?.element;
+    if (
+      !previous ||
+      intent.scope !== scope ||
+      (previous.isConnected && !previous.matches(':disabled,[aria-disabled="true"]')) ||
+      document.activeElement !== document.body ||
+      document.querySelector('[role="dialog"][data-state="open"],[role="alertdialog"][data-state="open"]')
+    )
+      return;
+    const target =
+      table.tableState.readState === 'error'
+        ? reloadButton.current
+        : table.tableState.readState === 'ready'
+          ? tableRegion.current?.querySelector<HTMLButtonElement>('button[aria-current="page"]')
+          : null;
+    target?.focus({ preventScroll: true });
+  }, [table.tableState.readState, scope]);
   const { updateFields } = table.queryForm;
   useEffect(() => {
     updateFields([{ name: 'term', label: t('examples.tables.term') }]);
   }, [t, updateFields]);
   return (
-    <ExampleGroup title={t('examples.tables.server')}>
+    <ExampleGroup
+      title={t('examples.tables.server')}
+      regionRef={tableRegion}
+      onFocusCapture={event => {
+        if (event.target instanceof HTMLElement) lastFocused.current = { element: event.target, scope };
+      }}
+    >
       <div className="min-w-0 space-y-3 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
         <table.queryForm.Form
           className="playground-tables-query min-w-0"
@@ -237,7 +283,7 @@ function ServerExample({ scope, load, t }: { scope: string; load: SyntheticTable
           resetLabel={t('examples.tables.reset')}
         />
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" onClick={() => void table.reload()}>
+          <Button ref={reloadButton} type="button" onClick={() => void table.reload()}>
             {t('examples.tables.reload')}
           </Button>
           <Button
