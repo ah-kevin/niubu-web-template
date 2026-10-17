@@ -23,6 +23,8 @@ export const applicationCopy = {
   'examples.application.frame': '本地嵌入示例',
   'examples.application.revokeFrame': '撤销嵌入权限',
   'examples.application.restoreFrame': '恢复嵌入权限',
+  'examples.application.waitingRequest': '点击按钮查看合成请求结果。',
+  'examples.application.downloadFailed': '合成文件读取失败，请重试。',
   'examples.application.requestTitle': '请求与会话 / Request',
   'examples.application.requestHelp':
     '独立内存会话与合成 transport；不会请求真实服务或修改当前登录。只展示重复参数、Blob 元数据和严格过期识别，不新增无损 JSON 或 serializer 预设。',

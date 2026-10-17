@@ -2,7 +2,7 @@ import { selectOption } from '../../tests/select-option';
 import { StrictMode } from 'react';
 import { CapacityExample } from './TabsPage';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@niubu/locales/react';
 import { createPlaygroundI18n } from '../../locales';
 import { AccessPage } from './AccessPage';
@@ -66,4 +66,33 @@ it('keeps the isolated request and capacity owners usable across StrictMode repl
   fireEvent.click(screen.getByRole('button', {name:'打开下一个合成标签'}));
   expect(screen.getByLabelText('容量结果')).toHaveTextContent('home, 1');
   scene.unmount();
+});
+
+
+it('keeps the embedded menu selection, breadcrumb and visible content aligned through revocation', () => {
+  mount(<NavigationPage />);
+  const nav = screen.getByRole('navigation', { name: '合成菜单' });
+  fireEvent.click(within(nav).getByRole('link', { name: '本地嵌入示例' }));
+  expect(within(nav).getByRole('link', { name: '本地嵌入示例' })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('navigation', { name: '面包屑' })).toHaveTextContent('本地嵌入示例');
+  expect(screen.getByRole('status')).toHaveTextContent('本地嵌入示例');
+  fireEvent.click(screen.getByRole('button', { name: '撤销嵌入权限' }));
+  expect(screen.queryByTitle('本地嵌入示例')).not.toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('Menu 1');
+});
+
+it('keeps a file-save failure in the download scene and preserves the session result', async () => {
+  const createUrl = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => { throw Error('unavailable'); });
+  try {
+    mount(<RequestFeaturesPage />);
+    await screen.findByText('合成会话 ready');
+    fireEvent.click(screen.getByRole('button', { name: '普通 401' }));
+    fireEvent.click(screen.getByRole('button', { name: '读取下载元数据' }));
+    fireEvent.click(await screen.findByRole('button', { name: '保存合成文件' }));
+    const download = within(screen.getByRole('region', { name: '统一 Blob 下载' }));
+    expect(download.getByRole('alert')).toHaveTextContent('当前环境无法保存文件');
+    expect(screen.getByText('不触发过期流程')).toBeVisible();
+  } finally {
+    createUrl.mockRestore();
+  }
 });

@@ -66,23 +66,27 @@ export function AccessPage() {
           {text('write')}
         </label>
       </div>
-      {roles.map(r => (
-        <p key={r}>
-          {r} {text('page')}：{access.grantedPageIds.includes(`example.${r}`) ? text('allowed') : text('denied')}
-        </p>
-      ))}
+      <div className="my-5 grid gap-3 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] sm:grid-cols-3">
+        {roles.map(r => (
+          <p key={r}>
+            {r} {text('page')}：{access.grantedPageIds.includes(`example.${r}`) ? text('allowed') : text('denied')}
+          </p>
+        ))}
+      </div>
       {!ready && <p role="status">{text('outsideScope')}</p>}
-      <AccessProvider value={{ roles: [role], codes, ready }}>
-        <AccessControl codes={['example:read', 'example:write']} mode="any">
-          <p>{text('any')}</p>
-        </AccessControl>
-        <AccessControl codes={['example:read', 'example:write']} mode="all">
-          <Button onClick={() => setWrite(false)}>{text('delete')}</Button>
-        </AccessControl>
-        <AccessControl roles={['admin', 'super']} strategy="disable">
-          {({ disabled }) => <Button disabled={disabled}>{text('manage')}</Button>}
-        </AccessControl>
-      </AccessProvider>
+      <div className="flex flex-wrap items-center gap-3">
+        <AccessProvider value={{ roles: [role], codes, ready }}>
+          <AccessControl codes={['example:read', 'example:write']} mode="any">
+            <p>{text('any')}</p>
+          </AccessControl>
+          <AccessControl codes={['example:read', 'example:write']} mode="all">
+            <Button onClick={() => setWrite(false)}>{text('delete')}</Button>
+          </AccessControl>
+          <AccessControl roles={['admin', 'super']} strategy="disable">
+            {({ disabled }) => <Button disabled={disabled}>{text('manage')}</Button>}
+          </AccessControl>
+        </AccessProvider>
+      </div>
     </section>
   );
 }

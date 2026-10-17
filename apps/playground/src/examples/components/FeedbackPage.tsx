@@ -134,7 +134,7 @@ function RecordEditor({
           void submit();
         }}
       >
-        <fieldset disabled={pending}>
+        <fieldset className="mb-4 grid gap-3" disabled={pending}>
           <legend>{t('record')}</legend>
           <ControlledField
             control={schema.form.control}
@@ -150,7 +150,7 @@ function RecordEditor({
         </Button>
       </form>
       {failed && <p role="alert">{t('saveFailed')}</p>}
-      <details>
+      <details className="mt-4 rounded-lg border border-border p-3 [&_p]:py-2 [&_summary]:cursor-pointer [&_summary]:font-medium">
         <summary>{t('scroll')}</summary>
         {Array.from({ length: 24 }, (_, index) => (
           <p key={index}>{t('contentRow', { row: index + 1 })}</p>
@@ -224,7 +224,9 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
             </Button>
           ))}
         </div>
-        <output aria-label={t('savedRecord')}>{saved ? `${saved.id} · ${saved.name}` : t('nothingSaved')}</output>
+        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('savedRecord')}>
+          {saved ? `${saved.id} · ${saved.name}` : t('nothingSaved')}
+        </output>
         {kind && (
           <RecordEditor
             kind={kind}
@@ -250,18 +252,35 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
         >
           {t('queueButton')}
         </Button>
-        <output aria-label={t('queueResult')}>{localize(queueResult)}</output>
+        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('queueResult')}>
+          {localize(queueResult)}
+        </output>
       </section>
       <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('reading')}</h2>
         <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
-          <Button type="button" onClick={() => setReadStatus('loading')}>
+          <Button
+            type="button"
+            variant={readStatus === 'loading' ? 'secondary' : 'outline'}
+            aria-pressed={readStatus === 'loading'}
+            onClick={() => setReadStatus('loading')}
+          >
             {t('showLoading')}
           </Button>
-          <Button type="button" onClick={() => setReadStatus('error')}>
+          <Button
+            type="button"
+            variant={readStatus === 'error' ? 'secondary' : 'outline'}
+            aria-pressed={readStatus === 'error'}
+            onClick={() => setReadStatus('error')}
+          >
             {t('showError')}
           </Button>
-          <Button type="button" onClick={() => setReadStatus('empty')}>
+          <Button
+            type="button"
+            variant={readStatus === 'empty' ? 'secondary' : 'outline'}
+            aria-pressed={readStatus === 'empty'}
+            onClick={() => setReadStatus('empty')}
+          >
             {t('showEmpty')}
           </Button>
         </div>
@@ -279,7 +298,9 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
             onNavigate={() => setReadAction('Returned to sample')}
           />
         </div>
-        <output aria-label={t('readAction')}>{localize(readAction)}</output>
+        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('readAction')}>
+          {localize(readAction)}
+        </output>
         <Button type="button" variant="outline" onClick={() => setPendingRoute(value => !value)}>
           {pendingRoute ? t('hidePending') : t('showPending')}
         </Button>
@@ -289,7 +310,13 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
         <h2>{t('states')}</h2>
         <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
           {(Object.keys(states) as (keyof typeof states)[]).map(value => (
-            <Button key={value} type="button" variant="outline" onClick={() => setState(value)}>
+            <Button
+              key={value}
+              type="button"
+              variant={state === value ? 'secondary' : 'outline'}
+              aria-pressed={state === value}
+              onClick={() => setState(value)}
+            >
               {t('showState', { state: value === 'Offline' ? t('offline') : value })}
             </Button>
           ))}
@@ -305,7 +332,9 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
             actions={[{ id: 'return', label: t('return'), onClick: () => setStateAction('Returned to sample') }]}
           />
         </RouteErrorBoundary>
-        <output aria-label={t('stateAction')}>{localize(stateAction)}</output>
+        <output className="rounded-lg bg-muted/40 px-3 py-2 text-sm" aria-live="polite" aria-label={t('stateAction')}>
+          {localize(stateAction)}
+        </output>
       </section>
     </main>
   );

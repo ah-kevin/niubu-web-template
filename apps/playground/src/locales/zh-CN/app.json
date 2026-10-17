@@ -456,5 +456,12 @@
   "navigation.unknown": "未知页面诊断",
   "login.welcome": "欢迎回来",
   "login.account": "账号",
-  "login.accountPlaceholder": "邮箱地址"
+  "login.accountPlaceholder": "邮箱地址",
+  "examples.application.waitingRequest": "点击按钮查看合成请求结果。",
+  "examples.application.downloadFailed": "合成文件读取失败，请重试。",
+  "examples.features.query.contextTitle": "合成上下文",
+  "examples.features.preferences.preview": "业务布局预览",
+  "examples.features.preferences.previewItem": "演示项目 {{item}}",
+  "examples.features.browser.watermarkHelp": "启用后在整个应用显示演示水印；关闭只影响本页的合成偏好。",
+  "examples.components.noChannels": "无"
 }

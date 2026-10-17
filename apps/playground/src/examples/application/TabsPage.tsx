@@ -89,7 +89,13 @@ export function CapacityExample() {
       >
         {text('capacityNext')}
       </Button>
-      <output aria-label={text('capacityOutput')}>{snapshot.tabs.map(t => t.key).join(', ')}</output>
+      <output
+        className="mt-4 block rounded-lg bg-muted/40 px-3 py-2 text-sm"
+        aria-live="polite"
+        aria-label={text('capacityOutput')}
+      >
+        {snapshot.tabs.map(t => t.key).join(', ')}
+      </output>
     </div>
   );
 }
@@ -123,7 +129,7 @@ export function TabDetailPage() {
       </p>
       <DetailLinks />
       <TabActions />
-      <label>
+      <label className="my-4 grid max-w-lg gap-2 text-sm">
         {text('temporary')}
         <Input value={value} onChange={e => setValue(e.target.value)} />
       </label>

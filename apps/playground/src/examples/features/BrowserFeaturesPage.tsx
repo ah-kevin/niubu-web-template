@@ -75,19 +75,26 @@ function ConfigurationAndWatermark() {
           {t('browser.copy')}
         </Button>
         <p role="status">{localize(copyStatus)}</p>
-        <Textarea aria-label={t('browser.manualCopy')} readOnly value={text} rows={8} />
+        <Textarea
+          className="mt-3 font-mono text-xs leading-relaxed"
+          aria-label={t('browser.manualCopy')}
+          readOnly
+          value={text}
+          rows={8}
+        />
         <p>{t('browser.copyHelp')}</p>
       </section>
       <section aria-label={t('browser.watermark')}>
         <h2>{t('browser.watermark')}</h2>
-        <label>
+        <label className="my-3 inline-flex items-center gap-2 text-sm">
           <Checkbox
             checked={core.general.watermark}
             onCheckedChange={checked => manager.update({ general: { watermark: checked === true } })}
           />
           {t('browser.showWatermark')}
         </label>
-        <label>
+        <p className="mb-4 text-sm text-muted-foreground">{t('browser.watermarkHelp')}</p>
+        <label className="grid max-w-xl gap-2 text-sm">
           {t('browser.watermarkText')}
           <Input
             value={core.general.watermarkText}
@@ -103,7 +110,7 @@ function ConfigurationAndWatermark() {
 export function BrowserFeaturesPage(): React.JSX.Element {
   const { t } = useFeaturesText();
   return (
-    <div className="playground-page example-page feature-example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold grid gap-[var(--workspace-section-gap)] [&>section]:min-w-0 [&>section]:rounded-xl [&>section]:border [&>section]:border-border [&>section]:bg-card [&>section]:p-[var(--workspace-card-padding)] [&_section>h2]:mb-3 [&_section>h2]:text-[16px] [&_section>h2]:font-semibold [&_section>[data-slot=button]]:me-2 [&_section>[data-slot=button]]:mt-3 [&_label]:inline-flex [&_label]:flex-wrap [&_label]:items-center [&_label]:gap-2">
+    <div className="playground-page example-page feature-example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold grid gap-[var(--workspace-section-gap)] [&>section]:min-w-0 [&>section]:rounded-xl [&>section]:border [&>section]:border-border [&>section]:bg-card [&>section]:p-[var(--workspace-card-padding)] [&_section>h2]:mb-3 [&_section>h2]:text-[16px] [&_section>h2]:font-semibold [&_section>[data-slot=button]]:me-2 [&_section>[data-slot=button]]:mt-3">
       <h1>{t('browser.title')}</h1>
       <p>{t('browser.help')}</p>
       <RootFullscreen />
@@ -112,10 +119,15 @@ export function BrowserFeaturesPage(): React.JSX.Element {
         {['database', 'settings', 'unknown'].map(name => {
           const Icon = registry.resolve(name);
           return (
-            <div key={name}>
+            <div key={name} className="my-3 flex items-center gap-3 text-sm">
               {Icon ? (
                 <>
-                  <Icon aria-label={t('browser.iconLabel', { name })} />
+                  <Icon
+                    width={20}
+                    height={20}
+                    className="shrink-0 text-muted-foreground"
+                    aria-label={t('browser.iconLabel', { name })}
+                  />
                   <span>{t('browser.iconRegistered', { name })}</span>
                 </>
               ) : (

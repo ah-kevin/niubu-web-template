@@ -18,7 +18,7 @@ it('copies the validated synthetic configuration via the existing clipboard API'
   fireEvent.click(await screen.findByRole('button', { name: '复制演示配置' }));
   await screen.findByText('配置已复制');
   const configuration = JSON.parse(writeText.mock.calls[0]![0]);
-  expect(configuration).toMatchObject({ schemaVersion: 1, extensions: {}, core: { general: { watermark: true, watermarkText: '合成数据 · Playground' } } });
+  expect(configuration).toMatchObject({ schemaVersion: 1, extensions: {}, core: { general: { watermark: false, watermarkText: '合成数据 · Playground' } } });
   expect(screen.getByRole('textbox', { name: '可手动复制的配置' })).toHaveValue(writeText.mock.calls[0]![0]);
 });
 
@@ -66,6 +66,8 @@ it('reports unsupported fullscreen, renders registered icons and changes only it
   expect(registry.getByLabelText('图标 database').tagName.toLowerCase()).toBe('svg');
   expect(registry.getByLabelText('图标 settings').tagName.toLowerCase()).toBe('svg');
   expect(registry.getByText('unknown：未登记')).toBeInTheDocument();
+  expect(view.container.querySelector('.foundation-watermark')).toBeNull();
+  fireEvent.click(screen.getByRole('checkbox', { name: '显示演示水印' }));
   fireEvent.change(screen.getByRole('textbox', { name: '演示水印文本' }), { target: { value: '本地水印' } });
   await waitFor(() => expect(view.container.querySelectorAll('.foundation-watermark span')).toHaveLength(24));
   expect(view.container.querySelector('.foundation-watermark')).toHaveTextContent('本地水印');

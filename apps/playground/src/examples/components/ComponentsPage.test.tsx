@@ -13,7 +13,7 @@ describe('basic controls existing subset', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Email' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'SMS' }));
     await userEvent.click(screen.getByRole('button', { name: 'Apply choices' }));
-    expect(screen.getByLabelText('Applied choices')).toHaveTextContent('comfortable · email, sms');
+    expect(screen.getByLabelText('Applied choices')).toHaveTextContent('Comfortable · Email, SMS');
     await userEvent.click(screen.getByRole('button', { name: 'Reset choices' }));
     expect(screen.getByRole('radio', { name: 'Compact' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Email' })).not.toBeChecked();

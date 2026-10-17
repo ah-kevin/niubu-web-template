@@ -4,6 +4,7 @@ import { type CustomFieldRegistry, type FormFieldConfig } from '@niubu/common-ui
 import { useQueryDataTable } from '@niubu/common-ui/data-table';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
+import { useTranslation } from '@niubu/locales/react';
 import { useFormsText } from './copy';
 import { ExampleFields } from './live-fields';
 import { useExampleForm } from './use-example-form';
@@ -31,7 +32,7 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
   const active = cases.find(([id]) => id === selected) ?? cases[0];
   const Panel = active[2];
   return (
-    <div className="pattern-page">
+    <div className="pattern-page grid min-w-0 gap-4">
       <h1 className="mb-[12px] text-[24px] font-semibold tracking-[-.025em]">{text('title')}</h1>
       <DocumentationLink kind="forms" />
       <p>{text('introduction')}</p>
@@ -48,7 +49,7 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
           </Button>
         ))}
       </nav>
-      <section aria-label={`${active[0]} · ${text(active[1])}`}>
+      <section className="min-w-0 space-y-4" aria-label={`${active[0]} · ${text(active[1])}`}>
         <h2>
           {active[0]} · {text(active[1])}
         </h2>
@@ -281,7 +282,7 @@ function BuiltinPanel() {
       <Button type="button" onClick={readPublicFields}>
         {text('preview')}
       </Button>
-      <pre>
+      <pre className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
         <output aria-label={text('builtinPreview')}>{preview}</output>
       </pre>
     </>
@@ -420,6 +421,7 @@ const queryRows = [
 ];
 function QueryPanel() {
   const text = useFormsText();
+  const { t } = useTranslation();
   const fields: FormFieldConfig<{ keyword: string; city: string }>[] = [
     { name: 'keyword', label: 'keyword', kind: 'text' },
     { name: 'city', label: 'city', kind: 'text' },
@@ -458,6 +460,10 @@ function QueryPanel() {
         />
       </Form>
       {controller.tableState.error !== null && <p role="alert">{text('queryFailed')}</p>}
+      {controller.tableState.readState === 'pending' && <p role="status">{t('common:read.loading.title')}</p>}
+      {controller.tableState.readState === 'ready' && controller.tableState.model.rows.length === 0 && (
+        <p role="status">{t('common:read.empty.title')}</p>
+      )}
       <ul aria-label={text('queryResults')} aria-busy={controller.tableState.readState === 'pending'}>
         {controller.tableState.model.rows.map(row => (
           <li key={row.id}>
@@ -571,10 +577,10 @@ function FormatPanel() {
       >
         {text('setRaw')}
       </Button>
-      <pre>
+      <pre className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
         <output aria-label={text('rawFields')}>{raw}</output>
       </pre>
-      <pre>
+      <pre className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
         <output aria-label={text('dtoFields')}>{dto}</output>
       </pre>
     </>

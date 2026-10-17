@@ -28,6 +28,17 @@ function output(label: string) {
 }
 
 describe('FormsPage existing form capabilities', () => {
+  it('shows an empty query state and restores results through reset', async () => {
+    render(<FormsPage />);
+    await scenario('E51');
+    await waitFor(() => expect(screen.getByRole('list', { name: 'Query results' }).children).toHaveLength(3));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Keyword' }), 'no-such-name');
+    await userEvent.click(screen.getByRole('button', { name: 'Apply query' }));
+    expect(await screen.findByText('没有匹配记录')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Reset query' }));
+    await waitFor(() => expect(screen.getByRole('list', { name: 'Query results' }).children).toHaveLength(3));
+    expect(screen.queryByText('没有匹配记录')).not.toBeInTheDocument();
+  });
   it('switches among all nine scenarios without keeping the previous form owner', async () => {
     render(<FormsPage />);
     for (const id of ['E43', 'E44', 'E46', 'E47', 'E48', 'E51', 'E52', 'E53', 'E54']) {
@@ -107,8 +118,8 @@ describe('FormsPage existing form capabilities', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Express' }));
     await userEvent.click(screen.getByRole('switch', { name: 'Enabled' }));
     fireEvent.change(screen.getByLabelText('Date', { exact: true }), { target: { value: '2026-10-17' } });
-    fireEvent.change(screen.getByLabelText('Date range start'), { target: { value: '2026-10-01' } });
-    fireEvent.change(screen.getByLabelText('Date range end'), { target: { value: '2026-10-31' } });
+    fireEvent.change(screen.getByLabelText('Date range 开始日期'), { target: { value: '2026-10-01' } });
+    fireEvent.change(screen.getByLabelText('Date range 结束日期'), { target: { value: '2026-10-31' } });
     await userEvent.click(screen.getByRole('button', { name: 'Preview public fields' }));
     expect(JSON.parse(output('Builtin preview').textContent!)).toEqual({
       name: 'Ada', notes: 'Demo note', quantity: 4, category: 'research', accepted: true,
@@ -224,8 +235,8 @@ describe('FormsPage existing form capabilities', () => {
     render(<FormsPage />);
     await scenario('E54');
     await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), '  Ada  ');
-    fireEvent.change(screen.getByLabelText('Date range start'), { target: { value: '2026-10-01' } });
-    fireEvent.change(screen.getByLabelText('Date range end'), { target: { value: '2026-10-31' } });
+    fireEvent.change(screen.getByLabelText('Date range 开始日期'), { target: { value: '2026-10-01' } });
+    fireEvent.change(screen.getByLabelText('Date range 结束日期'), { target: { value: '2026-10-31' } });
     await userEvent.click(screen.getByRole('button', { name: 'Compare raw and DTO' }));
     expect(JSON.parse(output('Raw example fields').textContent!)).toEqual({ name: '  Ada  ', range: { start: '2026-10-01', end: '2026-10-31' } });
     expect(JSON.parse(output('Output DTO fields').textContent!)).toEqual({ displayName: 'Ada', startDate: '2026-10-01', endDate: '2026-10-31' });
@@ -234,6 +245,6 @@ describe('FormsPage existing form capabilities', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('  Grace  ');
     await userEvent.click(screen.getByRole('button', { name: 'Compare raw and DTO' }));
     expect(JSON.parse(output('Raw example fields').textContent!).range.start).toBe('2026-11-01');
-    expect(screen.getByLabelText('Date range start')).toHaveValue('2026-11-01');
+    expect(screen.getByLabelText('Date range 开始日期')).toHaveValue('2026-11-01');
   });
 });

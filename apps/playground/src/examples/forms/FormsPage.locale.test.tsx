@@ -39,6 +39,22 @@ async function scenario(id: string) {
 }
 
 describe('FormsPage live locale metadata', () => {
+  it('localizes both date range endpoint labels without replacing their retained values', async () => {
+    const changeLocale = mount();
+    await scenario('E44');
+    const start = screen.getByLabelText('日期范围 开始日期');
+    const end = screen.getByLabelText('日期范围 结束日期');
+    fireEvent.change(start, { target: { value: '2026-10-01' } });
+    fireEvent.change(end, { target: { value: '2026-10-31' } });
+    await changeLocale('en-US');
+    expect(screen.getByLabelText('Date range start')).toBe(start);
+    expect(screen.getByLabelText('Date range end')).toBe(end);
+    expect(start).toHaveValue('2026-10-01');
+    expect(end).toHaveValue('2026-10-31');
+    await changeLocale('zh-CN');
+    expect(screen.getByLabelText('日期范围 开始日期')).toBe(start);
+    expect(screen.getByLabelText('日期范围 结束日期')).toBe(end);
+  });
   it.each([
     ['E43', '名称', 'Name'], ['E44', '名称', 'Name'], ['E46', '名称', 'Name'],
     ['E47', '代码', 'Code'], ['E48', '企业名称', 'Company'], ['E51', '关键词', 'Keyword'],

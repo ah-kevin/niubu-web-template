@@ -15,6 +15,7 @@ const componentsCopy = {
   reset: 'Reset choices',
   applied: 'Applied choices',
   noChoices: 'No choices applied',
+  noChannels: 'None',
   menu: 'Conditional context menu',
   allowArchive: 'Allow archive action',
   contextTrigger: 'Right-click this sample',

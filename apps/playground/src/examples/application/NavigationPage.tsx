@@ -70,13 +70,20 @@ export function NavigationPage({
     authenticated: true,
     baseURL: window.location.origin,
   });
+  const selectedFrame = embedded && path === '/embedded/local';
   const current = routes.find(r => r.path === path) ?? routes[0]!;
-  const items = projectBreadcrumbs(
+  const pageItems = projectBreadcrumbs(
     current,
     scope,
     routes.filter(r => !r.hideInMenu),
     { homePath: paths[0]!, domainLabels: { demo: 'app:examples.navigation' } },
   );
+  const items = selectedFrame
+    ? [
+        ...pageItems.map(item => ({ ...item, current: false, href: paths[0] })),
+        { id: 'local', labelKey: 'app:examples.application.frame', current: true },
+      ]
+    : pageItems;
   return (
     <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
       <h1>{text('navigationTitle')}</h1>
@@ -107,7 +114,7 @@ export function NavigationPage({
             />
           )}
         />
-        <div>
+        <div className="min-w-0 space-y-4 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]">
           <Breadcrumbs
             items={items}
             value={{ ...corePreferenceDefaults.breadcrumb, showHome: true }}
@@ -124,17 +131,27 @@ export function NavigationPage({
               </a>
             )}
           />
-          <p role="status">{current.id === 'nav.4' ? text('direct') : names[routes.indexOf(current)]}</p>
-          <Button onClick={() => setPath(paths[4]!)}>{text('openHidden')}</Button>
-          {controller && (
-            <>
-              <Link to={`/examples/navigation/detail${withScope('', liveScope === undefined ? scope : liveScope)}`}>
-                {text('routedDetail')}
-              </Link>
-              <NavigationCloseButton />
-            </>
-          )}
-          {current.id === 'nav.4' && <Button onClick={() => setPath(paths[0]!)}>{text('back')}</Button>}
+          <p role="status">
+            {selectedFrame ? text('frame') : current.id === 'nav.4' ? text('direct') : names[routes.indexOf(current)]}
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button size="sm" onClick={() => setPath(paths[4]!)}>
+              {text('openHidden')}
+            </Button>
+            {controller && (
+              <>
+                <Link to={`/examples/navigation/detail${withScope('', liveScope === undefined ? scope : liveScope)}`}>
+                  {text('routedDetail')}
+                </Link>
+                <NavigationCloseButton />
+              </>
+            )}
+            {current.id === 'nav.4' && (
+              <Button size="sm" variant="outline" onClick={() => setPath(paths[0]!)}>
+                {text('back')}
+              </Button>
+            )}
+          </div>
           <p>{text('frameHelp')}</p>
           {embedded && (
             <iframe
@@ -145,7 +162,14 @@ export function NavigationPage({
               className="playground-frame min-h-96 w-full border border-border"
             />
           )}
-          <Button onClick={() => setEmbedded(v => !v)}>{embedded ? text('revokeFrame') : text('restoreFrame')}</Button>
+          <Button
+            onClick={() => {
+              if (selectedFrame) setPath(paths[0]!);
+              setEmbedded(v => !v);
+            }}
+          >
+            {embedded ? text('revokeFrame') : text('restoreFrame')}
+          </Button>
         </div>
       </div>
     </section>

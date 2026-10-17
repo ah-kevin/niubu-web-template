@@ -113,7 +113,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
     };
   }, [preferences]);
   return (
-    <section className="grid gap-6">
+    <section className="grid min-w-0 gap-6">
       <h1>{t('examples.tables.title')}</h1>
       <DocumentationLink kind="tables" />
       <p>{t('examples.tables.synthetic')}</p>
@@ -215,7 +215,12 @@ function ServerExample({ scope, load, t }: { scope: string; load: SyntheticTable
         <Button type="button" onClick={() => void table.reload()}>
           {t('examples.tables.reload')}
         </Button>
-        <Button type="button" variant="outline" onClick={table.cancel}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={table.tableState.readState !== 'pending'}
+          onClick={table.cancel}
+        >
           {t('examples.tables.cancel')}
         </Button>
       </div>

@@ -20,6 +20,15 @@ function deferredServer() {
 }
 
 describe('DataTable existing-capability examples', () => {
+  it.each(['client', 'server'])('keeps the initial page size available after choosing a larger size in %s data', async kind => {
+    render(<TablesPage />);
+    await screen.findByText('North · Cedar');
+    const area = kind === 'client' ? client : remote;
+    await selectOption(area().getByRole('combobox', { name: '每页条数' }), '25');
+    await waitFor(() => expect(ids(area())).toHaveLength(4));
+    await selectOption(area().getByRole('combobox', { name: '每页条数' }), '2');
+    await waitFor(() => expect(ids(area())).toHaveLength(2));
+  });
   it('keeps read/list/selectable profiles distinct and sorts, pages and selects stable client IDs', async () => {
     render(<TablesPage />);
     expect(region('只读数据').queryByRole('button')).not.toBeInTheDocument();
@@ -145,11 +154,14 @@ describe('DataTable existing-capability examples', () => {
     await waitFor(() => expect(server.calls).toHaveLength(1));
     fireEvent.click(screen.getByRole('button', { name: '取消加载' }));
     expect(server.calls[0]!.request.signal.aborted).toBe(true);
+    expect(remote().getByRole('status')).toHaveTextContent('已取消加载，可重新查询或刷新。');
+    expect(screen.getByRole('button', { name: '取消加载' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: '刷新已应用查询' }));
     await waitFor(() => expect(server.calls).toHaveLength(2));
     await server.reply(1, 'new', 'Newest');
     await act(async () => server.calls[0]!.reject(new Error('Late failure')));
     expect(remote().getByText('Newest')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '取消加载' })).toBeDisabled();
     expect(remote().queryByRole('alert')).not.toBeInTheDocument();
   });
 });

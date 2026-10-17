@@ -36,7 +36,7 @@ export type QueryCriteria = {
   kind?: 'group' | 'page' | 'external';
   parentId?: string | null;
 };
-const layout = { columns: 2, labelWidth: '8rem' };
+const queryLayout = { columns: 2, labelWidth: 'auto' };
 export function editorDefaults<K extends ResourceKind>(resource: K, record?: RecordByResource[K]): EditorValues {
   const defaults: EditorValues = {
     name: '',
@@ -210,7 +210,7 @@ export function createEditorOptions<K extends ResourceKind>(
     fields,
     defaultValues: editorDefaults(resource, record),
     groups: [{ id: 'record', title: t('system.recordFields') }],
-    layout,
+    layout: { columns: 1, labelWidth: 'auto' },
     transform: values => {
       let output: InputByResource[ResourceKind];
       if (resource === 'users')
@@ -317,7 +317,7 @@ export function createQueryOptions(
   return {
     fields,
     defaultValues: { keyword: '', enabled: '', roleId: '', departmentId: '', kind: '', parentId: '' },
-    layout: { ...layout, collapsedRows: 2 },
+    layout: { ...queryLayout, collapsedRows: 2 },
     transform: values => ({
       ...(values.keyword ? { keyword: values.keyword } : {}),
       ...(values.enabled ? { enabled: values.enabled === 'true' } : {}),

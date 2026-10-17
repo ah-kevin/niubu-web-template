@@ -15,13 +15,14 @@ it('switches flat-key control copy in place while retaining selected values and 
     expect(screen.getByRole('heading', { name: '基础控件' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('radio', { name: '舒适' }));
     await userEvent.click(screen.getByRole('button', { name: '应用选项' }));
+    expect(screen.getByLabelText('已应用选项')).toHaveTextContent('舒适 · 无');
     const selected = screen.getByRole('radio', { name: '舒适' });
     await act(() => i18n.changeLocale('en-US', i18n.requiredNamespaces));
     expect(screen.getByRole('heading', { name: 'Basic controls' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Apply choices' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Comfortable' })).toBe(selected);
     expect(selected).toBeChecked();
-    expect(screen.getByLabelText('Applied choices')).toHaveTextContent('comfortable · none');
+    expect(screen.getByLabelText('Applied choices')).toHaveTextContent('Comfortable · None');
     await act(() => i18n.changeLocale('zh-CN', i18n.requiredNamespaces));
     expect(screen.getByRole('button', { name: '重置选项' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: '舒适' })).toBe(selected);

@@ -2,6 +2,10 @@ import { useTranslation } from '@niubu/locales/react';
 import type { TranslationParams } from '@niubu/locales';
 
 const featuresCopy = {
+  'query.contextTitle': '合成上下文',
+  'preferences.preview': '业务布局预览',
+  'preferences.previewItem': '演示项目 {{item}}',
+  'browser.watermarkHelp': '启用后在整个应用显示演示水印；关闭只影响本页的合成偏好。',
   'query.pageRow': '{{context}} · 第 {{page}} 页 · 条目 {{id}}',
   'query.moreRow': '{{context}} · 更多条目 {{id}}',
 

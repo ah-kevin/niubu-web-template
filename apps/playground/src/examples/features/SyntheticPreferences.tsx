@@ -30,7 +30,7 @@ function createSyntheticPreferenceStore() {
             values.set(key, value);
           },
         }),
-        appDefaults: { general: { watermark: true, watermarkText: '合成数据 · Playground' } },
+        appDefaults: { general: { watermark: false, watermarkText: '合成数据 · Playground' } },
       });
       manager = owner;
       listeners.forEach(listener => listener());

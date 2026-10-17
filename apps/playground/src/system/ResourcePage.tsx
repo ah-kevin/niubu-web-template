@@ -253,11 +253,13 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
       id: 'actions',
       header: headers.actions,
       enableSorting: false,
+      size: 256,
+      minSize: 256,
       cell: info => {
         const record = info.row.original,
           name = recordName(record);
         return (
-          <div className="system-row-actions flex flex-nowrap items-center gap-0.5 [&>[data-slot=button]]:shrink-0 [&>[data-action=delete]]:text-destructive">
+          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-slot=button]]:shrink-0 [&>[data-action=delete]]:text-destructive">
             <Button
               type="button"
               variant="ghost"

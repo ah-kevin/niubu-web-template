@@ -456,5 +456,12 @@
   "navigation.unknown": "Unknown Page Diagnostic",
   "login.welcome": "Welcome back",
   "login.account": "Account",
-  "login.accountPlaceholder": "Email address"
+  "login.accountPlaceholder": "Email address",
+  "examples.application.waitingRequest": "Run the sample to inspect its response.",
+  "examples.application.downloadFailed": "The sample file could not be loaded. Try again.",
+  "examples.features.query.contextTitle": "Synthetic context",
+  "examples.features.preferences.preview": "Business layout preview",
+  "examples.features.preferences.previewItem": "Sample item {{item}}",
+  "examples.features.browser.watermarkHelp": "Enabling this sample displays a watermark across the app. This control changes only the isolated sample preferences.",
+  "examples.components.noChannels": "None"
 }
