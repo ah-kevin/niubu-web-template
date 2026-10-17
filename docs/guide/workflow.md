@@ -4,24 +4,25 @@
 
 ## 检查怎么跑
 
-日常开发只跑改动涉及的部分：
+默认用这两条，提交或合并前都可以跑：
+
+```sh
+pnpm check          # 边界、翻译 key、类型、lint、测试、构建、首屏体积，任何一步失败就停
+pnpm format:check   # 格式
+```
+
+- `pnpm check` 本身是增量的：Turbo 缓存各包的结果，没改动的包直接回放，只重跑改动的包和依赖它的包。代码没变时整条链只要几秒。
+- 改了根 `package.json`、`turbo.json`、`internal/scripts`、`internal/tsconfig` 这类全局文件，缓存会全部失效，下一次 `pnpm check` 相当于全量跑。
+- 不要为了"冷跑"去删或挪走缓存，除非确实怀疑缓存有问题。
+
+开发中只想快速看一个包或一个文件时：
 
 ```sh
 pnpm --filter @niubu/common-ui test             # 单个包；typecheck、lint 同理
 pnpm --filter '@niubu/common-ui...' test        # 连同它依赖的包
 pnpm --filter @niubu/common-ui exec vitest run src/form/schema-form.test.tsx   # 单个测试文件
-pnpm check:affected                             # 相对 master 有改动的包：typecheck、lint、test
 ```
 
-合并到 master 前跑一次完整检查：
-
-```sh
-pnpm format:check
-pnpm check
-```
-
-- `pnpm check` 依次检查：依赖与目录边界、翻译 key、类型、lint、测试、构建、首屏体积。任何一步失败就停。
-- Turbo 会缓存各包的结果，输入没变就直接回放。不要为了"冷跑"去删或挪走缓存，除非确实怀疑缓存有问题。
 - 验收别人的交付时，如果对方已经给出完整检查的命令、退出码和日志，就只核对这些证据，再跑改动相关的测试，不再整套重跑。
 - 测试进程数默认是 CPU 核数的一半（见 `internal/test-config`），机器负载高时测试不容易超时误报。不要为了快改回全核。
 - E2E 不在任何默认检查里。只有用户明确授权后才能新增或运行，见根规则。

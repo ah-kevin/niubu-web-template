@@ -29,10 +29,9 @@ pnpm preview --app @niubu/playground --port 5180
 先读[开发标准](docs/guide/standards.md)和[工作方式](docs/guide/workflow.md)，再按[开发指南](docs/guide/README.md)查具体主题。标准写法参考 [system 模块](apps/playground/src/modules/system.tsx) 和[系统 CRUD](apps/playground/src/system/ResourcePage.tsx)。
 
 ```sh
-pnpm --filter '@niubu/playground...' test   # 日常：只跑改动涉及的包
-pnpm check:affected                         # 日常：相对 master 有改动的包
-pnpm format:check                           # 合并 master 前
-pnpm check                                  # 合并 master 前
+pnpm check                                  # 默认检查，靠缓存增量执行
+pnpm format:check                           # 格式
+pnpm --filter '@niubu/playground...' test   # 只想快速看某个包时
 ```
 
 `pnpm check` 依次检查边界、翻译、类型、lint、测试、构建和首屏体积，不含 E2E；E2E 授权规则见 [AGENTS.md](AGENTS.md)。HTTP 运行检查 `pnpm verify:playground`、hooks、CI、构建产物与 Docker 见[工程与部署](docs/guide/engineering-deploy.md)。
