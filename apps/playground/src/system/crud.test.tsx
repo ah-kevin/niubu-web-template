@@ -658,27 +658,28 @@ describe('compiled system page composition', () => {
     const { compilePlaygroundStyles, readCompiledRules } = await import('../tests/compiled-styles');
     rules = readCompiledRules(await compilePlaygroundStyles());
   });
-  it('preserves rem sizing and spacing on the real nested resource heading', async () => {
+  it('uses the shared workspace heading scale and spacing on the resource page', async () => {
     await mount('users');
     const { matchingRules } = await import('../tests/compiled-styles');
     const heading = screen.getByRole('heading', { name: '用户管理' });
-    expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === '1.5rem')).toBe(true);
-    expect(matchingRules(rules, heading, 'margin-bottom').some(rule => rule.style.getPropertyValue('margin-bottom') === '1rem')).toBe(true);
-    expect(matchingRules(rules, heading, 'font-weight').some(rule => ['600', 'var(--font-weight-semibold)'].includes(rule.style.getPropertyValue('font-weight')))).toBe(true);
+    expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === 'var(--workspace-title-font-size)')).toBe(true);
+    expect(matchingRules(rules, heading, 'margin-bottom').some(rule => rule.style.getPropertyValue('margin-bottom') === 'var(--workspace-heading-gap)')).toBe(true);
+    expect(matchingRules(rules, heading, 'font-weight').some(rule => rule.style.getPropertyValue('font-weight') === '650')).toBe(true);
   });
-  it.each(['standard', 'compact'])('keeps query actions above the public legacy fallback in %s density', async density => {
+  it.each(['standard', 'compact'])('composes query actions independently of the public form footer in %s density', async density => {
     await mount('users');
     const { matchingRules } = await import('../tests/compiled-styles');
     document.documentElement.dataset.density = density;
     document.documentElement.style.fontSize = '22px';
     try {
-      const actions = document.querySelector('.system-query-card .pattern-form-actions')!;
-      const fallback = (property: string) => matchingRules(rules, actions, property).filter(rule => rule.layer === null && rule.media.length === 0).at(-1)?.style.getPropertyValue(property);
-      expect(fallback('justify-content')).toBe('flex-end');
-      expect(fallback('gap')).toBe('8px');
-      expect(fallback('margin-top')).toBe('16px');
-      expect(fallback('padding')).toBe('0px');
-      expect(fallback('border')).toBe('0px');
+      const actions = document.querySelector<HTMLElement>('.system-query-actions')!;
+      expect(actions).not.toHaveClass('pattern-form-actions');
+      expect(matchingRules(rules, actions, 'justify-content').some(rule => rule.style.getPropertyValue('justify-content') === 'flex-end')).toBe(true);
+      expect(matchingRules(rules, actions, 'gap').some(rule => rule.style.getPropertyValue('gap').replace(/\s/g, '') === 'calc(var(--spacing)*2)')).toBe(true);
+      const form = actions.closest('form')!;
+      expect(form.querySelector('.system-query-fields')).not.toBeNull();
+      expect(within(actions).getByRole('button', { name: '查询' })).toHaveAttribute('type', 'submit');
+      expect(within(actions).getByRole('button', { name: '重置' })).toHaveAttribute('type', 'reset');
     } finally {
       delete document.documentElement.dataset.density;
       document.documentElement.style.removeProperty('font-size');

@@ -39,7 +39,7 @@ export function AccessPage() {
   });
   const ready = scopeId === 'north';
   return (
-    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
+    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
       <h1>{text('accessTitle')}</h1>
       <p>{text('accessHelp')}</p>
       <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
@@ -66,7 +66,7 @@ export function AccessPage() {
           {text('write')}
         </label>
       </div>
-      <div className="my-5 grid gap-3 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] sm:grid-cols-3">
+      <div className="my-5 grid gap-3 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] sm:grid-cols-3">
         {roles.map(r => (
           <p key={r}>
             {r} {text('page')}：{access.grantedPageIds.includes(`example.${r}`) ? text('allowed') : text('denied')}

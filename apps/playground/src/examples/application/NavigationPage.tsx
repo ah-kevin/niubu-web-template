@@ -85,7 +85,7 @@ export function NavigationPage({
       ]
     : pageItems;
   return (
-    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
+    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
       <h1>{text('navigationTitle')}</h1>
       <p>{text('navigationHelp')}</p>
       <div className="example-columns grid grid-cols-[minmax(12rem,1fr)_minmax(0,3fr)] gap-6 [@media(max-width:700px)]:grid-cols-1">
@@ -114,7 +114,7 @@ export function NavigationPage({
             />
           )}
         />
-        <div className="min-w-0 space-y-4 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]">
+        <div className="min-w-0 space-y-4 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
           <Breadcrumbs
             items={items}
             value={{ ...corePreferenceDefaults.breadcrumb, showHome: true }}

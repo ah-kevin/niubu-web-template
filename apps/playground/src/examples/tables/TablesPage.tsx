@@ -113,9 +113,9 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
     };
   }, [preferences]);
   return (
-    <section className="mx-auto w-full max-w-[82rem] min-w-0 space-y-6">
-      <header className="space-y-3">
-        <h1 className="text-2xl font-semibold">{t('examples.tables.title')}</h1>
+    <section className="mx-auto w-full max-w-[82rem] min-w-0 space-y-[var(--workspace-section-gap)]">
+      <header className="space-y-[var(--workspace-heading-gap)]">
+        <h1 className="text-[length:var(--workspace-title-font-size)] font-[650]">{t('examples.tables.title')}</h1>
         <DocumentationLink kind="tables" />
         <p className="max-w-[90ch] text-sm leading-relaxed text-muted-foreground">{t('examples.tables.synthetic')}</p>
         <p className="max-w-[90ch] text-sm leading-relaxed text-muted-foreground">{t('examples.tables.boundary')}</p>
@@ -133,7 +133,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
         />
       </label>
       <PreferenceProvider manager={preferences.manager}>
-        <div className="grid min-w-0 items-start gap-6 xl:grid-cols-2">
+        <div className="grid min-w-0 items-start gap-[var(--workspace-section-gap)] xl:grid-cols-2">
           <ClientExamples key={scope} scope={scope} t={t} />
           <ServerExample scope={scope} load={load} t={t} />
         </div>
@@ -229,7 +229,7 @@ function ServerExample({ scope, load, t }: { scope: string; load: SyntheticTable
   }, [t, updateFields]);
   return (
     <ExampleGroup title={t('examples.tables.server')}>
-      <div className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]">
+      <div className="min-w-0 space-y-3 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
         <table.queryForm.Form
           className="playground-tables-query min-w-0"
           submitLabel={t('examples.tables.query')}

@@ -6,6 +6,17 @@ import { renderLoginStyleScene } from '../tests/login-style-scene';
 let rules: CompiledStyleRule[];
 beforeAll(async () => { rules = readCompiledRules(await compilePlaygroundStyles()); });
 
+function contrast(a: string, b: string) {
+  const luminance = (hex: string) => {
+    const expanded = hex.length === 4 ? `#${[...hex.slice(1)].map(value => value + value).join('')}` : hex;
+    return [1, 3, 5].map(offset => parseInt(expanded.slice(offset, offset + 2), 16) / 255)
+      .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index]!, 0);
+  };
+  const values = [luminance(a), luminance(b)];
+  return (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05);
+}
+
 it.each(['light', 'dark'])('emits the same readable authentication boundaries for login and public controls in %s', async mode => {
   const f = await renderLoginStyleScene();
   document.documentElement.dataset.theme = mode;
@@ -22,7 +33,9 @@ it.each(['light', 'dark'])('emits the same readable authentication boundaries fo
     }
     const themeRules = rules.filter(rule => rule.layer === null && document.documentElement.matches(rule.selector));
     const token = (name: string) => themeRules.map(rule => rule.style.getPropertyValue(name)).filter(Boolean).at(-1);
-    expect(token('--control-border')).toBe(mode === 'light' ? '#767680' : '#7f7f88');
+    expect(token('--control-border')).toBe(mode === 'light' ? '#898993' : '#7f7f88');
+    for (const surface of ['--card', '--background', '--secondary', '--muted', '--accent'])
+      expect(contrast(token('--control-border')!, token(surface)!)).toBeGreaterThanOrEqual(3);
     const card = document.createElement('span');
     card.style.color = token('--card') ?? '';
     expect(card.style.color).toBe(mode === 'light' ? 'rgb(255, 255, 255)' : 'rgb(28, 30, 35)');

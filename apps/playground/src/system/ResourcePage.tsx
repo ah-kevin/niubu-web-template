@@ -9,6 +9,8 @@ import {
   type QueryRequest,
 } from '@niubu/common-ui/data-table';
 import { Modal, Drawer, useOverlay } from '@niubu/common-ui/overlay';
+import { PageHeader } from '@niubu/common-ui/page-header';
+import { Plus } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Badge } from '@niubu/shadcn-ui/badge';
 import { useTranslation } from '@niubu/locales/react';
@@ -242,7 +244,16 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
         enableSorting: (config.sortable as readonly string[]).includes(name),
         cell: info =>
           name === 'enabled' ? (
-            <Badge>{t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}</Badge>
+            <Badge
+              variant="secondary"
+              className={
+                info.row.original.enabled
+                  ? 'border-primary/20 bg-[var(--nav-active)] text-primary-text'
+                  : 'border-border text-muted-foreground'
+              }
+            >
+              {t(info.row.original.enabled ? 'system.enabled' : 'system.disabled')}
+            </Badge>
           ) : (
             info.getValue()
           ),
@@ -259,7 +270,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
         const record = info.row.original,
           name = recordName(record);
         return (
-          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-slot=button]]:shrink-0 [&>[data-action=delete]]:text-destructive">
+          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-slot=button]]:h-7 [&>[data-slot=button]]:shrink-0 [&>[data-slot=button]]:px-2 [&>[data-slot=button]]:py-0 [&>[data-action=delete]]:text-destructive">
             <Button
               type="button"
               variant="ghost"
@@ -317,21 +328,31 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const Overlay = shown?.mode === 'create' ? Modal : Drawer;
   return (
     <section className="playground-page system-resource-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[1rem] [&>h1]:text-[1.5rem] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_form]:max-w-none">
-      <header className="system-page-header mb-[var(--workspace-section-gap)] flex flex-wrap items-start justify-between gap-[var(--workspace-section-gap)]">
-        <div>
-          <h1 className="mb-[1rem] text-[1.5rem] font-semibold">{t(config.titleKey)}</h1>
-          <p className="system-demo-notice mt-2 max-w-[68ch] text-[length:var(--workspace-caption-font-size)] leading-relaxed text-muted-foreground">
-            {t('system.demoNotice')}
-          </p>
-        </div>
-        {writable && (
-          <Button type="button" disabled={!lookup.ready} onClick={create}>
-            {t('system.create')}
-          </Button>
-        )}
-      </header>
-      <div className="system-query-card mb-[var(--workspace-section-gap)] rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]">
-        <table.queryForm.Form submitLabel={t('common:search')} resetLabel={t('common:reset')} />
+      <PageHeader
+        title={t(config.titleKey)}
+        description={t('system.demoNotice')}
+        actions={
+          writable && (
+            <Button type="button" disabled={!lookup.ready} onClick={create}>
+              <Plus aria-hidden="true" />
+              {t('system.create')}
+            </Button>
+          )
+        }
+      />
+      <div className="system-query-card mb-[var(--workspace-section-gap)] rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)]">
+        <table.queryForm.Form
+          className="system-query-form grid min-w-0 gap-[var(--workspace-section-gap)] xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
+          showActions={false}
+        >
+          <table.queryForm.Fields className="system-query-fields min-w-0" />
+          <div className="system-query-actions flex items-center justify-end gap-2">
+            <Button type="submit">{t('common:search')}</Button>
+            <Button type="reset" variant="outline">
+              {t('common:reset')}
+            </Button>
+          </div>
+        </table.queryForm.Form>
       </div>
       {lookup.error && (
         <div role="alert">

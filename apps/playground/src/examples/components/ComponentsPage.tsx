@@ -25,10 +25,10 @@ export function ComponentsPage() {
     ? applied.channels.map(channel => t(channel === 'email' ? 'email' : 'sms')).join(', ')
     : t('noChannels');
   return (
-    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
+    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
       <h1>{t('title')}</h1>
       <p>{t('help')}</p>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('choices')}</h2>
         <fieldset className="grid gap-3">
           <legend className="mb-2 text-sm font-medium">{t('density')}</legend>
@@ -91,7 +91,7 @@ export function ComponentsPage() {
           {applied ? `${appliedDensity} · ${appliedChannels}` : t('noChoices')}
         </output>
       </section>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('menu')}</h2>
         <label className="mb-3 inline-flex cursor-pointer items-center gap-2 text-sm" htmlFor={`${id}-archive`}>
           <Checkbox
@@ -123,7 +123,7 @@ export function ComponentsPage() {
           {localize(menuResult)}
         </output>
       </section>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('tooltipTitle')}</h2>
         <Tooltip content={t('tooltip')}>
           <Button type="button" variant="outline">

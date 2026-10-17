@@ -15,17 +15,20 @@
   .template-workspace .template-scope-selector [role='combobox'] { font-size: 0.75rem; }
 }
 
-/* Keep this legacy app override unlayered so public bare-class form fallbacks
-   retain their defaults while query cards keep their original action layout. */
-.system-query-card .pattern-form-actions {
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 0;
-  margin-top: 16px;
-  border: 0;
+/* A query row adapts to available space instead of inheriting the editor's
+   fixed schema column count. Other form owners keep their configured grid. */
+.system-query-fields .pattern-field-grid.pattern-schema-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  margin-top: 0;
 }
 
 /* Match the unlayered public fallback without changing other form owners. */
 .playground-tables-query .pattern-form-actions {
   justify-content: flex-start;
+}
+
+@media (min-width: 701px) and (max-width: 1150px) {
+  .playground-builtin-form .pattern-field-grid.pattern-schema-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

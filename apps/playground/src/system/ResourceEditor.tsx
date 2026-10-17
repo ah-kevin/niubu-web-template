@@ -118,25 +118,29 @@ export function ResourceEditor<K extends ResourceKind>({
       </section>
     );
   return (
-    <FormFrame
-      form={schema.form}
-      title={t(record ? 'system.editTitle' : 'system.createTitle', { resource: t(resourceConfig[resource].titleKey) })}
-      headingLevel={2}
-      draftKey={draftKey}
-      scopeKey={scopeKey}
-      onCancel={onCancel}
-      onCancelReady={onCancelReady}
-      formId={formId}
-      draftFilter={filterDraft}
-      reviewReady={writable}
-      operationKey={JSON.stringify([schema.configVersion, state.generation, state.status, state.loginExpired])}
-      onSubmit={submit}
-      onSubmitted={onSubmitted}
-      submitLabel={t('common:save')}
-      resolveSubmitError={error => systemErrorCopy(error, t)}
-    >
-      {!writable && <p role="status">{t('system.writeUnavailable')}</p>}
-      <schema.Fields />
-    </FormFrame>
+    <div className="system-record-editor [&_.pattern-page-header]:hidden [&_.pattern-form-group]:rounded-none [&_.pattern-form-group]:border-0 [&_.pattern-form-group]:p-0 [&_.pattern-form-group>legend]:sr-only">
+      <FormFrame
+        form={schema.form}
+        title={t(record ? 'system.editTitle' : 'system.createTitle', {
+          resource: t(resourceConfig[resource].titleKey),
+        })}
+        headingLevel={2}
+        draftKey={draftKey}
+        scopeKey={scopeKey}
+        onCancel={onCancel}
+        onCancelReady={onCancelReady}
+        formId={formId}
+        draftFilter={filterDraft}
+        reviewReady={writable}
+        operationKey={JSON.stringify([schema.configVersion, state.generation, state.status, state.loginExpired])}
+        onSubmit={submit}
+        onSubmitted={onSubmitted}
+        submitLabel={t('common:save')}
+        resolveSubmitError={error => systemErrorCopy(error, t)}
+      >
+        {!writable && <p role="status">{t('system.writeUnavailable')}</p>}
+        <schema.Fields />
+      </FormFrame>
+    </div>
   );
 }

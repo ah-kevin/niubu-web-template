@@ -9,6 +9,7 @@ import { useFormsText } from './copy';
 import { ExampleFields } from './live-fields';
 import { useExampleForm } from './use-example-form';
 import { DocumentationLink } from '../DocumentationLink';
+import { PageHeader } from '@niubu/common-ui/page-header';
 
 type NameValues = { name: string };
 const cases = [
@@ -28,25 +29,23 @@ export type FormsPageProps = {
 };
 export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element {
   const text = useFormsText();
-  const [selected, setSelected] = useState<string>('E43');
+  const [selected, setSelected] = useState<string>('E44');
   const active = cases.find(([id]) => id === selected) ?? cases[0];
   const Panel = active[2];
   return (
     <div className="pattern-page grid min-w-0 gap-4">
-      <header className="grid gap-[12px]">
-        <h1 className="text-[24px] font-semibold tracking-[-.025em]">{text('title')}</h1>
-        <DocumentationLink kind="forms" />
-        <p className="text-sm leading-relaxed text-muted-foreground">{text('introduction')}</p>
-      </header>
-      <nav
-        aria-label={text('title')}
-        className="flex min-w-0 flex-wrap items-center justify-start gap-2 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]"
-      >
+      <PageHeader
+        title={text('title')}
+        description={text('introduction')}
+        actions={<DocumentationLink kind="forms" />}
+      />
+      <nav aria-label={text('title')} className="flex min-w-0 flex-wrap items-center gap-x-1 border-b border-border">
         {cases.map(([id, label]) => (
           <Button
             key={id}
             type="button"
-            variant={selected === id ? 'default' : 'outline'}
+            variant="ghost"
+            className={`rounded-none border-b-2 px-3 ${selected === id ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground'}`}
             aria-pressed={selected === id}
             onClick={() => setSelected(id)}
           >
@@ -56,8 +55,8 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
       </nav>
       <section
         className={[
-          'min-w-0 space-y-4 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] sm:p-6',
-          active[0] === 'E44' || active[0] === 'E46' ? '' : '[&_form]:max-w-xl',
+          'min-w-0 space-y-[var(--workspace-section-gap)] rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] sm:p-6',
+          active[0] === 'E44' || active[0] === 'E46' ? '' : 'w-full max-w-3xl [&_form]:max-w-xl',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -265,6 +264,7 @@ function BuiltinPanel() {
       label: 'delivery',
       kind: 'radio',
       componentProps: {
+        className: 'flex min-h-[var(--workspace-control-height)] flex-wrap items-center gap-x-4 gap-y-2',
         options: [
           { value: 'standard', label: 'standard' },
           { value: 'express', label: 'express' },
@@ -278,7 +278,7 @@ function BuiltinPanel() {
   const schema = useExampleForm<BuiltinValues>({
     fields,
     defaultValues: { category: 'general', delivery: 'standard' },
-    layout: { columns: 2, labelWidth: 'auto' },
+    layout: { columns: 3, labelWidth: 80 },
   });
   function readPublicFields() {
     const values = schema.publicValues(schema.getValues());
@@ -299,7 +299,7 @@ function BuiltinPanel() {
   }
   return (
     <>
-      <schema.Form showActions={false}>
+      <schema.Form className="playground-builtin-form" showActions={false}>
         <ExampleFields form={schema.form} {...schema.presentation} />
       </schema.Form>
       <Button type="button" onClick={readPublicFields}>

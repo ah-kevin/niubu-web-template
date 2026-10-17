@@ -137,6 +137,7 @@ describe('FormsPage live locale metadata', () => {
       await save;
       if (!context.signal.aborted) savedNames.push(name);
     } });
+    await scenario('公开 API');
     const input = screen.getByRole('textbox', { name: '名称' });
     fireEvent.change(input, { target: { value: 'Dirty pending' } });
     await userEvent.click(screen.getByRole('button', { name: '更新已有字段' }));

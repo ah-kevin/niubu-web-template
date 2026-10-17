@@ -43,9 +43,16 @@ export function ExampleFields<V extends Record<string, unknown>, C extends Custo
   const [expanded, setExpanded] = useState(false);
   const collapsedError = visible.some((field, index) => index >= limit && form.getFieldState(field.name).invalid);
   if (collapsedError && !expanded) setExpanded(true);
-  const style = { '--schema-columns': columns } as CSSProperties;
+  const style = {
+    '--schema-columns': columns,
+    '--schema-label-width': typeof layout?.labelWidth === 'number' ? `${layout.labelWidth}px` : layout?.labelWidth,
+  } as CSSProperties;
   return (
-    <div className="pattern-schema-fields" data-label-layout="top" style={style}>
+    <div
+      className="pattern-schema-fields"
+      data-label-layout={(layout?.labelWidth ?? 'auto') === 'auto' ? 'top' : 'inline'}
+      style={style}
+    >
       <div className="pattern-field-grid pattern-schema-grid" style={style}>
         {visible.map((field, index) => {
           const localized = {

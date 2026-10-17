@@ -211,11 +211,11 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
     if (!signal.aborted) setQueueResult(`${confirmed ? 'Confirmed' : 'Cancelled'} · alert completed`);
   }
   return (
-    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
+    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[var(--workspace-heading-gap)] [&>h1]:text-[length:var(--workspace-title-font-size)] [&>h1]:font-[650] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold">
       <h1>{t('title')}</h1>
       <DocumentationLink kind="overlay" />
       <p>{t('help')}</p>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('overlays')}</h2>
         <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
           {(['Modal', 'Drawer'] as const).map(value => (
@@ -242,7 +242,7 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
           />
         )}
       </section>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('queue')}</h2>
         <Button
           type="button"
@@ -256,7 +256,7 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
           {localize(queueResult)}
         </output>
       </section>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('reading')}</h2>
         <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
           <Button
@@ -306,7 +306,7 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
         </Button>
         <div aria-label={t('pendingExample')}>{pendingRoute && <RoutePending />}</div>
       </section>
-      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
+      <section className="example-card my-4 min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('states')}</h2>
         <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
           {(Object.keys(states) as (keyof typeof states)[]).map(value => (

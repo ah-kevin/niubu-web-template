@@ -1,20 +1,24 @@
 import { render, screen } from '@testing-library/react';
-import { beforeAll, expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { FormsPage } from '../examples/forms/FormsPage';
 import { compilePlaygroundStyles, matchingRules, readCompiledRules, type CompiledStyleRule } from '../tests/compiled-styles';
 
 let rules: CompiledStyleRule[];
-beforeAll(async () => { rules = readCompiledRules(await compilePlaygroundStyles()); });
+beforeAll(async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  rules = readCompiledRules(await compilePlaygroundStyles());
+});
+afterAll(() => { vi.unstubAllGlobals(); });
 
-it('keeps the real form example title at its fixed size and shared header spacing', () => {
+it('uses the shared workspace title and header spacing tokens in the real form page', () => {
   render(<FormsPage />);
   const heading = screen.getByRole('heading', { level: 1 });
-  expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === '24px')).toBe(true);
-  expect(matchingRules(rules, heading, 'font-weight').some(rule => ['600', 'var(--font-weight-semibold)'].includes(rule.style.getPropertyValue('font-weight')))).toBe(true);
+  expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === 'var(--workspace-title-font-size)')).toBe(true);
+  expect(matchingRules(rules, heading, 'font-weight').some(rule => rule.style.getPropertyValue('font-weight') === '650')).toBe(true);
   const header = heading.closest('header');
   expect(header).not.toBeNull();
-  expect(matchingRules(rules, header!, 'gap').some(rule => rule.style.getPropertyValue('gap') === '12px')).toBe(true);
+  expect(matchingRules(rules, header!, 'gap').some(rule => rule.style.getPropertyValue('gap') === 'var(--workspace-heading-gap)')).toBe(true);
 });
 
 it('retains the public CSS contract for bare business breadcrumbs and loading messages', () => {
