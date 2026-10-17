@@ -116,5 +116,7 @@
   "table.pageSizeOption": "{{size}} / page",
   "table.search": "Search",
   "table.refresh": "Refresh",
-  "table.moreColumnSettings": "More column settings"
+  "table.moreColumnSettings": "More column settings",
+  "table.expandRow": "Expand {{name}}",
+  "table.collapseRow": "Collapse {{name}}"
 }

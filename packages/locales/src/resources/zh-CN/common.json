@@ -116,5 +116,7 @@
   "table.pageSizeOption": "{{size}} 条/页",
   "table.search": "搜索",
   "table.refresh": "刷新",
-  "table.moreColumnSettings": "更多列设置"
+  "table.moreColumnSettings": "更多列设置",
+  "table.expandRow": "展开 {{name}}",
+  "table.collapseRow": "收起 {{name}}"
 }

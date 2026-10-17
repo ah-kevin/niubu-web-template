@@ -9,8 +9,9 @@ import type {
   RowSelectionState,
   SortingState,
   TableOptions,
+  ExpandedState,
 } from '@tanstack/react-table';
-import type { listFeatures, readFeatures, selectableListFeatures } from './profiles';
+import type { listFeatures, readFeatures, selectableListFeatures, treeFeatures } from './profiles';
 export type SliceOwner<S> =
   | { kind: 'internal'; initial?: S; value?: never; onChange?: never }
   | { kind: 'controlled'; value: S; onChange: OnChangeFn<S>; initial?: never };
@@ -100,7 +101,19 @@ export type SelectableTableProps<T extends RowData> = BaseTableProps<T> &
       allResultsUnavailable: string;
     };
   };
-export type DataTableProps<T extends RowData> = ReadTableProps<T> | ListTableProps<T> | SelectableTableProps<T>;
+export type TreeListTableProps<T extends RowData> = BaseTableProps<T> &
+  Omit<ListSlices, 'pagination'> & {
+    profile: 'tree-list';
+    model: Extract<DataModel<T>, { kind: 'client' }>;
+    columns: TableOptions<typeof treeFeatures, T>['columns'];
+    treeColumnId: string;
+    getSubRows: (row: T, index: number) => readonly T[] | undefined;
+    getRowLabel: (row: T) => string;
+    expanded?: SliceOwner<ExpandedState>;
+    pagination?: never;
+  };
+export type DataTableProps<T extends RowData> =
+  ReadTableProps<T> | ListTableProps<T> | SelectableTableProps<T> | TreeListTableProps<T>;
 export type {
   ColumnPinningState,
   ColumnSizingState,
@@ -110,4 +123,5 @@ export type {
   RowSelectionState,
   SortingState,
   Updater,
+  ExpandedState,
 } from '@tanstack/react-table';

@@ -2,7 +2,7 @@ import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { Select } from '@niubu/shadcn-ui/select';
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@niubu/icons';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
 import {
@@ -16,10 +16,10 @@ import {
   type ReactNode,
 } from 'react';
 import type { Column, Header, ReactTable, Row, RowData } from '@tanstack/react-table';
-import type { listFeatures, selectableListFeatures } from './profiles';
-import type { BaseTableProps, ListSlices, TableLabels } from './types';
+import type { listFeatures, selectableListFeatures, treeFeatures } from './profiles';
+import type { BaseTableProps, ListSlices, TableLabels, TreeListTableProps } from './types';
 import { cn } from '@niubu/shadcn-ui/cn';
-import type { ListNativeTable } from './ColumnSettings';
+import type { ListNativeTable, PresentationTable } from './ColumnSettings';
 import { TableToolbar } from './TableToolbar';
 
 export function ReadMessage<T>({
@@ -87,7 +87,7 @@ export const SelectionCheckbox = memo(function SelectionCheckbox({
   );
 });
 function pinnedStyle<T extends RowData>(
-  column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T>,
+  column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T> | Column<typeof treeFeatures, T>,
 ): CSSProperties {
   const pin = column.getIsPinned();
   const width = column.getSize();
@@ -102,7 +102,8 @@ function pinnedStyle<T extends RowData>(
     background: pin ? 'var(--table-row-background, var(--card, Canvas))' : undefined,
   };
 }
-type ListNativeHeader<T extends RowData> = Header<typeof listFeatures, T> | Header<typeof selectableListFeatures, T>;
+type ListNativeHeader<T extends RowData> =
+  Header<typeof listFeatures, T> | Header<typeof selectableListFeatures, T> | Header<typeof treeFeatures, T>;
 
 /** Only native header layout/actions are shared; the concrete owner supplies FlexRender. */
 function HeaderView<T extends RowData>({
@@ -188,7 +189,7 @@ function CellView<T extends RowData>({
   column,
   children,
 }: {
-  column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T>;
+  column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T> | Column<typeof treeFeatures, T>;
   children: ReactNode;
 }) {
   return (
@@ -326,8 +327,9 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   selectionCell,
   selectionSummary,
   isRowSelected,
+  footer,
 }: {
-  table: ListNativeTable<T>;
+  table: PresentationTable<T>;
   props: BaseTableProps<T> & ListSlices;
   headerGroups: readonly { id: string; headers: readonly H[] }[];
   rows: readonly R[];
@@ -337,8 +339,8 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   selectionCell?: (row: R) => ReactNode;
   selectionSummary?: ReactNode;
   isRowSelected?: (row: R) => boolean;
+  footer?: ReactNode;
 }) {
-  const [initialPageSize] = useState(() => table.state.pagination.pageSize);
   const [maximized, setMaximized] = useState(false);
   const section = useRef<HTMLElement>(null);
   if (maximized && !props.toolbar?.allowMaximize) setMaximized(false);
@@ -422,9 +424,7 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
           </table>
         </div>
       )}
-      {props.readState === 'ready' && (
-        <Pagination table={table} labels={props.labels} caption={props.caption} initialPageSize={initialPageSize} />
-      )}
+      {props.readState === 'ready' && footer}
     </section>
   );
 }
@@ -435,10 +435,14 @@ export function ListView<T extends RowData>({
   table: ReactTable<typeof listFeatures, T>;
   props: BaseTableProps<T> & ListSlices;
 }) {
+  const [initialPageSize] = useState(() => table.state.pagination.pageSize);
   return (
     <ListLayout
       table={table}
       props={props}
+      footer={
+        <Pagination table={table} labels={props.labels} caption={props.caption} initialPageSize={initialPageSize} />
+      }
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       renderHeader={header => (
@@ -469,10 +473,14 @@ export function SelectableView<T extends RowData>({
   selectionCell?: (row: Row<typeof selectableListFeatures, T>) => ReactNode;
   selectionSummary?: ReactNode;
 }) {
+  const [initialPageSize] = useState(() => table.state.pagination.pageSize);
   return (
     <ListLayout
       table={table}
       props={props}
+      footer={
+        <Pagination table={table} labels={props.labels} caption={props.caption} initialPageSize={initialPageSize} />
+      }
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       selectionHeader={selectionHeader}
@@ -488,6 +496,64 @@ export function SelectableView<T extends RowData>({
         row.getVisibleCells().map(cell => (
           <CellView<T> key={cell.id} column={cell.column}>
             <table.FlexRender cell={cell} />
+          </CellView>
+        ))
+      }
+    />
+  );
+}
+
+export function TreeView<T extends RowData>({
+  table,
+  props,
+}: {
+  table: ReactTable<typeof treeFeatures, T>;
+  props: TreeListTableProps<T>;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ListLayout
+      table={table}
+      props={props}
+      headerGroups={table.getHeaderGroups()}
+      rows={table.getRowModel().rows}
+      renderHeader={header => (
+        <HeaderView<T> header={header} labels={props.labels}>
+          <table.FlexRender header={header} />
+        </HeaderView>
+      )}
+      renderCells={row =>
+        row.getVisibleCells().map(cell => (
+          <CellView<T> key={cell.id} column={cell.column}>
+            {cell.column.id === props.treeColumnId ? (
+              <div
+                className="pattern-tree-cell flex min-w-0 items-center"
+                style={{ paddingInlineStart: row.depth * 20 }}
+              >
+                <span className="inline-flex w-[18px] shrink-0 items-center">
+                  {row.getCanExpand() && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      className="pattern-tree-toggle size-[12px] rounded-none border-0 bg-transparent p-0 text-foreground shadow-none! hover:bg-transparent [&_svg]:size-[12px]"
+                      aria-expanded={row.getIsExpanded()}
+                      aria-label={t(row.getIsExpanded() ? 'common:table.collapseRow' : 'common:table.expandRow', {
+                        name: props.getRowLabel(row.original),
+                      })}
+                      onClick={row.getToggleExpandedHandler()}
+                    >
+                      <ChevronDown aria-hidden="true" className={row.getIsExpanded() ? '' : '-rotate-90'} />
+                    </Button>
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <table.FlexRender cell={cell} />
+                </div>
+              </div>
+            ) : (
+              <table.FlexRender cell={cell} />
+            )}
           </CellView>
         ))
       }

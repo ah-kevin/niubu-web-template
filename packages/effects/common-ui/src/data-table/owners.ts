@@ -1,26 +1,23 @@
-import { functionalUpdate, type ColumnSizingState, type Updater } from '@tanstack/react-table';
+import { functionalUpdate, type ColumnSizingState, type ExpandedState, type Updater } from '@tanstack/react-table';
 import { clampColumnWidth } from './preferences';
+import { isSafeColumnId } from './identity';
 import type { ListSlices, SliceOwner } from './types';
 const initial = <S>(owner: SliceOwner<S> | undefined): S | undefined =>
   owner?.kind === 'internal' ? owner.initial : undefined;
 const controlled = <S>(owner: SliceOwner<S> | undefined): S | undefined =>
   owner?.kind === 'controlled' ? owner.value : undefined;
 /** Undefined slices are omitted, so SDK internal ownership remains intact. */
-export function listOwnership(props: ListSlices, columnIds: readonly string[]) {
+function columnOwnership(props: Omit<ListSlices, 'pagination'>, columnIds: readonly string[]) {
   const sizing = props.columnSizing;
   return {
     initialState: {
       ...(initial(props.sorting) !== undefined ? { sorting: initial(props.sorting) } : {}),
-      ...(props.pagination?.kind !== 'controlled'
-        ? { pagination: initial(props.pagination) ?? { pageIndex: 0, pageSize: 25 } }
-        : {}),
       ...(initial(props.columnVisibility) !== undefined ? { columnVisibility: initial(props.columnVisibility) } : {}),
       ...(initial(props.columnSizing) !== undefined ? { columnSizing: initial(props.columnSizing) } : {}),
       ...(initial(props.columnPinning) !== undefined ? { columnPinning: initial(props.columnPinning) } : {}),
     },
     state: {
       ...(controlled(props.sorting) !== undefined ? { sorting: controlled(props.sorting) } : {}),
-      ...(controlled(props.pagination) !== undefined ? { pagination: controlled(props.pagination) } : {}),
       ...(controlled(props.columnVisibility) !== undefined
         ? { columnVisibility: controlled(props.columnVisibility) }
         : {}),
@@ -28,7 +25,6 @@ export function listOwnership(props: ListSlices, columnIds: readonly string[]) {
       ...(controlled(props.columnPinning) !== undefined ? { columnPinning: controlled(props.columnPinning) } : {}),
     },
     ...(props.sorting?.kind === 'controlled' ? { onSortingChange: props.sorting.onChange } : {}),
-    ...(props.pagination?.kind === 'controlled' ? { onPaginationChange: props.pagination.onChange } : {}),
     ...(props.columnVisibility?.kind === 'controlled'
       ? { onColumnVisibilityChange: props.columnVisibility.onChange }
       : {}),
@@ -49,6 +45,64 @@ export function listOwnership(props: ListSlices, columnIds: readonly string[]) {
     ...(props.columnPinning?.kind === 'controlled' ? { onColumnPinningChange: props.columnPinning.onChange } : {}),
   };
 }
+export function listOwnership(props: ListSlices, columnIds: readonly string[]) {
+  const columns = columnOwnership(props, columnIds);
+  return {
+    ...columns,
+    initialState: {
+      ...columns.initialState,
+      ...(props.pagination?.kind !== 'controlled'
+        ? { pagination: initial(props.pagination) ?? { pageIndex: 0, pageSize: 25 } }
+        : {}),
+    },
+    state: {
+      ...columns.state,
+      ...(controlled(props.pagination) !== undefined ? { pagination: controlled(props.pagination) } : {}),
+    },
+    ...(props.pagination?.kind === 'controlled' ? { onPaginationChange: props.pagination.onChange } : {}),
+  };
+}
+type TreeSlices = Omit<ListSlices, 'pagination'> & { expanded?: SliceOwner<ExpandedState>; pagination?: never };
+export function treeOwnership(props: TreeSlices, columnIds: readonly string[]) {
+  const columns = columnOwnership(props, columnIds);
+  return {
+    ...columns,
+    initialState: {
+      ...columns.initialState,
+      ...(initial(props.expanded) !== undefined ? { expanded: initial(props.expanded) } : {}),
+    },
+    state: {
+      ...columns.state,
+      ...(controlled(props.expanded) !== undefined ? { expanded: controlled(props.expanded) } : {}),
+    },
+    ...(props.expanded?.kind === 'controlled' ? { onExpandedChange: props.expanded.onChange } : {}),
+  };
+}
+export function validateTreeOwnership(props: TreeSlices, columnIds: readonly string[], treeColumnId: string): void {
+  validateListOwnership(props, columnIds);
+  if (props.pagination !== undefined) throw Error('Tree lists do not accept pagination');
+  const visibility =
+    props.columnVisibility?.kind === 'controlled' ? props.columnVisibility.value : props.columnVisibility?.initial;
+  if (visibility?.[treeColumnId] === false) throw Error('Tree column must remain visible');
+  const owner = props.expanded;
+  if (!owner) return;
+  if (owner.kind !== 'internal' && owner.kind !== 'controlled') throw Error('Invalid expanded owner');
+  if (owner.kind === 'controlled' && (typeof owner.onChange !== 'function' || 'initial' in owner))
+    throw Error('Invalid expanded owner');
+  if (owner.kind === 'internal' && ('value' in owner || 'onChange' in owner)) throw Error('Invalid expanded owner');
+  const expanded = owner.kind === 'controlled' ? owner.value : owner.initial;
+  if (expanded === undefined && owner.kind === 'internal') return;
+  if (expanded === true) return;
+  if (
+    !expanded ||
+    typeof expanded !== 'object' ||
+    Array.isArray(expanded) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(expanded)) ||
+    Object.entries(expanded).some(([id, value]) => !isSafeColumnId(id) || typeof value !== 'boolean')
+  )
+    throw Error('Expanded state must be true or a safe boolean row-ID record');
+}
+
 export function validateListOwnership(props: ListSlices, columnIds: readonly string[]): void {
   const value = <S>(owner: SliceOwner<S> | undefined): S | undefined =>
     owner?.kind === 'controlled' ? owner.value : owner?.initial;

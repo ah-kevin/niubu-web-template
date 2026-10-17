@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import type { RowData } from '@tanstack/react-table';
 import { cn } from '@niubu/shadcn-ui/cn';
 import type { BaseTableProps, ListSlices } from './types';
-import { ColumnSettings, type ListNativeTable } from './ColumnSettings';
+import { ColumnSettings, type PresentationTable } from './ColumnSettings';
 import { TableToolButton } from './TableToolButton';
 
 export function TableToolbar<T extends RowData>({
@@ -14,7 +14,7 @@ export function TableToolbar<T extends RowData>({
   maximized,
   onMaximizeChange,
 }: {
-  table: ListNativeTable<T>;
+  table: PresentationTable<T>;
   props: BaseTableProps<T> & ListSlices;
   selectionSummary?: ReactNode;
   maximized: boolean;

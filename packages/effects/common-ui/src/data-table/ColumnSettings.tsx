@@ -9,13 +9,14 @@ import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
 import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '@niubu/shadcn-ui/popover';
 import { cn } from '@niubu/shadcn-ui/cn';
-import type { listFeatures, selectableListFeatures } from './profiles';
+import type { listFeatures, selectableListFeatures, treeFeatures } from './profiles';
 import type { TableLabels } from './types';
 import { clampColumnWidth } from './preferences';
 import { TableToolButton } from './TableToolButton';
 
 export type ListNativeTable<T extends RowData> =
   ReactTable<typeof listFeatures, T> | ReactTable<typeof selectableListFeatures, T>;
+export type PresentationTable<T extends RowData> = ListNativeTable<T> | ReactTable<typeof treeFeatures, T>;
 
 function ColumnWidthInput({
   value,
@@ -51,7 +52,7 @@ export function ColumnSettings<T extends RowData>({
   labels,
   onResetColumns,
 }: {
-  table: ListNativeTable<T>;
+  table: PresentationTable<T>;
   labels: TableLabels;
   onResetColumns?: () => void;
 }) {

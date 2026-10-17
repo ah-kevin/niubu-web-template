@@ -9,10 +9,13 @@ import { useDataTable } from './useDataTable';
 import { listOwnership, validateListOwnership, listInstanceKey } from './owners';
 import { ListView, SelectableView, ReadMessage, SelectionCheckbox } from './renderer';
 import type { DataTableProps, ListTableProps, ReadTableProps, SelectableTableProps } from './types';
-const defaults = { size: 180, minSize: 80, maxSize: 640, sortFn: 'alphanumeric' as const };
+import { listColumnDefaults as defaults } from './column-defaults';
+import { TreeRenderer } from './TreeRenderer';
 
 /** Each discriminant mounts a renderer with a fixed, module-scoped native feature set. */
 export function DataTable<T extends RowData>(props: DataTableProps<T>): ReactElement {
+  if (props.profile === 'tree-list')
+    return <TreeRenderer key={`${listInstanceKey(props)}:${props.expanded?.kind ?? 'internal'}`} {...props} />;
   validateRowIds(props.model.rows, props.getRowId);
   validateReadModel(props.model, props);
   if (props.profile === 'read') return <ReadRenderer {...props} />;

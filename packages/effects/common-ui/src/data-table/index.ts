@@ -1,6 +1,11 @@
 export { DataTable } from './DataTable';
-export { createReadColumnHelper, createListColumnHelper, createSelectableColumnHelper } from './columns';
-export type { ReadColumnDef, ListColumnDef, SelectableColumnDef } from './columns';
+export {
+  createReadColumnHelper,
+  createListColumnHelper,
+  createSelectableColumnHelper,
+  createTreeColumnHelper,
+} from './columns';
+export type { ReadColumnDef, ListColumnDef, SelectableColumnDef, TreeColumnDef } from './columns';
 export { validateRowIds } from './identity';
 export { tablePreferences, cleanTablePreferences } from './preferences';
 export type { TablePreferences } from './preferences';
@@ -9,6 +14,7 @@ export type {
   ReadTableProps,
   ListTableProps,
   SelectableTableProps,
+  TreeListTableProps,
   DataModel,
   SliceOwner,
   TableReadMetadata,
@@ -21,6 +27,7 @@ export type {
   RowSelectionState,
   SortingState,
   Updater,
+  ExpandedState,
 } from './types';
 export { functionalUpdate } from '@tanstack/react-table';
 

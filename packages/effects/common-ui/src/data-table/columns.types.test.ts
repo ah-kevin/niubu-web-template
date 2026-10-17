@@ -1,8 +1,8 @@
 import { expectTypeOf, it } from 'vitest';
 import type { ColumnDef, ReactTable, TableOptions } from '@tanstack/react-table';
-import { createListColumnHelper, createReadColumnHelper, createSelectableColumnHelper } from './columns';
-import { listFeatures, readFeatures, selectableListFeatures } from './profiles';
-import type { DataTableProps, ListTableProps, ReadTableProps, SliceOwner } from './types';
+import { createListColumnHelper, createReadColumnHelper, createSelectableColumnHelper, createTreeColumnHelper } from './columns';
+import { listFeatures, readFeatures, selectableListFeatures, treeFeatures } from './profiles';
+import type { DataTableProps, ListTableProps, ReadTableProps, SliceOwner, TreeListTableProps } from './types';
 type Item = { id: string; quantity: number; nullable: number | null };
 it('preserves individual accessor types through native heterogeneous columns', () => {
   const helper = createListColumnHelper<Item>();
@@ -131,3 +131,33 @@ it('keeps nested accessor value inference when explicit IDs disambiguate native 
     ColumnDef<typeof listFeatures, { nested: { value: number }; nested_value: string }, string>
   >();
 });
+
+it('preserves tree column accessor inference with its concrete native feature type', () => {
+  const helper = createTreeColumnHelper<Item>();
+  const columns = helper.columns([helper.accessor('quantity', { id: 'quantity', cell: ctx => {
+    expectTypeOf(ctx.getValue()).toEqualTypeOf<number>();
+    return String(ctx.getValue());
+  } })]);
+  expectTypeOf(columns).toExtend<TableOptions<typeof treeFeatures, Item>['columns']>();
+});
+
+// Compile-time boundaries: tree state is native, while pagination and selection stay absent.
+export function treeFeatureBoundaries(tree: ReactTable<typeof treeFeatures, Item>, list: ReactTable<typeof listFeatures, Item>, props: TreeListTableProps<Item>) {
+  tree.setExpanded({ id: true });
+  tree.toggleAllRowsExpanded();
+  // @ts-expect-error expansion does not add pagination to this profile
+  tree.setPagination({ pageIndex: 0, pageSize: 10 });
+  // @ts-expect-error tree profile has no selection owner
+  tree.setRowSelection({ id: true });
+  // @ts-expect-error list profile does not acquire tree APIs
+  list.setExpanded(true);
+  const noPage: TreeListTableProps<Item> = { ...props,
+    // @ts-expect-error public tree props forbid a pagination owner
+    pagination: { kind: 'internal' },
+  };
+  const noServer: TreeListTableProps<Item> = { ...props,
+    // @ts-expect-error a paginated server result is not a complete tree model
+    model: { kind: 'server', rows: [], rowCount: 0 },
+  };
+  void [noPage, noServer];
+}

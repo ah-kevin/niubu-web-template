@@ -9,6 +9,8 @@ import {
   columnSizingFeature,
   columnResizingFeature,
   rowSelectionFeature,
+  rowExpandingFeature,
+  createExpandedRowModel,
   sortFn_basic,
   sortFn_alphanumeric,
 } from '@tanstack/react-table';
@@ -25,3 +27,14 @@ export const listFeatures = tableFeatures({
   columnResizingFeature,
 });
 export const selectableListFeatures = tableFeatures({ ...listFeatures, rowSelectionFeature });
+export const treeFeatures = tableFeatures({
+  rowSortingFeature,
+  sortedRowModel: createSortedRowModel(),
+  sortFns: { basic: sortFn_basic, alphanumeric: sortFn_alphanumeric },
+  rowExpandingFeature,
+  expandedRowModel: createExpandedRowModel(),
+  columnVisibilityFeature,
+  columnPinningFeature,
+  columnSizingFeature,
+  columnResizingFeature,
+});

@@ -78,3 +78,54 @@ export function validateReadModel<T>(model: DataModel<T>, metadata: TableReadMet
   if (model.kind === 'server' && (model.rowCount !== metadata.resultCount || model.rows.length > model.rowCount))
     throw Error('Server rowCount must equal resultCount and cover the loaded page');
 }
+
+/** Validate the supplied hierarchy, never the expansion-dependent visible sequence. */
+export function validateTreeRows<T>(
+  rows: readonly T[],
+  getRowId: (row: T) => string,
+  getSubRows: (row: T, index: number) => readonly T[] | undefined,
+): number {
+  const ids = new Set<string>();
+  const ancestors = new Set<T>();
+  let count = 0;
+  function visit(nodes: readonly T[]) {
+    nodes.forEach((row, index) => {
+      if (ancestors.has(row)) throw Error('Tree contains a cycle');
+      const id = getRowId(row);
+      if (typeof id !== 'string' || !id.trim()) throw Error('Row ID must not be empty');
+      if (!isSafeColumnId(id)) throw Error('Tree row ID must be safe');
+      if (ids.has(id)) throw Error(`Row ID is duplicate: ${id}`);
+      ids.add(id);
+      count++;
+      ancestors.add(row);
+      const children = getSubRows(row, index);
+      if (children !== undefined) {
+        if (!Array.isArray(children)) throw Error('Tree subrows must be a synchronous array');
+        visit(children);
+      }
+      ancestors.delete(row);
+    });
+  }
+  visit(rows);
+  return count;
+}
+
+export function validateTreeReadModel<T>(model: DataModel<T>, metadata: TableReadMetadata, nodeCount: number): void {
+  if (model.kind !== 'client') throw Error('Tree lists require a complete client hierarchy');
+  for (const [name, value] of [
+    ['sourceCount', metadata.sourceCount],
+    ['resultCount', metadata.resultCount],
+  ] as const) {
+    if (value !== null && (!Number.isSafeInteger(value) || value < 0))
+      throw Error(`${name} must be a non-negative safe integer`);
+  }
+  if (metadata.readState !== 'ready') {
+    if (nodeCount || metadata.sourceCount !== null || metadata.resultCount !== null)
+      throw Error('Non-ready reads require no rows and unknown counts');
+    return;
+  }
+  if (metadata.resultCount === null) throw Error('Ready reads require resultCount');
+  if (metadata.sourceCount !== null && metadata.resultCount > metadata.sourceCount)
+    throw Error('resultCount exceeds sourceCount');
+  if (nodeCount !== metadata.resultCount) throw Error('Complete tree node count must equal resultCount');
+}
