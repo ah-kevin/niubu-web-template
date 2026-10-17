@@ -8,12 +8,10 @@
     "internal/*/package.json",
     "internal/*/tsconfig.json",
     "internal/*/vitest.config.ts",
-    "internal/*/src/**/*.ts",
     "internal/tsconfig/*.json",
     "internal/tsconfig/check.mjs",
     "internal/lint-configs/*/package.json",
     "internal/lint-configs/*/tsconfig.json",
-    "internal/lint-configs/*/src/**/*.ts",
     "internal/lint-configs/prettier-config/index.json",
     "vite.config.ts",
     "vitest.config.ts",
@@ -50,6 +48,12 @@
     },
     "lint": {
       "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/eslint.config.js",
+        "$TURBO_ROOT$/internal/lint-configs/eslint-config/src/**",
+        "$TURBO_ROOT$/internal/node-utils/src/**"
+      ],
       "outputs": []
     },
     "budget:check": {
@@ -64,7 +68,18 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
       "env": ["VITE_*", "NODE_ENV"],
-      "inputs": ["$TURBO_DEFAULT$", "src/**", "public/**", "scripts/**", "tools/**", ".env*", "!dist/**", "!.turbo/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**",
+        "public/**",
+        "scripts/**",
+        "tools/**",
+        ".env*",
+        "!dist/**",
+        "!.turbo/**",
+        "$TURBO_ROOT$/internal/scripts/src/**",
+        "$TURBO_ROOT$/internal/node-utils/src/**"
+      ]
     }
   }
 }

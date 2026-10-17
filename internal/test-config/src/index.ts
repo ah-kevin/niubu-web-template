@@ -19,6 +19,8 @@ export function createTestConfig(options: {
       setupFiles: options.setupFiles,
       clearMocks: true,
       restoreMocks: true,
+      // Half the cores keeps the machine usable and avoids load-induced timeouts.
+      maxWorkers: '50%',
     },
   });
 }
