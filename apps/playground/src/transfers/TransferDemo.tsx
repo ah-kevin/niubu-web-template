@@ -241,7 +241,7 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
       <Input
         id={id}
         type="file"
-        className="h-auto min-h-[var(--workspace-control-height)] max-w-full min-w-0 py-2 file:me-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-sm file:text-foreground"
+        className="max-w-full"
         disabled={!permitted || Boolean(visible?.busy)}
         onChange={event => {
           retire();

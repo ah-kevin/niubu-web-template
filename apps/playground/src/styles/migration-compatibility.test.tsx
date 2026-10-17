@@ -48,14 +48,15 @@ it.each([undefined, 'selected'])('renders distinct mixed and checked shapes thro
   const display = (element: Element) => matchingRules(rules, element, 'display').filter(rule => rule.layer === 'utilities' && rule.media.length === 0).at(-1)?.style.getPropertyValue('display');
   expect(checkbox).toHaveAttribute('aria-checked', 'mixed');
   expect(checkbox).toHaveAttribute('data-state', 'indeterminate');
-  const minus = checkbox.querySelector('.lucide-minus');
-  expect(minus).not.toBeNull();
+  // Vben's Ant mixed state is a filled square, distinct from its checked tick.
+  const mixed = checkbox.querySelector('span[aria-hidden="true"]');
+  expect(mixed).not.toBeNull();
   const check = checkbox.querySelector('.lucide-check')!;
-  expect(display(minus!)).toBe('block');
+  expect(display(mixed!)).toBe('block');
   expect(display(check)).toBe('none');
   view.rerender(<Checkbox aria-label="Selection" checked name={name} />);
   expect(checkbox).toHaveAttribute('aria-checked', 'true');
   expect(checkbox).toHaveAttribute('data-state', 'checked');
   expect(display(checkbox.querySelector('.lucide-check')!)).toBe('block');
-  expect(display(checkbox.querySelector('.lucide-minus')!)).toBe('none');
+  expect(display(checkbox.querySelector('span[aria-hidden="true"]')!)).toBe('none');
 });

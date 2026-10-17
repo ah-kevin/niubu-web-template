@@ -292,10 +292,10 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
         const record = info.row.original,
           name = recordName(record);
         return (
-          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-slot=button]]:h-7 [&>[data-slot=button]]:shrink-0 [&>[data-slot=button]]:px-2 [&>[data-slot=button]]:py-0 [&>[data-action=delete]]:text-destructive">
+          <div className="system-row-actions flex flex-wrap items-center gap-0.5 [&>[data-action=delete]]:text-destructive">
             <Button
               type="button"
-              variant="ghost"
+              variant="link"
               size="sm"
               aria-label={t('system.viewAction', { name })}
               onClick={() => void openRecord('detail', record.id)}
@@ -306,7 +306,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
               <>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="link"
                   size="sm"
                   aria-label={t('system.editAction', { name })}
                   disabled={!lookup.ready}
@@ -316,7 +316,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
                 </Button>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="link"
                   size="sm"
                   data-action="delete"
                   aria-label={t('system.deleteAction', { name })}

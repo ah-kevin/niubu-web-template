@@ -24,9 +24,9 @@ describe('DataTable existing-capability examples', () => {
     render(<TablesPage />);
     await screen.findByText('North · Cedar');
     const area = kind === 'client' ? client : remote;
-    await selectOption(area().getByRole('combobox', { name: '每页条数' }), '25');
+    await selectOption(area().getByRole('combobox', { name: '每页条数' }), '20 条/页');
     await waitFor(() => expect(ids(area())).toHaveLength(4));
-    await selectOption(area().getByRole('combobox', { name: '每页条数' }), '2');
+    await selectOption(area().getByRole('combobox', { name: '每页条数' }), '2 条/页');
     await waitFor(() => expect(ids(area())).toHaveLength(2));
   });
   it('keeps read/list/selectable profiles distinct and sorts, pages and selects stable client IDs', async () => {
@@ -45,7 +45,7 @@ describe('DataTable existing-capability examples', () => {
     expect(client().getByText('已选择 3 条')).toBeInTheDocument();
     fireEvent.click(client().getByRole('button', { name: '清空选择' }));
     expect(client().getByText('已选择 0 条')).toBeInTheDocument();
-    await selectOption(client().getByRole('combobox', { name: '每页条数' }), '25');
+    await selectOption(client().getByRole('combobox', { name: '每页条数' }), '20 条/页');
     expect(ids(client())).toEqual(['sample-4', 'sample-2', 'sample-3', 'sample-1']);
     await screen.findByText('North · Cedar');
   });
