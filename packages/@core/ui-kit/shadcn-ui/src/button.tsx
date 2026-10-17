@@ -1,34 +1,30 @@
-// Adapted from the official shadcn/ui new-york-v4 registry (MIT). See docs/decisions/002-shell-routing.md.
+// Visuals follow Vben playground / Antdv Next 1.5.2; native and Radix behavior is retained.
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "./cn"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-[length:var(--workspace-body-font-size,0.875rem)] font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-[calc(var(--control-spacing)/2)] rounded-[var(--control-radius)] border text-[length:var(--control-font-size)] leading-[var(--control-line-height)] font-normal whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 outline-none focus-visible:outline-[3px] focus-visible:outline-offset-1 focus-visible:outline-[var(--control-primary-border)] disabled:pointer-events-none disabled:border-[var(--control-border)] disabled:bg-[var(--control-disabled-background)] disabled:text-[var(--control-disabled-foreground)] disabled:shadow-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1em]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover hover:text-primary-hover-foreground",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
-        outline:
-          "border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary-text underline-offset-4 hover:underline",
+        default: "border-transparent bg-[var(--control-primary)] text-primary-foreground shadow-[var(--control-primary-shadow)] hover:bg-primary-hover active:bg-primary-active",
+        destructive: "border-transparent bg-destructive text-primary-foreground shadow-[var(--control-error-shadow)] hover:bg-[var(--control-error-hover)] active:bg-[var(--control-error-active)]",
+        outline: "border-[var(--control-border)] bg-[var(--control-background)] text-[var(--control-foreground)] shadow-[var(--control-default-shadow)] hover:border-[var(--control-hover-border)] hover:text-[var(--control-hover-border)] active:border-primary-active active:text-primary-active",
+        secondary: "border-transparent bg-[var(--control-hover-background)] text-[var(--control-foreground)] hover:bg-[var(--control-fill-secondary)] active:bg-[var(--control-fill)]",
+        ghost: "border-transparent bg-transparent text-[var(--control-foreground)] hover:bg-[var(--control-hover-background)] active:bg-[var(--control-fill)] disabled:border-transparent disabled:bg-transparent",
+        link: "border-transparent bg-transparent text-[var(--control-primary)] hover:text-primary-hover active:text-primary-active disabled:border-transparent disabled:bg-transparent",
       },
       size: {
-        default: "h-[var(--workspace-control-height,36px)] px-4 py-0 has-[>svg]:px-3",
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        default: "h-[var(--control-height)] px-[var(--control-button-padding-inline)] py-0",
+        xs: "rounded-[var(--control-radius-sm)] h-[var(--control-height-sm)] px-[7px] py-0",
+        sm: "rounded-[var(--control-radius-sm)] h-[var(--control-height-sm)] px-[7px] py-0",
+        lg: "rounded-[var(--control-radius-lg)] h-[var(--control-height-lg)] px-[var(--control-button-padding-inline)] py-0 text-[length:var(--control-font-size-lg)] leading-[var(--control-line-height-lg)]",
+        icon: "size-[var(--control-height)] p-0",
+        "icon-xs": "rounded-[var(--control-radius-sm)] size-[var(--control-height-sm)] p-0",
+        "icon-sm": "rounded-[var(--control-radius-sm)] size-[var(--control-height-sm)] p-0",
+        "icon-lg": "rounded-[var(--control-radius-lg)] size-[var(--control-height-lg)] p-0 text-[length:var(--control-font-size-lg)]",
       },
     },
     defaultVariants: {

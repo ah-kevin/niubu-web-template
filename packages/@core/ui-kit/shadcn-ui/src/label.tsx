@@ -1,5 +1,4 @@
-// Official shadcn/ui new-york-v4 registry source (MIT), retrieved 2026-10-11.
-// See docs/decisions/003-restorable-patterns.md and LICENSE.shadcn.
+// Visuals follow the corresponding Vben framework Label primitive.
 "use client"
 
 import * as React from "react"

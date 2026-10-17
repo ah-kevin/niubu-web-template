@@ -15,7 +15,8 @@ test('static CSS retains aliases, theme selectors and independent density cascad
   for (const tokens of Object.values(densityTokens))
     for (const [key, value] of Object.entries(tokens)) assert.ok(css.includes(`${key}: ${value};`));
   assert.ok(css.includes('--color-input: var(--control-border);'));
-  assert.ok(css.includes('--color-card-foreground: var(--foreground);'));
+  assert.ok(css.includes('--color-card-foreground: var(--card-foreground);'));
+  assert.ok(css.includes('--color-popover: var(--popover);'));
   const dark = css.split(":root[data-theme='dark']")[1]!.split('}')[0]!;
   assert.ok(!dark.includes('--row-height') && !dark.includes('--space-page'));
   assert.ok(css.indexOf(":root[data-density='compact']") > css.indexOf(":root[data-theme='dark']"));

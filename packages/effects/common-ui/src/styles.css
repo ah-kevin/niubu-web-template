@@ -1,8 +1,7 @@
 @import './data-table/styles.css';
 @import './preferences/styles.css';
 
-/* Existing application JSX consumes these public pattern classes directly.
-   Keep their original priority over primitive defaults for density and typography. */
+/* Public pattern hooks own page geometry; primitive controls own their visual skin. */
 .pattern-description,
 .pattern-provenance {
   font-size: var(--workspace-caption-font-size);
@@ -19,14 +18,8 @@
   min-width: 0;
 }
 .pattern-form-field [data-slot='label'] {
-  font-size: var(--workspace-caption-font-size);
-  margin-bottom: 10px;
-  line-height: 1.5;
+  margin-bottom: 8px;
   flex-wrap: wrap;
-}
-.pattern-form-field [data-slot='input'] {
-  height: var(--workspace-control-height);
-  font-size: var(--workspace-body-font-size);
 }
 .pattern-form-field [data-slot='label'] > span[aria-hidden] {
   color: var(--destructive);
@@ -64,20 +57,6 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-.pattern-filter-bar [data-slot='input'],
-.pattern-form-field [data-slot='input'] {
-  border-color: var(--control-border);
-  background: var(--card);
-  color: var(--foreground);
-}
-.pattern-filter-bar [data-slot='input']::placeholder,
-.pattern-form-field [data-slot='input']::placeholder {
-  color: var(--placeholder);
-  opacity: 1;
-}
-.pattern-form-field [data-slot='input'][aria-invalid='true'] {
-  border-color: var(--destructive);
 }
 .field-error {
   color: var(--destructive);

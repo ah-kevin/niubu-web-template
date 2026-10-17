@@ -413,10 +413,7 @@ export function FormField({ name, label, type = 'text', description, unit, requi
   const errorId = error ? `${id}-error` : '';
   return (
     <div className="pattern-form-field min-w-0">
-      <Label
-        className="mb-[10px] flex-wrap text-[length:var(--workspace-caption-font-size)] leading-[1.5] [&>span[aria-hidden]]:text-destructive"
-        htmlFor={id}
-      >
+      <Label className="mb-[8px] flex-wrap [&>span[aria-hidden]]:text-destructive" htmlFor={id}>
         {label}
         {required && <span aria-hidden="true"> *</span>}
         {unit && (
@@ -426,7 +423,6 @@ export function FormField({ name, label, type = 'text', description, unit, requi
         )}
       </Label>
       <Input
-        className="h-[var(--workspace-control-height)] border-[var(--control-border)] bg-card dark:bg-card text-[length:var(--workspace-body-font-size)] md:text-[length:var(--workspace-body-font-size)] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100 aria-invalid:border-destructive"
         id={id}
         aria-label={label}
         type={type}

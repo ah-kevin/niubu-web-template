@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import * as hooks from './index.ts';
 import type { ThemeSnapshot } from '@niubu/core-preferences';
-import { defaultThemeAppearance, resolvePresentationTheme, themePresets } from '@niubu/core-design';
+import { defaultThemeAppearance, defaultThemeProfile, resolvePresentationTheme, themePresets } from '@niubu/core-design';
 import type { BrandOverride, ThemeProfile } from '@niubu/core-design';
 
 type Runtime = { apply(snapshot: ThemeSnapshot): void; setBrand(brand: BrandOverride): void; dispose(): void };
@@ -25,6 +25,40 @@ function create(target: HTMLElement, m: ReturnType<typeof media>, brand: BrandOv
   return fn!({ target, matchMedia: m.matchMedia, brand, profile });
 }
 describe('theme runtime ownership', () => {
+  it('keeps an equivalent cloned default profile identical and does not rederive default dark seeds for a card override', () => {
+    const target = document.createElement('div'), m = media();
+    const cloned = { light: { ...defaultThemeProfile.light }, dark: { ...defaultThemeProfile.dark } };
+    const runtime = create(target, m, {}, cloned);
+    runtime.apply(snapshot('dark'));
+    expect(target.style.getPropertyValue('--control-error')).toBe('#dc3355');
+    expect(target.style.getPropertyValue('--control-focus-shadow')).toBe('0 0 0 2px rgba(0,62,131,0.5)');
+    expect(target.style.getPropertyValue('--popover-foreground')).toBe('#f8fafc');
+    runtime.dispose();
+    const card = create(target, m, {}, { ...cloned, dark: { ...cloned.dark, '--card': '#242424' } });
+    card.apply(snapshot('dark'));
+    expect(target.style.getPropertyValue('--control-error')).toBe('#dc3355');
+    expect(target.style.getPropertyValue('--control-primary')).toBe('#035ec7');
+    expect(target.style.getPropertyValue('--control-background')).toBe('#242424');
+    expect(target.style.getPropertyValue('--popover-foreground')).toBe('#f8fafc');
+    card.dispose();
+  });
+  it('derives control roles after custom profile and brand overrides, including alpha brand colors', () => {
+    const target = document.createElement('div'), m = media();
+    const profile: ThemeProfile = { ...defaultThemeProfile, light: { ...defaultThemeProfile.light, '--card': '#112233' } };
+    const runtime = create(target, m, { '--primary': '#123456', '--primary-foreground': '#000000', '--ring': '#abcdef' }, profile);
+    runtime.apply(snapshot('light'));
+    expect(target.style.getPropertyValue('--control-background')).toBe('#112233');
+    expect(target.style.getPropertyValue('--control-primary')).toBe('#123456');
+    expect(target.style.getPropertyValue('--primary-hover')).toBe('#254663');
+    expect(target.style.getPropertyValue('--primary-foreground')).toBe('#000000');
+    expect(target.style.getPropertyValue('--control-focus-border')).toBe('#abcdef');
+    runtime.setBrand({ '--primary': '#abcd' });
+    expect(target.style.getPropertyValue('--primary')).toBe('#abcd');
+    expect(target.style.getPropertyValue('--control-primary')).toBe('#aabbccdd');
+    expect(target.style.getPropertyValue('--control-focus-border')).toBe('#aabbccdd');
+    runtime.dispose();
+    expect(target.style.getPropertyValue('--control-primary')).toBe('');
+  });
   it('keeps one system listener using the latest snapshot and brand, then detaches forced mode', () => {
     const target = document.createElement('div'), m = media();
     const runtime = create(target, m);

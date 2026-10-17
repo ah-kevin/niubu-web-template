@@ -107,5 +107,11 @@
   "guard.livePreserveDescription": "离开后会在当前页面会话中保留本范围的草稿。返回后可选择恢复；未保存的更改不会提交。",
   "guard.liveDiscardDescription": "离开将放弃当前未保存的输入。",
   "form.liveReviewPassed": "已通过字段检查，确认后将保存。",
-  "submit": "提交"
+  "submit": "提交",
+  "table.first": "首页",
+  "table.last": "末页",
+  "table.previousPages": "向上跳页",
+  "table.nextPages": "向下跳页",
+  "table.pageNumber": "第 {{page}} 页",
+  "table.pageSizeOption": "{{size}} 条/页"
 }

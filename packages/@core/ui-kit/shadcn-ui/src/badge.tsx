@@ -9,12 +9,12 @@ export function Badge({ className, variant = 'default', ...props }: BadgeProps) 
       {...props}
       data-slot="badge"
       className={cn(
-        'inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-[var(--control-radius-sm)] border px-[7px] py-0 text-[length:var(--control-font-size-sm)] leading-[var(--control-line-height-sm)] font-normal whitespace-nowrap',
         {
-          'border-transparent bg-primary text-primary-foreground': variant === 'default',
-          'border-transparent bg-secondary text-secondary-foreground': variant === 'secondary',
-          'border-transparent bg-destructive text-white': variant === 'destructive',
-          'text-foreground': variant === 'outline',
+          'border-[var(--control-primary-border)] bg-[var(--control-selected-background)] text-[var(--control-primary)]': variant === 'default',
+          'border-[var(--control-border)] bg-[var(--control-fill-alter)] text-[var(--control-foreground)]': variant === 'secondary',
+          'border-[var(--control-error-border)] bg-[var(--control-error-background)] text-destructive': variant === 'destructive',
+          'border-[var(--control-border)] bg-transparent text-[var(--control-foreground)]': variant === 'outline',
         },
         className,
       )}

@@ -4,7 +4,7 @@ import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { Label } from '@niubu/shadcn-ui/label';
 import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight } from '@niubu/icons';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
 import { Fragment, memo, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
@@ -71,7 +71,6 @@ export const SelectionCheckbox = memo(function SelectionCheckbox({
 }) {
   return (
     <Checkbox
-      className="size-4"
       aria-label={label}
       checked={indeterminate ? 'indeterminate' : selected}
       onCheckedChange={checked => onChange(checked === true)}
@@ -155,7 +154,6 @@ function ColumnSettings<T extends RowData>({
               <legend className="px-1 text-[length:var(--workspace-caption-font-size)] font-semibold">{name}</legend>
               <Label className="pattern-column-setting-toggle flex items-center gap-2">
                 <Checkbox
-                  className="size-4"
                   checked={visible}
                   aria-label={labels.showColumn(name)}
                   disabled={!column.getCanHide() || (visible && table.getVisibleLeafColumns().length === 1)}
@@ -240,7 +238,7 @@ function HeaderView<T extends RowData>({
       {!header.isPlaceholder &&
         (column.getCanSort() ? (
           <Button
-            className="h-auto w-full min-w-0 justify-start p-0 pe-6 text-start text-inherit"
+            className="h-auto w-full min-w-0 justify-start gap-1 p-0 pe-6 text-start text-[12px] text-inherit [font-weight:inherit] [&_svg]:size-[12px]"
             variant="ghost"
             type="button"
             aria-label={labels.sortColumn(name)}
@@ -253,7 +251,7 @@ function HeaderView<T extends RowData>({
             ) : sorted === 'desc' ? (
               <ArrowDown aria-hidden="true" />
             ) : (
-              <span aria-hidden="true" className="inline-flex text-muted-foreground [&_svg]:size-3">
+              <span aria-hidden="true" className="inline-flex text-muted-foreground [&_svg]:size-[12px]">
                 <ArrowUp />
                 <ArrowDown />
               </span>
@@ -318,51 +316,109 @@ function Pagination<T extends RowData>({
   caption: string;
   initialPageSize: number;
 }) {
+  const { t } = useTranslation();
   const pagination = table.state.pagination;
+  const pageCount = Math.max(1, table.getPageCount());
+  const current = pagination.pageIndex + 1;
+  const windowSize = pageCount > 7 ? 5 : 7;
+  const start =
+    pageCount > 7 ? (current >= pageCount - 2 ? Math.max(pageCount - windowSize + 1, 1) : Math.max(current - 2, 1)) : 1;
+  const pages = Array.from({ length: Math.min(windowSize, pageCount) }, (_, index) => start + index);
+  const firstLabel = labels.firstPage ?? t('common:table.first');
+  const lastLabel = labels.lastPage ?? t('common:table.last');
+  const previousJumpLabel = labels.previousPages ?? t('common:table.previousPages');
+  const nextJumpLabel = labels.nextPages ?? t('common:table.nextPages');
+  const control = (label: string, content: ReactNode, disabled: boolean, onClick: () => void) => (
+    <Button
+      variant="ghost"
+      type="button"
+      className="pattern-page-button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {content}
+    </Button>
+  );
   return (
     <nav
-      className="pattern-pagination grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2 border-t border-border px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)] [@media(max-width:700px)]:grid-cols-[minmax(0,1fr)_auto_auto]"
+      className="pattern-pagination flex min-h-[36px] flex-wrap items-center gap-y-2 px-3 py-1 text-[12px] leading-[1.5714285714]"
       aria-label={caption}
     >
-      <Label className="inline-flex min-w-0 flex-wrap items-center gap-2 text-muted-foreground [@media(max-width:700px)]:col-span-3">
-        {labels.pageSize}
-        <Select
-          className="pattern-page-size h-[var(--workspace-control-height)] w-20 min-w-0 px-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)]"
-          label={labels.pageSize}
-          value={String(pagination.pageSize)}
-          onValueChange={value => table.setPageSize(Number(value))}
-          options={[...new Set([10, 25, 50, 100, initialPageSize, pagination.pageSize])]
-            .sort((a, b) => a - b)
-            .map(size => ({ value: String(size), label: String(size) }))}
-        />
-      </Label>
-      <span className="col-start-2 text-muted-foreground [@media(max-width:700px)]:col-start-1" aria-live="polite">
-        {labels.page(pagination.pageIndex + 1, Math.max(1, table.getPageCount()))}
+      <span className="me-3">{labels.total(table.getRowCount())}</span>
+      <Select
+        className="pattern-page-size me-auto h-[28px] w-auto min-w-24 px-2 text-[12px]"
+        label={labels.pageSize}
+        value={String(pagination.pageSize)}
+        onValueChange={value => table.setPageSize(Number(value))}
+        options={[...new Set([10, 20, 30, 50, 100, 200, initialPageSize, pagination.pageSize])]
+          .sort((a, b) => a - b)
+          .map(size => ({
+            value: String(size),
+            label: labels.pageSizeOption?.(size) ?? t('common:table.pageSizeOption', { size }),
+          }))}
+      />
+      <span className="sr-only" aria-live="polite">
+        {labels.page(current, pageCount)}
       </span>
-      <Button
-        variant="outline"
-        type="button"
-        size="icon-sm"
-        className="size-[32px]"
-        aria-label={labels.previousPage}
-        title={labels.previousPage}
-        disabled={!table.getCanPreviousPage()}
-        onClick={() => table.previousPage()}
-      >
-        <ChevronLeft aria-hidden="true" />
-      </Button>
-      <Button
-        variant="outline"
-        type="button"
-        size="icon-sm"
-        className="size-[32px]"
-        aria-label={labels.nextPage}
-        title={labels.nextPage}
-        disabled={!table.getCanNextPage()}
-        onClick={() => table.nextPage()}
-      >
-        <ChevronRight aria-hidden="true" />
-      </Button>
+      <div className="flex min-w-0 flex-wrap items-center gap-y-2">
+        {control(
+          firstLabel,
+          <span aria-hidden="true" className="inline-flex items-center">
+            <span className="h-[12px] border-s border-current" />
+            <ChevronLeft className="size-[12px]" />
+          </span>,
+          !table.getCanPreviousPage(),
+          () => table.setPageIndex(0),
+        )}
+        {control(
+          previousJumpLabel,
+          <ChevronsLeft aria-hidden="true" className="size-[12px]" />,
+          !table.getCanPreviousPage(),
+          () => table.setPageIndex(Math.max(0, pagination.pageIndex - windowSize)),
+        )}
+        {control(
+          labels.previousPage,
+          <ChevronLeft aria-hidden="true" className="size-[12px]" />,
+          !table.getCanPreviousPage(),
+          () => table.previousPage(),
+        )}
+        {pages.map(page => (
+          <Button
+            key={page}
+            variant="ghost"
+            type="button"
+            className="pattern-page-button"
+            aria-label={labels.pageNumber?.(page) ?? t('common:table.pageNumber', { page })}
+            aria-current={page === current ? 'page' : undefined}
+            onClick={() => table.setPageIndex(page - 1)}
+          >
+            {page}
+          </Button>
+        ))}
+        {control(
+          labels.nextPage,
+          <ChevronRight aria-hidden="true" className="size-[12px]" />,
+          !table.getCanNextPage(),
+          () => table.nextPage(),
+        )}
+        {control(
+          nextJumpLabel,
+          <ChevronsRight aria-hidden="true" className="size-[12px]" />,
+          !table.getCanNextPage(),
+          () => table.setPageIndex(Math.min(pageCount - 1, pagination.pageIndex + windowSize)),
+        )}
+        {control(
+          lastLabel,
+          <span aria-hidden="true" className="inline-flex items-center">
+            <ChevronRight className="size-[12px]" />
+            <span className="h-[12px] border-s border-current" />
+          </span>,
+          !table.getCanNextPage(),
+          () => table.setPageIndex(pageCount - 1),
+        )}
+      </div>
     </nav>
   );
 }
@@ -395,9 +451,6 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
     <section className={nativeTableClassName} aria-label={props.caption}>
       <div className="pattern-table-toolbar flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)]">
         <div className="pattern-table-summary flex min-w-0 flex-auto flex-wrap items-center gap-x-[var(--workspace-section-gap)] gap-y-[var(--workspace-heading-gap)] [&>p]:m-0">
-          {props.resultCount !== null && (
-            <p className="text-muted-foreground">{props.labels.total(props.resultCount)}</p>
-          )}
           {selectionSummary}
         </div>
         <ColumnSettings table={table} labels={props.labels} onResetColumns={props.onResetColumns} />

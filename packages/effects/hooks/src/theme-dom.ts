@@ -2,8 +2,6 @@ import { parseThemeSnapshot, type ThemeSnapshot } from '@niubu/core-preferences'
 import {
   defaultThemeProfile,
   resolvePresentationTheme,
-  resolveTheme,
-  validateBrandOverride,
   type BrandOverride,
   type ThemeProfile,
 } from '@niubu/core-design';
@@ -31,9 +29,7 @@ export function applyThemeSnapshot(
   Object.assign(target.dataset, attributes);
   target.classList.toggle('dark', mode === 'dark');
   const variables = {
-    ...resolvePresentationTheme(appearance, mode),
-    ...(profile === defaultThemeProfile ? {} : resolveTheme(profile, mode)),
-    ...validateBrandOverride(brand),
+    ...resolvePresentationTheme(appearance, mode, profile, brand),
     '--presentation-filter':
       [appearance.grayscale && 'grayscale(1)', appearance.colorWeak && 'invert(1)'].filter(Boolean).join(' ') || 'none',
   };

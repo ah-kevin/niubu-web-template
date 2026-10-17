@@ -9,7 +9,7 @@ export function TabsList({ className, ...props }: React.ComponentProps<typeof Ta
     <TabsPrimitive.List
       {...props}
       className={cn(
-        'inline-flex items-center gap-1 rounded-[var(--radius)] border border-border bg-card p-1 text-muted-foreground',
+        'inline-flex h-9 w-fit items-center justify-center rounded-md bg-muted p-1 text-muted-foreground',
         className,
       )}
     />
@@ -21,7 +21,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
     <TabsPrimitive.Trigger
       {...props}
       className={cn(
-        'inline-flex items-center justify-center rounded-[calc(var(--radius)*.75)] px-3 py-1.5 text-[length:var(--workspace-body-font-size)] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground',
+        'inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-foreground transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground',
         className,
       )}
     />
@@ -32,7 +32,7 @@ export function TabsContent({ className, ...props }: React.ComponentProps<typeof
   return (
     <TabsPrimitive.Content
       {...props}
-      className={cn('min-w-0 outline-none focus-visible:outline-2 focus-visible:outline-ring', className)}
+      className={cn('min-w-0 flex-1 outline-none', className)}
     />
   );
 }

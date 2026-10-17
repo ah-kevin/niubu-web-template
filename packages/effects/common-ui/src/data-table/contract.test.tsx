@@ -17,7 +17,13 @@ const labels: TableLabels = {
   pageEmpty: '当前页没有记录',
   previousPage: '上一页',
   nextPage: '下一页',
+  firstPage: '首页',
+  lastPage: '末页',
+  previousPages: '向上跳页',
+  nextPages: '向下跳页',
+  pageNumber: page => `第${page}页`,
   pageSize: '每页条数',
+  pageSizeOption: size => `${size} 条/页`,
   settings: '列设置',
   resetColumns: '重置列',
   pinStart: '起始侧',
@@ -877,7 +883,7 @@ it('applies shared select keyboard choices to the page size and column pin owner
   const pageSize = screen.getByRole('combobox', { name: labels.pageSize });
   pageSize.focus();
   fireEvent.keyDown(pageSize, { key: 'ArrowDown' });
-  const fifty = await screen.findByRole('option', { name: '50' });
+  const fifty = await screen.findByRole('option', { name: '50 条/页' });
   fireEvent.keyDown(fifty, { key: 'Enter' });
   expect(pageSize).toHaveTextContent('50');
   fireEvent.click(screen.getByText(labels.settings));
@@ -894,10 +900,65 @@ it.each([2, 10])('keeps initial page size %i selectable after changing it', asyn
   const pageSize = screen.getByRole('combobox', { name: labels.pageSize });
   pageSize.focus();
   fireEvent.keyDown(pageSize, { key: 'ArrowDown' });
-  fireEvent.keyDown(await screen.findByRole('option', { name: '25' }), { key: 'Enter' });
-  expect(pageSize).toHaveTextContent('25');
+  fireEvent.keyDown(await screen.findByRole('option', { name: '20 条/页' }), { key: 'Enter' });
+  expect(pageSize).toHaveTextContent('20');
   pageSize.focus();
   fireEvent.keyDown(pageSize, { key: 'ArrowDown' });
-  fireEvent.keyDown(await screen.findByRole('option', { name: String(initialPageSize) }), { key: 'Enter' });
+  fireEvent.keyDown(await screen.findByRole('option', { name: `${initialPageSize} 条/页` }), { key: 'Enter' });
   expect(pageSize).toHaveTextContent(String(initialPageSize));
+});
+
+
+it('navigates the real server page owner through VXE numeric windows, jump and boundary controls', () => {
+  render(<DataTable {...base} profile="list" model={{ kind: 'server', rows: rows.slice(0, 1), rowCount: 220 }} sourceCount={220} resultCount={220} pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 20 } }} />);
+  const pager = within(screen.getByRole('navigation', { name: '库存' }));
+  expect(pager.getByRole('button', { name: '第1页' })).toHaveAttribute('aria-current', 'page');
+  expect(pager.getByRole('button', { name: '第5页' })).toBeEnabled();
+  expect(pager.queryByRole('button', { name: '第6页' })).not.toBeInTheDocument();
+  expect(pager.getByRole('button', { name: '首页' })).toBeDisabled();
+  expect(pager.getByRole('button', { name: '向上跳页' })).toBeDisabled();
+  fireEvent.click(pager.getByRole('button', { name: '第4页' }));
+  expect(pager.getByRole('button', { name: '第4页' })).toHaveAttribute('aria-current', 'page');
+  fireEvent.click(pager.getByRole('button', { name: '向下跳页' }));
+  expect(pager.getByRole('button', { name: '第9页' })).toHaveAttribute('aria-current', 'page');
+  fireEvent.click(pager.getByRole('button', { name: '向下跳页' }));
+  expect(pager.getByRole('button', { name: '第11页' })).toHaveAttribute('aria-current', 'page');
+  expect(pager.getByRole('button', { name: '末页' })).toBeDisabled();
+  expect(pager.getByRole('button', { name: '下一页' })).toBeDisabled();
+  fireEvent.click(pager.getByRole('button', { name: '向上跳页' }));
+  expect(pager.getByRole('button', { name: '第6页' })).toHaveAttribute('aria-current', 'page');
+  fireEvent.click(pager.getByRole('button', { name: '首页' }));
+  fireEvent.click(pager.getByRole('button', { name: '下一页' }));
+  expect(pager.getByRole('button', { name: '第2页' })).toHaveAttribute('aria-current', 'page');
+  fireEvent.click(pager.getByRole('button', { name: '上一页' }));
+  expect(pager.getByRole('button', { name: '第1页' })).toHaveAttribute('aria-current', 'page');
+  fireEvent.click(pager.getByRole('button', { name: '末页' }));
+  expect(pager.getByRole('button', { name: '第11页' })).toHaveAttribute('aria-current', 'page');
+});
+
+it('updates a controlled page owner without resetting it and shows all seven known pages', () => {
+  function ControlledPager() {
+    const [pagination, setPagination] = useState({ pageIndex: 2, pageSize: 10 });
+    return <><DataTable {...base} profile="list" model={{ kind: 'server', rows: rows.slice(0, 1), rowCount: 70 }} sourceCount={70} resultCount={70} pagination={{ kind: 'controlled', value: pagination, onChange: setPagination }} /><output aria-label="page owner">{JSON.stringify(pagination)}</output></>;
+  }
+  render(<ControlledPager />);
+  const pager = within(screen.getByRole('navigation', { name: '库存' }));
+  expect(pager.getByRole('button', { name: '第7页' })).toBeEnabled();
+  expect(pager.queryByRole('button', { name: '第8页' })).not.toBeInTheDocument();
+  fireEvent.click(pager.getByRole('button', { name: '第6页' }));
+  expect(screen.getByLabelText('page owner')).toHaveTextContent('{"pageIndex":5,"pageSize":10}');
+  fireEvent.click(pager.getByRole('button', { name: '向上跳页' }));
+  expect(screen.getByLabelText('page owner')).toHaveTextContent('{"pageIndex":0,"pageSize":10}');
+});
+
+it('offers no invented pages while counts are unavailable and keeps an empty ready result at one page', () => {
+  const view = render(<DataTable {...base} profile="list" model={{ kind: 'server', rows: [], rowCount: 0 }} readState="pending" sourceCount={null} resultCount={null} />);
+  expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  view.rerender(<DataTable {...base} profile="list" model={{ kind: 'server', rows: [], rowCount: 0 }} sourceCount={null} resultCount={0} />);
+  const pager = within(screen.getByRole('navigation', { name: '库存' }));
+  expect(pager.getByRole('button', { name: '第1页' })).toHaveAttribute('aria-current', 'page');
+  expect(pager.queryByRole('button', { name: '第2页' })).not.toBeInTheDocument();
+  expect(pager.getByRole('button', { name: '首页' })).toBeDisabled();
+  expect(pager.getByRole('button', { name: '末页' })).toBeDisabled();
+  expect(pager.getByRole('button', { name: '向下跳页' })).toBeDisabled();
 });

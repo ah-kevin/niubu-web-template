@@ -134,7 +134,7 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
             {labels.email}
           </Label>
           <Input
-            className="h-[44px] w-full rounded-[var(--radius-md)] border-[var(--control-border)] bg-card dark:bg-card px-[12px] py-0 text-[12px] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100 aria-invalid:border-destructive md:text-[12px]"
+            className="h-[var(--control-height-lg)] rounded-[var(--control-radius-lg)] py-[var(--control-padding-block-lg)] text-[length:var(--control-font-size-lg)] leading-[var(--control-line-height-lg)]"
             id={emailId}
             ref={emailRef}
             type="email"
@@ -164,7 +164,7 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
               {links?.recovery && link(links.recovery)}
             </div>
             <Input
-              className="h-[44px] w-full rounded-[var(--radius-md)] border-[var(--control-border)] bg-card dark:bg-card px-[12px] py-0 text-[12px] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100 aria-invalid:border-destructive md:text-[12px]"
+              className="h-[var(--control-height-lg)] rounded-[var(--control-radius-lg)] py-[var(--control-padding-block-lg)] text-[length:var(--control-font-size-lg)] leading-[var(--control-line-height-lg)]"
               id={passwordId}
               ref={passwordRef}
               type="password"
@@ -186,12 +186,7 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
             )}
           </div>
         )}
-        <Button
-          className="auth-submit mt-[3px] h-[44px] w-full justify-between rounded-[var(--radius-md)] px-[16px] py-0 text-[12px]"
-          size="lg"
-          type="submit"
-          disabled={pending}
-        >
+        <Button className="auth-submit mt-[3px] w-full justify-between" size="lg" type="submit" disabled={pending}>
           {labels.submit}
           <ArrowRight aria-hidden="true" size={17} />
         </Button>

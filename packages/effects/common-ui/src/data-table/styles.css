@@ -1,4 +1,4 @@
-/* Column resize handle geometry and density overrides remain shared contracts. */
+/* Resize hit areas remain independent from the mini table's visual density. */
 .native-data-table .pattern-column-resizer {
   position: absolute;
   inset-inline-end: 0;
@@ -18,17 +18,39 @@
   background: var(--border);
 }
 
-:root[data-density='compact'] .native-data-table td {
-  padding: calc(var(--workspace-heading-gap) / 2) 12px;
-}
-
-:root[data-density='compact'] .pattern-list-workspace .pattern-table-toolbar {
-  padding: var(--workspace-table-inset) 14px;
-}
-:root[data-density='compact'] .pattern-list-workspace .pattern-selection-bar {
-  padding-block: var(--workspace-table-inset);
-}
-
-:root[data-density='compact'] .pattern-list-workspace .pattern-table-toolbar .pattern-selection-bar {
+.native-data-table .pattern-page-button {
+  width: 2.15em;
+  min-width: 2.15em;
+  height: 2.15em;
+  margin: 0 3px;
   padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 2em;
+  box-shadow: none;
+}
+.native-data-table .pattern-page-button:not(:disabled):hover {
+  color: var(--primary);
+}
+.native-data-table .pattern-page-button[aria-current='page'],
+.native-data-table .pattern-page-button[aria-current='page']:not(:disabled):hover {
+  color: var(--primary-foreground);
+  background: var(--primary);
+  font-weight: 700;
+}
+.native-data-table .pattern-page-button:not(:disabled):focus-visible,
+.native-data-table .pattern-page-button:not(:disabled):active {
+  color: var(--accent-foreground, var(--foreground));
+  background: var(--accent);
+  border-color: var(--border);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.native-data-table .pattern-page-button:disabled {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  cursor: not-allowed;
+  opacity: 1;
 }

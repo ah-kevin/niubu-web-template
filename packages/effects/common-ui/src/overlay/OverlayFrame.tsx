@@ -87,7 +87,7 @@ export function OverlayFrame({
           <Content
             className={
               variant === 'modal'
-                ? 'pattern-overlay pattern-overlay-modal flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0'
+                ? 'pattern-overlay pattern-overlay-modal flex max-h-[calc(90dvh-1rem)] flex-col gap-0 overflow-hidden p-0'
                 : 'pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-hidden sm:max-w-lg [@media(max-width:700px)]:w-full [@media(max-width:700px)]:max-w-full'
             }
             showCloseButton={false}
@@ -110,7 +110,7 @@ export function OverlayFrame({
               requestClose('outside');
             }}
           >
-            <Header className="shrink-0 border-b border-border p-[var(--workspace-card-padding)] pe-14 text-start">
+            <Header className="shrink-0 pe-14 text-start">
               <Title>{title}</Title>
               {hasDescription && <Description>{description}</Description>}
             </Header>
@@ -124,12 +124,10 @@ export function OverlayFrame({
             >
               <X aria-hidden="true" size={16} />
             </Button>
-            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain p-[var(--workspace-card-padding)]">
-              {children}
+            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain p-3">
+              <div className="min-h-40">{children}</div>
             </div>
-            {actions !== null && actions !== false && (
-              <Footer className="shrink-0 border-t border-border p-[var(--workspace-card-padding)]">{actions}</Footer>
-            )}
+            {actions !== null && actions !== false && <Footer className="shrink-0">{actions}</Footer>}
           </Content>
         </Suspense>
       )}

@@ -1,4 +1,5 @@
 import type { SemanticToken, ThemeProfile } from './types.ts';
+import { vbenControlTheme } from './vben-control-theme.ts';
 
 export const semanticTokenKeys: readonly SemanticToken[] = Object.freeze([
   '--background',
@@ -28,62 +29,11 @@ export const semanticTokenKeys: readonly SemanticToken[] = Object.freeze([
   '--shadow',
 ]);
 
-export const defaultThemeProfile: ThemeProfile = Object.freeze({
-  light: Object.freeze({
-    '--background': '#f1f3f6',
-    '--foreground': '#32363a',
-    '--card': '#ffffff',
-    '--primary': '#006be6',
-    '--primary-foreground': '#ffffff',
-    '--primary-text': '#0068df',
-    '--secondary': '#f4f4f5',
-    '--muted': '#f4f4f5',
-    '--muted-foreground': '#64646d',
-    '--secondary-muted-foreground': '#606069',
-    '--placeholder': '#64646d',
-    '--control-border': '#8a8a94',
-    '--accent': '#f4f4f5',
-    '--border': '#e4e4e7',
-    '--ring': '#006be6',
-    '--destructive': '#b83b3b',
-    '--sidebar': '#ffffff',
-    '--sidebar-foreground': '#32363a',
-    '--sidebar-submenu': '#ffffff',
-    '--sidebar-submenu-foreground': '#32363a',
-    '--header': '#ffffff',
-    '--header-foreground': '#32363a',
-    '--nav-active': '#e6f0fe',
-    '--warm': '#fafafa',
-    '--shadow': '0 12px 40px #1c3a2510',
-  }),
-  dark: Object.freeze({
-    '--background': '#14171b',
-    '--foreground': '#f2f2f2',
-    '--card': '#1c1e23',
-    '--primary': '#006be6',
-    '--primary-foreground': '#ffffff',
-    '--primary-text': '#5ea2ef',
-    '--secondary': '#29292e',
-    '--muted': '#27272a',
-    '--muted-foreground': '#a1a1aa',
-    '--secondary-muted-foreground': '#a1a1aa',
-    '--placeholder': '#a1a1aa',
-    '--control-border': '#71717b',
-    '--accent': '#2e3033',
-    '--border': '#36363a',
-    '--ring': '#006be6',
-    '--destructive': '#ff9696',
-    '--sidebar': '#1c1e23',
-    '--sidebar-foreground': '#f2f2f2',
-    '--sidebar-submenu': '#1c1e23',
-    '--sidebar-submenu-foreground': '#f2f2f2',
-    '--header': '#1c1e23',
-    '--header-foreground': '#f2f2f2',
-    '--nav-active': '#17375e',
-    '--warm': '#232529',
-    '--shadow': '0 12px 40px #00000020',
-  }),
-});
+const profile = (mode: 'light' | 'dark') => {
+  const source = vbenControlTheme('default', mode, '#006be6');
+  return Object.freeze(Object.fromEntries(semanticTokenKeys.map(key => [key, source[key]]))) as ThemeProfile['light'];
+};
+export const defaultThemeProfile: ThemeProfile = Object.freeze({ light: profile('light'), dark: profile('dark') });
 
 export const densityTokens = Object.freeze({
   standard: Object.freeze({
@@ -92,7 +42,23 @@ export const densityTokens = Object.freeze({
     '--workspace-section-gap': '16px',
     '--workspace-card-padding': '16px',
     '--workspace-heading-gap': '12px',
-    '--workspace-control-height': '36px',
+    '--workspace-control-height': '32px',
+    '--control-height': '32px',
+    '--control-height-sm': '24px',
+    '--control-height-lg': '40px',
+    '--control-font-size': '14px',
+    '--control-line-height': '22px',
+    '--control-font-size-lg': '16px',
+    '--control-line-height-lg': '24px',
+    '--control-font-size-sm': '12px',
+    '--control-line-height-sm': '20px',
+    '--control-padding-block': '4px',
+    '--control-padding-block-lg': '7px',
+    '--control-padding-inline': '11px',
+    '--control-button-padding-inline': '15px',
+    '--control-spacing': '16px',
+    '--control-spacing-sm': '12px',
+    '--control-spacing-lg': '24px',
   }),
   compact: Object.freeze({
     '--space-page': '24px',
@@ -100,6 +66,22 @@ export const densityTokens = Object.freeze({
     '--workspace-section-gap': '12px',
     '--workspace-card-padding': '12px',
     '--workspace-heading-gap': '8px',
-    '--workspace-control-height': '32px',
+    '--workspace-control-height': '28px',
+    '--control-height': '28px',
+    '--control-height-sm': '21px',
+    '--control-height-lg': '35px',
+    '--control-font-size': '12px',
+    '--control-line-height': '20px',
+    '--control-font-size-lg': '14px',
+    '--control-line-height-lg': '22px',
+    '--control-font-size-sm': '10px',
+    '--control-line-height-sm': '18px',
+    '--control-padding-block': '3px',
+    '--control-padding-block-lg': '5.5px',
+    '--control-padding-inline': '7px',
+    '--control-button-padding-inline': '11px',
+    '--control-spacing': '8px',
+    '--control-spacing-sm': '8px',
+    '--control-spacing-lg': '16px',
   }),
 });

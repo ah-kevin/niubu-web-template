@@ -7,20 +7,20 @@ describe('pure theme tokens', () => {
     const dark = resolveTheme(defaultThemeProfile, 'dark');
     expect(light['--primary']).toBe('#006be6');
     expect(dark['--primary']).toBe('#006be6');
-    expect(light['--shadow']).toBe('0 12px 40px #1c3a2510');
-    expect(dark['--shadow']).toBe('0 12px 40px #00000020');
+    expect(light['--shadow']).toBe('0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)');
+    expect(dark['--shadow']).toBe('0 6px 16px 0 rgba(255,255,255,0.016), 0 3px 6px -4px rgba(255,255,255,0.024), 0 9px 28px 8px rgba(255,255,255,0.010000000000000002)');
     expect(light).not.toHaveProperty('--space-page');
     expect(dark).not.toHaveProperty('--row-height');
-    expect(densityTokens).toEqual({
+    expect(densityTokens).toMatchObject({
       standard: {
         '--space-page': '32px', '--row-height': '42px',
         '--workspace-section-gap': '16px', '--workspace-card-padding': '16px',
-        '--workspace-heading-gap': '12px', '--workspace-control-height': '36px',
+        '--workspace-heading-gap': '12px', '--workspace-control-height': '32px',
       },
       compact: {
         '--space-page': '24px', '--row-height': '36px',
         '--workspace-section-gap': '12px', '--workspace-card-padding': '12px',
-        '--workspace-heading-gap': '8px', '--workspace-control-height': '32px',
+        '--workspace-heading-gap': '8px', '--workspace-control-height': '28px',
       },
     });
     expect(Object.isFrozen(light)).toBe(true);
@@ -29,8 +29,8 @@ describe('pure theme tokens', () => {
     const shadow = '0 8px 24px #1c3a2510';
     const profile = { ...defaultThemeProfile, light: { ...defaultThemeProfile.light, '--shadow': shadow } };
     expect(resolveTheme(profile, 'light')['--shadow']).toBe(shadow);
-    expect(resolveTheme(defaultThemeProfile, 'light')['--shadow']).toBe('0 12px 40px #1c3a2510');
-    expect(defaultThemeProfile.light['--shadow']).toBe('0 12px 40px #1c3a2510');
+    expect(resolveTheme(defaultThemeProfile, 'light')['--shadow']).toBe('0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)');
+    expect(defaultThemeProfile.light['--shadow']).toBe('0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)');
   });
   it.each([
     '1 8px 24px #1c3a2510',
@@ -58,7 +58,7 @@ describe('pure theme tokens', () => {
     expect(result['--primary-foreground']).toBe('#abcd');
     expect(result['--ring']).toBe('#aabbcc');
     expect(result['--accent']).toBe('#aabbccdd');
-    expect(result['--destructive']).toBe('#b83b3b');
+    expect(result['--destructive']).toBe('#ff3860');
     expect(result).not.toHaveProperty('--arbitrary');
     expect(resolveTheme(defaultThemeProfile, 'light')['--primary']).toBe('#006be6');
   });

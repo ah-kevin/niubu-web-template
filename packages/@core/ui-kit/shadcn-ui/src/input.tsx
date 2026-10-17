@@ -1,5 +1,4 @@
-// Official shadcn/ui new-york-v4 registry source (MIT), retrieved 2026-10-11.
-// See docs/decisions/003-restorable-patterns.md and LICENSE.shadcn.
+// Visuals follow Vben playground / Antdv Next 1.5.2; native and Radix behavior is retained.
 import * as React from "react"
 import { cn } from "./cn"
 
@@ -9,9 +8,9 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "h-[var(--workspace-control-height,36px)] w-full min-w-0 rounded-md border border-input bg-card px-3 py-1 text-[length:max(16px,var(--workspace-body-font-size,0.875rem))] text-foreground transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-[length:var(--workspace-body-font-size,0.875rem)]",
-        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+        "h-[var(--control-height)] w-full min-w-0 rounded-[var(--control-radius)] border border-[var(--control-border)] bg-[var(--control-background)] px-[var(--control-padding-inline)] py-[var(--control-padding-block)] text-[length:var(--control-font-size)] leading-[var(--control-line-height)] font-normal text-[var(--control-foreground)] transition-[color,background-color,border-color,box-shadow] duration-200 outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:border-0 file:bg-transparent file:py-0 file:text-[length:var(--control-font-size)] file:leading-[var(--control-line-height)] file:font-normal file:text-foreground placeholder:text-[var(--control-placeholder)] enabled:hover:border-[var(--control-hover-border)] disabled:cursor-not-allowed disabled:bg-[var(--control-disabled-background)] disabled:text-[var(--control-disabled-foreground)]",
+        "focus:border-[var(--control-focus-border)] enabled:focus:hover:border-[var(--control-focus-border)] focus:shadow-[var(--control-focus-shadow)]",
+        "aria-invalid:border-destructive aria-invalid:enabled:hover:border-[var(--control-error-hover)] aria-invalid:focus:border-destructive aria-invalid:enabled:focus:hover:border-destructive aria-invalid:focus:shadow-[var(--control-error-focus-shadow)]",
         className
       )}
       {...props}

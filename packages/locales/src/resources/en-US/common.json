@@ -107,5 +107,11 @@
   "guard.livePreserveDescription": "Keep this scope’s draft in this page session and choose whether to restore it when you return. Unsaved changes will not be submitted.",
   "guard.liveDiscardDescription": "Leaving discards the current unsaved input.",
   "form.liveReviewPassed": "Field checks passed. Confirm to save.",
-  "submit": "Submit"
+  "submit": "Submit",
+  "table.first": "First page",
+  "table.last": "Last page",
+  "table.previousPages": "Jump backward",
+  "table.nextPages": "Jump forward",
+  "table.pageNumber": "Page {{page}}",
+  "table.pageSizeOption": "{{size}} / page"
 }

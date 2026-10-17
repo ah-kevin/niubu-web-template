@@ -30,6 +30,12 @@ export interface TableLabels {
   previousPage: string;
   nextPage: string;
   pageSize: string;
+  firstPage?: string;
+  lastPage?: string;
+  previousPages?: string;
+  nextPages?: string;
+  pageNumber?: (oneBasedPage: number) => string;
+  pageSizeOption?: (size: number) => string;
   settings: string;
   resetColumns: string;
   pinStart: string;

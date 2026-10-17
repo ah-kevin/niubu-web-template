@@ -1,7 +1,8 @@
-import { defaultThemeProfile } from './tokens.ts';
-import { resolveTheme } from './resolve-theme.ts';
-import { isThemePresetId, themePresets, themePresetSurfaces } from './theme-presets.ts';
-import type { ResolvedTheme, ThemeAppearance } from './types.ts';
+import { vbenControlTheme } from './vben-control-theme.ts';
+import { defaultThemeProfile, semanticTokenKeys } from './tokens.ts';
+import { resolveTheme, validateBrandOverride } from './resolve-theme.ts';
+import { isThemePresetId, themePresets } from './theme-presets.ts';
+import type { BrandOverride, ResolvedTheme, ThemeAppearance, ThemeProfile, SemanticToken } from './types.ts';
 
 export const defaultThemeAppearance: Readonly<ThemeAppearance> = Object.freeze({
   mode: 'system',
@@ -41,66 +42,26 @@ export function validateThemeAppearancePatch(input: unknown): Partial<ThemeAppea
   }
   return result;
 }
-const rgb = (hex: string): number[] => {
-  const full = hex.length === 4 ? '#' + [...hex.slice(1)].map(c => c + c).join('') : hex;
-  return [1, 3, 5].map(i => parseInt(full.slice(i, i + 2), 16) / 255);
-};
-const luminance = (hex: string) =>
-  rgb(hex)
-    .map(v => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
-    .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i]!, 0);
-const contrast = (a: string, b: string) =>
-  (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
-const foreground = (color: string) =>
-  contrast(color, '#ffffff') >= contrast(color, '#000000') ? '#ffffff' : '#000000';
-const mix = (color: string, amount: number, mode: ResolvedTheme) =>
-  '#' +
-  rgb(color)
-    .map(v =>
-      Math.round(v * 255 * (1 - amount) + (mode === 'dark' ? 255 : 0) * amount)
-        .toString(16)
-        .padStart(2, '0'),
-    )
-    .join('');
-const surfaceKeys = [
-  '--background',
-  '--card',
-  '--secondary',
-  '--muted',
-  '--accent',
-  '--sidebar',
-  '--sidebar-submenu',
-  '--header',
-  '--nav-active',
-  '--warm',
-] as const;
-function readableColor(color: string, surfaces: readonly string[], mode: ResolvedTheme, minimum: number): string {
-  for (let n = 0; n <= 100; n++) {
-    const candidate = mix(color, n / 100, mode);
-    if (surfaces.every(surface => contrast(candidate, surface) >= minimum)) return candidate;
-  }
-  return mode === 'dark' ? '#ffffff' : '#000000';
-}
-/** Exact official surfaces with explicit accessibility adaptations for explanatory text and control boundaries. */
-function semanticSurfaces(id: ThemeAppearance['preset'], mode: ResolvedTheme) {
-  const tokens = { ...resolveTheme(defaultThemeProfile, mode), ...themePresetSurfaces[id][mode] };
-  const backgrounds = surfaceKeys.map(key => tokens[key]!);
-  const muted = readableColor(tokens['--muted-foreground']!, backgrounds, mode, 4.5);
-  return {
-    ...tokens,
-    '--muted-foreground': muted,
-    '--secondary-muted-foreground': muted,
-    '--placeholder': muted,
-    '--control-border': readableColor(tokens['--control-border']!, backgrounds, mode, 3),
-  };
-}
 /** Pure canonical output; half-dark affects selected regions, never the main content. */
-export function resolvePresentationTheme(input: unknown, mode: ResolvedTheme): Readonly<Record<string, string>> {
+export function resolvePresentationTheme(
+  input: unknown,
+  mode: ResolvedTheme,
+  profile: ThemeProfile = defaultThemeProfile,
+  brand: BrandOverride = {},
+): Readonly<Record<string, string>> {
   const appearance = { ...defaultThemeAppearance, ...validateThemeAppearancePatch(input) };
   const preset = themePresets.find(item => item.id === appearance.preset)!;
-  const primary = appearance.preset === 'custom' ? appearance.colorPrimary : preset[mode];
-  const tokens = semanticSurfaces(preset.id, mode),
-    hover = mix(primary, 0.08, mode);
+  const overridesFor = (localMode: ResolvedTheme) => {
+    const resolved = resolveTheme(profile, localMode),
+      profileChanges: Partial<Record<SemanticToken, string>> = {};
+    // Default-derived values are baselines, not new palette seeds, even in copied profiles.
+    for (const key of semanticTokenKeys)
+      if (resolved[key] !== defaultThemeProfile[localMode][key]) profileChanges[key] = resolved[key];
+    return { ...profileChanges, ...validateBrandOverride(brand) };
+  };
+  const overrides = overridesFor(mode);
+  const primary = overrides['--primary'] ?? (appearance.preset === 'custom' ? appearance.colorPrimary : preset[mode]);
+  const tokens = vbenControlTheme(preset.id, mode, primary, overrides);
   const regions: Record<string, string> = {};
   for (const [region, enabled] of [
     ['sidebar', appearance.semiDarkSidebar],
@@ -108,12 +69,37 @@ export function resolvePresentationTheme(input: unknown, mode: ResolvedTheme): R
     ['header', appearance.semiDarkHeader],
   ] as const) {
     const regionMode = mode === 'light' && enabled ? 'dark' : mode;
-    const local = regionMode === mode ? tokens : semanticSurfaces(preset.id, regionMode);
+    const localOverrides = overridesFor(regionMode);
+    const local =
+      regionMode === mode
+        ? tokens
+        : vbenControlTheme(
+            preset.id,
+            regionMode,
+            localOverrides['--primary'] ?? (preset.id === 'custom' ? appearance.colorPrimary : preset[regionMode]),
+            localOverrides,
+          );
     regions[`--${region}`] = local[`--${region}`]!;
     regions[`--${region}-foreground`] = local[`--${region}-foreground`]!;
-    const localBackgrounds = surfaceKeys.map(key => local[key]!);
-    regions[`--${region}-primary-text`] = readableColor(primary, localBackgrounds, regionMode, 4.5);
-    regions[`--${region}-ring`] = readableColor(primary, localBackgrounds, regionMode, 3);
+    regions[`--${region}-primary-text`] = local['--primary-text'];
+    regions[`--${region}-ring`] = local['--ring'];
+    for (const [key, value] of Object.entries(local)) {
+      if (
+        key.startsWith('--control-') ||
+        [
+          '--popover',
+          '--popover-foreground',
+          '--card-foreground',
+          '--secondary-foreground',
+          '--accent-foreground',
+          '--accent-hover',
+          '--primary-hover',
+          '--primary-active',
+          '--popup-shadow',
+        ].includes(key)
+      )
+        regions[`--${region}-${key.slice(2)}`] = value;
+    }
     for (const role of [
       'background',
       'warm',
@@ -133,23 +119,13 @@ export function resolvePresentationTheme(input: unknown, mode: ResolvedTheme): R
   return Object.freeze({
     ...tokens,
     ...regions,
-    '--primary': primary,
-    '--primary-text': readableColor(
-      primary,
-      surfaceKeys.map(key => tokens[key]!),
-      mode,
-      4.5,
-    ),
-    '--primary-foreground': foreground(primary),
-    '--primary-hover': hover,
-    '--primary-hover-foreground': foreground(hover),
-    '--ring': readableColor(
-      primary,
-      surfaceKeys.map(key => tokens[key]!),
-      mode,
-      3,
-    ),
     '--radius': `${appearance.radius}rem`,
+    '--control-radius': `${appearance.radius * 16}px`,
+    // Vben's Ant bridge multiplies rem intent by 16; Ant genRadius supplies the variants.
+    '--control-radius-sm': `${{ 0: 0, 0.25: 4, 0.5: 6, 0.75: 6, 1: 8 }[appearance.radius]}px`,
+    '--control-radius-lg': `${{ 0: 0, 0.25: 4, 0.5: 10, 0.75: 14, 1: 16 }[appearance.radius]}px`,
+    '--control-radius-xs': `${appearance.radius === 0 ? 0 : appearance.radius === 0.25 ? 1 : 2}px`,
+    '--control-radius-outer': `${appearance.radius === 0 ? 0 : appearance.radius === 0.25 ? 4 : 6}px`,
     '--font-size-base': `${appearance.fontSize}px`,
   });
 }

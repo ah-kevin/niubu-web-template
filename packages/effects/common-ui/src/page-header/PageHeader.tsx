@@ -34,7 +34,7 @@ export function PageHeader({
         {meta && <div className="pattern-header-meta mt-[var(--workspace-heading-gap)]">{meta}</div>}
       </div>
       {actions && (
-        <div className="pattern-header-actions flex max-w-full flex-[0_1_auto] flex-wrap gap-[8px] pt-[6px] [@media(max-width:700px)]:w-full [@media(max-width:700px)]:pt-0 [&_[data-slot=button]]:h-auto [&_[data-slot=button]]:min-h-[var(--workspace-control-height)] [&_[data-slot=button]]:whitespace-normal [&_[data-slot=button]]:text-center">
+        <div className="pattern-header-actions flex max-w-full flex-[0_1_auto] flex-wrap gap-[8px] pt-[6px] [@media(max-width:700px)]:w-full [@media(max-width:700px)]:pt-0">
           {actions}
         </div>
       )}

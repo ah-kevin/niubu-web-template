@@ -46,9 +46,9 @@ export function FilterBar({
       aria-label={t('filter.region')}
     >
       <div className="pattern-search-field relative min-w-0 max-w-[360px] flex-[1_1_210px] [@media(max-width:700px)]:max-w-none [@media(max-width:700px)]:basis-full [&>svg]:pointer-events-none [&>svg]:absolute [&>svg]:left-[12px] [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:text-muted-foreground">
-        <Search size={17} aria-hidden="true" />
+        <Search size={14} aria-hidden="true" />
         <Input
-          className="h-[var(--workspace-control-height)] border-[var(--control-border)] bg-card dark:bg-card pl-[38px] text-[length:var(--workspace-body-font-size)] md:text-[length:var(--workspace-body-font-size)] text-foreground placeholder:text-[var(--placeholder)] placeholder:opacity-100"
+          className="pl-[29px]"
           type="search"
           aria-label={t('filter.search')}
           placeholder={t('filter.search')}

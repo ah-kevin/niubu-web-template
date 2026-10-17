@@ -335,14 +335,10 @@ export function PreferenceDrawer(p: PreferenceDrawerProps) {
         <Tabs defaultValue="appearance" className="preference-tabs flex min-h-0 flex-1 flex-col">
           <TabsList
             aria-label={t('preferences.title')}
-            className="preference-tab-list mx-[12px] mt-2 mb-1 grid shrink-0 grid-cols-[repeat(5,minmax(max-content,1fr))] gap-0.5 overflow-x-auto rounded-[var(--radius)] border border-border bg-muted p-1 [scrollbar-width:thin]"
+            className="preference-tab-list w-auto min-w-0 max-w-full mx-[12px] mt-2 mb-1 grid shrink-0 grid-cols-[repeat(5,minmax(max-content,1fr))] overflow-x-auto [scrollbar-width:thin]"
           >
             {preferenceGroups.map(group => (
-              <TabsTrigger
-                key={group}
-                value={group}
-                className="min-w-max rounded-[calc(var(--radius)*.75)] px-3 py-[.35rem] text-xs leading-[1.4] whitespace-nowrap text-muted-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-[state=active]:bg-card data-[state=active]:text-primary-text data-[state=active]:shadow-xs"
-              >
+              <TabsTrigger key={group} value={group} className="min-w-max">
                 {t(`preferences.group.${group}`)}
               </TabsTrigger>
             ))}
