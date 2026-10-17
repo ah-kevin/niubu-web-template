@@ -6,7 +6,7 @@ import { runDevApp } from './dev-app';
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })));
-function fixture(names = ['playground']) {
+function fixture(names = ['primary']) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'niubu-dev-dispatch-')));
   roots.push(root);
   const put = (file: string, value: unknown) => {
@@ -18,7 +18,7 @@ function fixture(names = ['playground']) {
   put('pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n");
   for (const name of names)
     put(`apps/${name}/package.json`, {
-      name: `@niubu/${name}`,
+      name: `@fixture/${name}`,
       scripts: { dev: 'vite', preview: 'vite preview', build: 'build-app' },
       devDependencies: { '@niubu-internal/vite-config': 'workspace:*' },
     });
@@ -40,18 +40,19 @@ it('selects the sole frontend and forwards all Vite arguments with no shell', ()
   expect(calls).toEqual([
     [
       'pnpm',
-      ['--filter', '@niubu/playground', 'dev', '--port', '5188', '--host', '127.0.0.1'],
+      ['--filter', '@fixture/primary', 'dev', '--port', '5188', '--host', '127.0.0.1'],
       { cwd: root, stdio: 'inherit', shell: false },
     ],
   ]);
+
 });
 it('selects an explicit app and strips only the dispatcher option and initial pnpm separator', () => {
-  const root = fixture(['playground', 'secondary']);
+  const root = fixture(['primary', 'secondary']);
   const calls: unknown[] = [];
   expect(
     runDevApp({
       root,
-      args: ['preview', '--', '--app=@niubu/playground', '--port=5190', '--base', '/a b/'],
+      args: ['preview', '--', '--app=@fixture/primary', '--port=5190', '--base', '/a b/'],
       spawn: (...args) => {
         calls.push(args);
         return { status: 0 };
@@ -61,18 +62,18 @@ it('selects an explicit app and strips only the dispatcher option and initial pn
   expect(calls).toEqual([
     [
       'pnpm',
-      ['--filter', '@niubu/playground', 'preview', '--port=5190', '--base', '/a b/'],
+      ['--filter', '@fixture/primary', 'preview', '--port=5190', '--base', '/a b/'],
       { cwd: root, stdio: 'inherit', shell: false },
     ],
   ]);
 });
-it('defaults to the sole playground in a single-frontend workspace and propagates child failure', () => {
-  const root = fixture(['playground']);
+it('defaults to the sole primary in a single-frontend workspace and propagates child failure', () => {
+  const root = fixture(['primary']);
   const calls: unknown[] = [];
   expect(
     runDevApp({
       root,
-      args: ['dev', '--app', '@niubu/playground', '--port', '5179'],
+      args: ['dev', '--app', '@fixture/primary', '--port', '5179'],
       spawn: (...args) => {
         calls.push(args);
         return { status: 7 };
@@ -81,7 +82,7 @@ it('defaults to the sole playground in a single-frontend workspace and propagate
   ).toBe(7);
   expect(calls[0]).toEqual([
     'pnpm',
-    ['--filter', '@niubu/playground', 'dev', '--port', '5179'],
+    ['--filter', '@fixture/primary', 'dev', '--port', '5179'],
     { cwd: root, stdio: 'inherit', shell: false },
   ]);
   expect(
@@ -89,7 +90,7 @@ it('defaults to the sole playground in a single-frontend workspace and propagate
       root,
       args: ['preview'],
       spawn: (_command, args) => {
-        expect(args).toEqual(['--filter', '@niubu/playground', 'preview']);
+        expect(args).toEqual(['--filter', '@fixture/primary', 'preview']);
         return { status: null };
       },
     }),
@@ -100,7 +101,7 @@ it.each([
   ['dev', '--app'],
   ['dev', '--app', '--port', '5173'],
   ['dev', '--app='],
-  ['dev', '--app', '@niubu/playground', '--app=@niubu/playground'],
+  ['dev', '--app', '@fixture/primary', '--app=@fixture/primary'],
   ['build'],
 ])('rejects invalid dispatch before spawning: %j', (...args) => {
   expect(() =>

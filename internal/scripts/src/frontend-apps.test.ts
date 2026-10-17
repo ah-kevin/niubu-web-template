@@ -6,7 +6,7 @@ import { discoverFrontendApps, selectFrontendApp } from './frontend-apps';
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })));
-function fixture(names = ['@niubu/playground', '@fixture/secondary']) {
+function fixture(names = ['@fixture/primary', '@fixture/secondary']) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'niubu-frontends-')));
   roots.push(root);
   const put = (file: string, value: unknown) => {
@@ -36,18 +36,19 @@ function fixture(names = ['@niubu/playground', '@fixture/secondary']) {
 it('discovers both fixture frontend apps from workspace metadata and excludes backend packages', () => {
   const { root } = fixture();
   expect(discoverFrontendApps(root)).toEqual([
+    { name: '@fixture/primary', root: join(root, 'apps/primary') },
     { name: '@fixture/secondary', root: join(root, 'apps/secondary') },
-    { name: '@niubu/playground', root: join(root, 'apps/playground') },
   ]);
 });
 it('rejects multiple frontends regardless of package name and supports explicit selection', () => {
   const { root } = fixture();
   expect(() => selectFrontendApp(root)).toThrow(/ambiguous/i);
-  expect(selectFrontendApp(root, '@niubu/playground').name).toBe('@niubu/playground');
+  expect(selectFrontendApp(root, '@fixture/primary').name).toBe('@fixture/primary');
+
 });
-it('selects the sole playground and refuses an explicitly missing frontend', () => {
-  const { root } = fixture(['@niubu/playground']);
-  expect(selectFrontendApp(root)).toEqual({ name: '@niubu/playground', root: join(root, 'apps/playground') });
+it('selects the sole primary and refuses an explicitly missing frontend', () => {
+  const { root } = fixture(['@fixture/primary']);
+  expect(selectFrontendApp(root)).toEqual({ name: '@fixture/primary', root: join(root, 'apps/primary') });
   expect(() => selectFrontendApp(root, '@fixture/secondary')).toThrow(/unknown.*frontend/i);
   expect(() => selectFrontendApp(root, '@niubu/backend-mock')).toThrow(/unknown.*frontend/i);
 });
@@ -60,5 +61,5 @@ it('rejects ambiguous defaults and zero frontend apps', () => {
 it('honors actual workspace globs instead of discovering an excluded directory', () => {
   const { root, put } = fixture();
   put('pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n  - '!apps/secondary'\n");
-  expect(discoverFrontendApps(root).map(app => app.name)).toEqual(['@niubu/playground']);
+  expect(discoverFrontendApps(root).map(app => app.name)).toEqual(['@fixture/primary']);
 });

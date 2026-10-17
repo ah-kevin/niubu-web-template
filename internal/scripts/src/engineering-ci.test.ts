@@ -31,19 +31,19 @@ function fixture() {
   };
   put('package.json', { name: 'fixture', private: true });
   put('pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n  - 'packages/*'\n  - 'internal/*'\n");
-  put('apps/playground/package.json', {
-    name: '@niubu/playground',
+  put('apps/primary/package.json', {
+    name: '@fixture/primary',
     scripts: { build: 'build-app' },
     devDependencies: { '@niubu-internal/vite-config': 'workspace:*' },
   });
-  put('apps/playground/src/main.ts', "document.body.textContent = 'playground';");
+  put('apps/primary/src/main.ts', "document.body.textContent = 'primary';");
   put('internal/vite-config/package.json', { name: '@niubu-internal/vite-config', exports: './src/index.ts' });
   put('internal/vite-config/src/index.ts', 'export const config = {};');
   put('packages/locales/package.json', { name: '@niubu/locales', exports: './src/index.ts' });
   put('packages/locales/src/index.ts', 'export const locale = 1;');
   for (const locale of ['zh-CN', 'en-US']) {
     put(`packages/locales/src/resources/${locale}/common.json`, { ok: 'OK' });
-    put(`apps/playground/src/locales/${locale}/app.json`, { title: 'Playground' });
+    put(`apps/primary/src/locales/${locale}/app.json`, { title: 'Primary' });
   }
   put('boundary.config.json', { scan: ['packages'], exclude: [], words: ['widget'], literals: [], allow: [] });
   return { root, put };
@@ -54,7 +54,7 @@ it('has no command side effects when importing the check CLI', () => {
 });
 it('keeps the complete serial check graph in a valid NoWeb workspace and serializes package tests', () => {
   const { root } = fixture();
-  expect(discoverFrontendApps(root).map(app => app.name)).toEqual(['@niubu/playground']);
+  expect(discoverFrontendApps(root).map(app => app.name)).toEqual(['@fixture/primary']);
   expect(checkWorkspaceLocales(root).errors).toEqual([]);
   expect(checkWorkspace(root).errors).toEqual([]);
   expect(checkBoundary(root, readBoundaryConfig(root)).errors).toEqual([]);

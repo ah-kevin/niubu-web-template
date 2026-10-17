@@ -14,10 +14,11 @@ import {
   type BuildProvenanceApi,
 } from '@niubu-internal/node-utils';
 import { measureBuiltOverview, measureCurrentOverview } from './budget.ts';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
 import { buildApp } from './build-app.ts';
+import { discoverFrontendApps } from './frontend-apps.ts';
 
 const repo = fileURLToPath(new URL('../../..', import.meta.url));
 function fixture() {
@@ -450,10 +451,24 @@ it('keeps descriptor/schema/generator source in source and resolved context evid
     // Real repository graph must retain the public schema/generator and this tooling in canonical inputs.
     const inputs = readWorkspace(repo);
     const { readBuildInputs } = await import('@niubu-internal/node-utils');
-    const files = readBuildInputs(inputs, '@niubu/playground').inputs.map(input => input.file);
-    expect(files).toContain('packages/@core/base/shared/src/runtime-config.ts');
-    expect(files).toContain('internal/node-utils/src/runtime-config-artifacts.ts');
-    expect(files).toContain('internal/vite-config/src/runtime-config-plugin.ts');
+    const apps = discoverFrontendApps(repo);
+    expect(apps.length).toBeGreaterThan(0);
+    for (const app of apps) {
+      const files = readBuildInputs(inputs, app.name).inputs.map(input => input.file);
+      expect(files).toContain('packages/@core/base/shared/src/runtime-config.ts');
+      expect(files).toContain('internal/node-utils/src/runtime-config-artifacts.ts');
+      expect(files).toContain('internal/vite-config/src/runtime-config-plugin.ts');
+      const sourceRoot = relative(repo, app.root).replaceAll('\\', '/');
+      expect(files).toContain(`${sourceRoot}/src/runtime-config.ts`);
+      expect(files).toContain(`${sourceRoot}/src/main.tsx`);
+      const config = await resolveConfig({ root: app.root, logLevel: 'silent' }, 'build');
+      const provenance = config.plugins.filter(plugin => plugin.name === 'niubu:build-provenance');
+      expect(provenance).toHaveLength(1);
+      const policy = (provenance[0].api as BuildProvenanceApi).getRuntimeConfig();
+      expect(policy).toEqual({ fileName: '_app.config.js', schemaVersion: 1, defaults: { schemaVersion: 1, apiURL: '/' } });
+      expect(Object.isFrozen(policy)).toBe(true);
+      expect(Object.isFrozen(policy!.defaults)).toBe(true);
+    }
   } finally {
     rmSync(f.root, { recursive: true, force: true });
   }

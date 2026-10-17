@@ -4,7 +4,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import { resolveConfig } from 'vite';
-import { discoverFrontendApps } from './frontend-apps.ts';
+import { discoverFrontendApps, selectFrontendApp } from './frontend-apps.ts';
 import { measureCurrentOverview } from './budget.ts';
 const toolingRoot = fileURLToPath(new URL('../../..', import.meta.url));
 function inside(root: string, path: string) {
@@ -128,7 +128,7 @@ export async function prepareDeployment({
   );
 }
 export async function runDeploymentCli(args = process.argv.slice(2)): Promise<void> {
-  let appName = '@niubu/playground',
+  let appName: string | undefined,
     outDir = '/out',
     build = false;
   const seen = new Set<string>();
@@ -145,7 +145,7 @@ export async function runDeploymentCli(args = process.argv.slice(2)): Promise<vo
     } else throw Error('Unknown deployment option');
   }
   const root = process.cwd();
-  if (!discoverFrontendApps(root).some(app => app.name === appName)) throw Error('Unknown frontend app');
+  appName = selectFrontendApp(root, appName).name;
   if (build) {
     const result = spawnSync('pnpm', ['--filter', appName, 'build'], { cwd: root, shell: false, stdio: 'inherit' });
     if (result.error) throw result.error;

@@ -20,7 +20,7 @@ async function fixture(base = '/') {
   put('pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n  - 'internal/*'\n");
   put(
     'pnpm-lock.yaml',
-    "lockfileVersion: '9.0'\nimporters:\n  .: {}\n  apps/playground: {}\n  internal/vite-config: {}\n",
+    "lockfileVersion: '9.0'\nimporters:\n  .: {}\n  apps/primary: {}\n  internal/vite-config: {}\n",
   );
   put('internal/vite-config/package.json', {
     name: '@niubu-internal/vite-config',
@@ -29,8 +29,8 @@ async function fixture(base = '/') {
     exports: { '.': './index.js' },
   });
   put('internal/vite-config/index.js', 'export {};');
-  put('apps/playground/package.json', {
-    name: '@niubu/playground',
+  put('apps/primary/package.json', {
+    name: '@fixture/primary',
     private: true,
     type: 'module',
     scripts: { build: 'fixture' },
@@ -44,26 +44,26 @@ async function fixture(base = '/') {
   });
   put('apps/backend-mock/src.js', 'NIUBU_BACKEND_MOCK_ONLY_STAGE3');
   put(
-    'apps/playground/index.html',
+    'apps/primary/index.html',
     '<html><head></head><body><script type="module" src="/src/main.js"></script></body></html>',
   );
-  put('apps/playground/src/main.js', 'import "./main.css";document.body.textContent="ready";');
-  put('apps/playground/src/main.css', 'body{color:red}');
-  put('apps/playground/public/assets/logo-original.svg', '<svg><title>Current brand</title></svg>');
-  put('apps/playground/public/assets/legal.html', '<html>Current terms</html>');
-  put('apps/playground/public/assets/legal-20261017.html', '<html>Current terms</html>');
-  put('apps/playground/src/theme.js', 'document.documentElement.dataset.theme="fixture";');
+  put('apps/primary/src/main.js', 'import "./main.css";document.body.textContent="ready";');
+  put('apps/primary/src/main.css', 'body{color:red}');
+  put('apps/primary/public/assets/logo-original.svg', '<svg><title>Current brand</title></svg>');
+  put('apps/primary/public/assets/legal.html', '<html>Current terms</html>');
+  put('apps/primary/public/assets/legal-20261017.html', '<html>Current terms</html>');
+  put('apps/primary/src/theme.js', 'document.documentElement.dataset.theme="fixture";');
   put(
-    'apps/playground/vite.config.ts',
-    `import {createWebViteConfig} from ${JSON.stringify(join(repo, 'internal/vite-config/src/index.ts'))};export default {...createWebViteConfig({appRoot:${JSON.stringify(join(root, 'apps/playground'))},workspaceRoot:${JSON.stringify(root)},runtimeConfig:{fileName:'_app.config.js',schemaVersion:1,defaults:{schemaVersion:1,apiURL:'/'}},themeInit:{entry:'src/theme.js',appId:'fixture',environment:'production',globalName:'FixtureTheme'},firstScreen:{appName:'@niubu/playground',modules:{main:'src/main.js',theme:'src/theme.js'},variants:{current:{}}}}),base:${JSON.stringify(base)}};`,
+    'apps/primary/vite.config.ts',
+    `import {createWebViteConfig} from ${JSON.stringify(join(repo, 'internal/vite-config/src/index.ts'))};export default {...createWebViteConfig({appRoot:${JSON.stringify(join(root, 'apps/primary'))},workspaceRoot:${JSON.stringify(root)},runtimeConfig:{fileName:'_app.config.js',schemaVersion:1,defaults:{schemaVersion:1,apiURL:'/'}},themeInit:{entry:'src/theme.js',appId:'fixture',environment:'production',globalName:'FixtureTheme'},firstScreen:{appName:'@fixture/primary',modules:{main:'src/main.js',theme:'src/theme.js'},variants:{current:{}}}}),base:${JSON.stringify(base)}};`,
   );
   symlinkSync(join(repo, 'node_modules'), join(root, 'node_modules'), 'dir');
-  await buildApp({ root: join(root, 'apps/playground'), logLevel: 'silent' });
-  return { root, put, dist: join(root, 'apps/playground/dist'), out: join(root, 'out') };
+  await buildApp({ root: join(root, 'apps/primary'), logLevel: 'silent' });
+  return { root, put, dist: join(root, 'apps/primary/dist'), out: join(root, 'out') };
 }
 it('packages only the selected sealed frontend and reuses the real compiled canonical config contract', async () => {
   const f = await fixture();
-  await prepareDeployment({ workspaceRoot: f.root, appName: '@niubu/playground', outDir: f.out });
+  await prepareDeployment({ workspaceRoot: f.root, appName: '@fixture/primary', outDir: f.out });
   expect(readFileSync(join(f.out, 'html/index.html'), 'utf8')).toContain('type="module"');
   expect(existsSync(join(f.out, 'html/src'))).toBe(false);
   expect(existsSync(join(f.out, 'html/backend-mock'))).toBe(false);
@@ -99,7 +99,7 @@ it.each(['/portal/', '/assets/'])(
   'keeps resource base %s without rewriting sealed HTML and applies exact asset caching',
   async base => {
     const f = await fixture(base);
-    await prepareDeployment({ workspaceRoot: f.root, appName: '@niubu/playground', outDir: f.out });
+    await prepareDeployment({ workspaceRoot: f.root, appName: '@fixture/primary', outDir: f.out });
     expect(readFileSync(join(f.out, 'html/index.html'), 'utf8')).toBe(readFileSync(join(f.dist, 'index.html'), 'utf8'));
     const nginx = readFileSync(join(f.out, 'nginx.conf'), 'utf8');
     expect(nginx).toContain('~^' + base + '(.*)$ /$1;');
@@ -125,12 +125,29 @@ it('refuses unknown apps, unsafe/existing outputs and stale/tampered artifacts w
   ).rejects.toThrow();
   expect(existsSync(f.out)).toBe(false);
   await expect(
-    prepareDeployment({ workspaceRoot: f.root, appName: '@niubu/playground', outDir: f.root }),
+    prepareDeployment({ workspaceRoot: f.root, appName: '@fixture/primary', outDir: f.root }),
   ).rejects.toThrow();
   expect(readFileSync(join(f.root, 'package.json'), 'utf8')).toContain('deployment-fixture');
   writeFileSync(join(f.dist, 'index.html'), readFileSync(join(f.dist, 'index.html'), 'utf8') + '<!-- changed -->');
   await expect(
-    prepareDeployment({ workspaceRoot: f.root, appName: '@niubu/playground', outDir: f.out }),
+    prepareDeployment({ workspaceRoot: f.root, appName: '@fixture/primary', outDir: f.out }),
   ).rejects.toThrow();
   expect(existsSync(f.out)).toBe(false);
+});
+
+it('selects the sole non-Playground frontend by default from the real deployment CLI', async () => {
+  const f = await fixture();
+  const result = spawnSync(process.execPath, [join(repo, 'internal/scripts/src/deployment.ts'), '--out', f.out], {
+    cwd: f.root,
+    encoding: 'utf8',
+    shell: false,
+  });
+  expect(result.status, result.stdout + result.stderr).toBe(0);
+  expect(JSON.parse(readFileSync(join(f.out, 'runtime/deployment.json'), 'utf8'))).toEqual({
+    schemaVersion: 1,
+    appName: '@fixture/primary',
+    runtimeConfig: '_app.config.js',
+  });
+  expect(readFileSync(join(f.out, 'html/index.html'), 'utf8')).toBe(readFileSync(join(f.dist, 'index.html'), 'utf8'));
+  expect(existsSync(join(f.out, 'html/backend-mock'))).toBe(false);
 });
