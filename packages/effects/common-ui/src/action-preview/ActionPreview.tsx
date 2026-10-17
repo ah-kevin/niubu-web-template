@@ -52,7 +52,7 @@ export function ActionPreview({ valid, children, reason, label, title, onReview 
       )}
       {valid && reviewed && (
         <div
-          className="submission-state mt-[17px] flex items-start gap-[10px] rounded-[var(--radius)] bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-[var(--primary-text)] [&_p]:text-[length:var(--workspace-caption-font-size)] [&_p]:text-[var(--secondary-muted-foreground)]"
+          className="submission-state mt-4 flex items-start gap-3 text-[length:var(--workspace-body-font-size)] leading-relaxed text-foreground [&_p]:mt-1 [&_p]:text-muted-foreground [&_svg]:mt-0.5 [&_svg]:shrink-0 [&_svg]:text-primary-text"
           role="status"
         >
           <Info size={18} aria-hidden="true" />
@@ -76,7 +76,7 @@ export function ActionPreview({ valid, children, reason, label, title, onReview 
             </AlertDialogTitle>
             <AlertDialogDescription>{t('common:action.description')}</AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="pattern-review-content min-w-0 rounded-[var(--radius)] border border-border bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] [--muted-foreground:var(--secondary-muted-foreground)] [overflow-wrap:anywhere]">
+          <div className="pattern-review-content min-w-0 rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] text-[length:var(--workspace-body-font-size)] leading-relaxed [overflow-wrap:anywhere]">
             {children}
           </div>
           <AlertDialogFooter>

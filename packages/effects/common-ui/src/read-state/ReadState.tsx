@@ -47,19 +47,19 @@ export function ReadState({
   const href = safeReturnTo(fallback, '');
   return (
     <section
-      className="pattern-read-state flex min-w-0 flex-col items-center gap-[12px] px-[22px] py-[48px] text-center [overflow-wrap:anywhere]"
+      className="pattern-read-state flex min-w-0 flex-col items-center gap-3 px-6 py-12 text-center [overflow-wrap:anywhere]"
       role={status === 'error' ? 'alert' : 'status'}
       aria-busy={status === 'loading'}
     >
-      <span className="pattern-state-symbol inline-flex size-[56px] items-center justify-center rounded-[var(--radius)] bg-secondary text-[var(--primary-text)]">
+      <span className="pattern-state-symbol inline-flex size-12 items-center justify-center rounded-full border border-border bg-card text-primary-text">
         <Icon size={26} aria-hidden="true" />
       </span>
       <h2 className="text-base font-semibold">{t(titles[status])}</h2>
-      <p className="max-w-[440px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-muted-foreground">
+      <p className="max-w-[440px] text-[length:var(--workspace-body-font-size)] leading-relaxed text-muted-foreground">
         {message ?? t(explanations[status])}
       </p>
       {children}
-      <div className="pattern-state-actions mt-[6px] flex flex-wrap justify-center gap-[8px]">
+      <div className="pattern-state-actions mt-1 flex flex-wrap justify-center gap-2">
         {status === 'error' && onRetry && (
           <Button type="button" onClick={onRetry}>
             {t('common:retry')}

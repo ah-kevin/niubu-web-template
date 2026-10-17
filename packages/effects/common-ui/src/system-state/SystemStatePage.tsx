@@ -30,17 +30,21 @@ export function SystemStatePage({
   renderLink,
 }: SystemStatePageProps) {
   return (
-    <section className="system-state max-w-[450px] [&>p]:text-[12px] [&>p]:leading-[1.9]">
+    <section className="system-state max-w-[450px] text-[length:var(--workspace-body-font-size)] [&>p]:leading-relaxed">
       {icon && (
-        <span className="state-symbol inline-flex size-[62px] items-center justify-center rounded-[var(--radius)] border border-border bg-secondary text-[var(--primary-text)] mb-[27px]">
+        <span className="state-symbol mb-5 inline-flex size-12 items-center justify-center rounded-full border border-border bg-card text-primary-text">
           {icon}
         </span>
       )}
-      {code && <span className="eyebrow">{code}</span>}
-      <h1 className="my-[14px] text-[27px]">{heading}</h1>
+      {code && (
+        <span className="eyebrow block text-[length:var(--workspace-caption-font-size)] font-medium tracking-wider text-muted-foreground">
+          {code}
+        </span>
+      )}
+      <h1 className="my-3 text-2xl font-semibold leading-snug">{heading}</h1>
       <p className="muted text-muted-foreground">{description}</p>
       {actions.length > 0 && (
-        <div className="state-actions my-[28px] flex flex-wrap gap-[12px] [&_[data-slot=button]]:text-[11px]">
+        <div className="state-actions my-6 flex flex-wrap gap-3">
           {actions.map(action =>
             action.href !== undefined ? (
               <Button key={action.id} asChild variant={action.variant}>
@@ -58,7 +62,9 @@ export function SystemStatePage({
           )}
         </div>
       )}
-      {footer && <p className="small muted text-muted-foreground">{footer}</p>}
+      {footer && (
+        <p className="small muted text-[length:var(--workspace-caption-font-size)] text-muted-foreground">{footer}</p>
+      )}
     </section>
   );
 }
