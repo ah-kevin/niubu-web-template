@@ -1,4 +1,7 @@
 import { Button } from '@niubu/shadcn-ui/button';
+import { Checkbox } from '@niubu/shadcn-ui/checkbox';
+import { Input } from '@niubu/shadcn-ui/input';
+import { Textarea } from '@niubu/shadcn-ui/textarea';
 import { useFeaturesText } from './copy';
 import { useEffect, useRef, useState } from 'react';
 import { createIconRegistry, Database, Settings2 } from '@niubu/icons';
@@ -72,22 +75,21 @@ function ConfigurationAndWatermark() {
           {t('browser.copy')}
         </Button>
         <p role="status">{localize(copyStatus)}</p>
-        <textarea aria-label={t('browser.manualCopy')} readOnly value={text} rows={8} />
+        <Textarea aria-label={t('browser.manualCopy')} readOnly value={text} rows={8} />
         <p>{t('browser.copyHelp')}</p>
       </section>
       <section aria-label={t('browser.watermark')}>
         <h2>{t('browser.watermark')}</h2>
         <label>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={core.general.watermark}
-            onChange={event => manager.update({ general: { watermark: event.target.checked } })}
+            onCheckedChange={checked => manager.update({ general: { watermark: checked === true } })}
           />
           {t('browser.showWatermark')}
         </label>
         <label>
           {t('browser.watermarkText')}
-          <input
+          <Input
             value={core.general.watermarkText}
             onChange={event => manager.update({ general: { watermarkText: event.target.value } })}
           />
@@ -101,7 +103,7 @@ function ConfigurationAndWatermark() {
 export function BrowserFeaturesPage(): React.JSX.Element {
   const { t } = useFeaturesText();
   return (
-    <div className="playground-page example-page feature-example-page">
+    <div className="playground-page example-page feature-example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold grid gap-[var(--workspace-section-gap)] [&>section]:min-w-0 [&>section]:rounded-xl [&>section]:border [&>section]:border-border [&>section]:bg-card [&>section]:p-[var(--workspace-card-padding)] [&_section>h2]:mb-3 [&_section>h2]:text-[16px] [&_section>h2]:font-semibold [&_section>[data-slot=button]]:me-2 [&_section>[data-slot=button]]:mt-3 [&_label]:inline-flex [&_label]:flex-wrap [&_label]:items-center [&_label]:gap-2">
       <h1>{t('browser.title')}</h1>
       <p>{t('browser.help')}</p>
       <RootFullscreen />

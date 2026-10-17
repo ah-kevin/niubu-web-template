@@ -78,10 +78,10 @@ export function NavigationPage({
     { homePath: paths[0]!, domainLabels: { demo: 'app:examples.navigation' } },
   );
   return (
-    <section className="playground-page example-page">
+    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
       <h1>{text('navigationTitle')}</h1>
       <p>{text('navigationHelp')}</p>
-      <div className="example-columns">
+      <div className="example-columns grid grid-cols-[minmax(12rem,1fr)_minmax(0,3fr)] gap-6 [@media(max-width:700px)]:grid-cols-1">
         <TreeNavigation
           nodes={projectMenu(access.menu, path, scope, key => key)}
           label={text('menu')}
@@ -142,7 +142,7 @@ export function NavigationPage({
               src="/frame-demo.html"
               sandbox="allow-scripts allow-forms"
               referrerPolicy="no-referrer"
-              className="playground-frame"
+              className="playground-frame min-h-96 w-full border border-border"
             />
           )}
           <Button onClick={() => setEmbedded(v => !v)}>{embedded ? text('revokeFrame') : text('restoreFrame')}</Button>

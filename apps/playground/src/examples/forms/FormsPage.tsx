@@ -32,7 +32,7 @@ export function FormsPage({ saveName }: FormsPageProps = {}): React.JSX.Element 
   const Panel = active[2];
   return (
     <div className="pattern-page">
-      <h1>{text('title')}</h1>
+      <h1 className="mb-[12px] text-[24px] font-semibold tracking-[-.025em]">{text('title')}</h1>
       <DocumentationLink kind="forms" />
       <p>{text('introduction')}</p>
       <nav aria-label={text('title')} className="pattern-form-actions">

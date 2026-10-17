@@ -4,6 +4,8 @@ import { resolveAccess } from '@niubu/access';
 import { AccessControl, AccessProvider } from '@niubu/access/react';
 import type { RouteMeta } from '@niubu/types';
 import { Button } from '@niubu/shadcn-ui/button';
+import { Checkbox } from '@niubu/shadcn-ui/checkbox';
+import { Select } from '@niubu/shadcn-ui/select';
 
 const roles = ['admin', 'super', 'user'] as const;
 const routes = roles.map((role, order) => ({
@@ -37,27 +39,30 @@ export function AccessPage() {
   });
   const ready = scopeId === 'north';
   return (
-    <section className="playground-page example-page">
+    <section className="playground-page example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
       <h1>{text('accessTitle')}</h1>
       <p>{text('accessHelp')}</p>
-      <div className="example-toolbar">
+      <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
         <label>
           {text('role')}
-          <select value={role} onChange={e => setRole(e.target.value)}>
-            {roles.map(r => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
+          <Select
+            label={text('role')}
+            value={role}
+            onValueChange={setRole}
+            options={roles.map(value => ({ value, label: value }))}
+          />
         </label>
         <label>
           {text('scope')}
-          <select value={scopeId} onChange={e => setScopeId(e.target.value)}>
-            <option>north</option>
-            <option>other</option>
-          </select>
+          <Select
+            label={text('scope')}
+            value={scopeId}
+            onValueChange={setScopeId}
+            options={['north', 'other'].map(value => ({ value, label: value }))}
+          />
         </label>
         <label>
-          <input type="checkbox" checked={write} onChange={e => setWrite(e.target.checked)} />
+          <Checkbox checked={write} onCheckedChange={value => setWrite(value === true)} />
           {text('write')}
         </label>
       </div>

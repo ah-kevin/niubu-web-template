@@ -1,40 +1,26 @@
-/* App composition only: public controls own their border, padding and variants. */
-.template-workspace .workspace-main { background: var(--background); }
-.playground-page { width: 100%; max-width: none; padding: 24px; }
-.playground-page > h1, .playground-page > header h1 { line-height: 1.35; letter-spacing: -.025em; }
-.playground-page > p { color: var(--muted-foreground); line-height: 1.7; max-width: 80ch; }
-.system-page-header { margin-bottom: 20px; }
-.system-demo-notice { font-size: 13px; line-height: 1.65; margin-top: 8px; }
-.system-query-card { padding: 20px; margin-bottom: 20px; background: var(--card); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); }
-.system-query-card .pattern-form-actions { justify-content: flex-end; gap: 8px; padding: 0; margin-top: 16px; border: 0; }
-.system-row-actions { flex-wrap: nowrap; gap: 2px; }
-.system-row-actions [data-slot='button'] { flex-shrink: 0; }
-.system-row-actions [data-action='delete'] { color: var(--destructive); }
-.example-page { padding: 24px; width: 100%; max-width: none; }
-.example-page > h1, .pattern-page > h1 { font-size: 24px; font-weight: 600; letter-spacing: -.025em; margin-bottom: 12px; }
-.example-page > p { font-size: 14px; line-height: 1.7; color: var(--muted-foreground); }
-.feature-example-page { display: grid; gap: 20px; }
-.feature-example-page > section, .feature-example-page > .template-feature-card { padding: 20px; background: var(--card); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); min-width: 0; }
-.feature-example-page section h2 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
-.feature-example-page section > [data-slot='button'] { margin-inline-end: 8px; margin-block-start: 12px; }
-.feature-example-page label { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.example-page input:not([data-slot]):not([type='checkbox']):not([type='radio']),
-.example-page select:not([data-slot]) { border: 1px solid var(--control-border); border-radius: var(--radius); background: var(--card); color: var(--foreground); min-height: 36px; padding: 6px 10px; }
-.example-page input[type='checkbox']:not([data-slot]), .example-page input[type='radio']:not([data-slot]) { accent-color: var(--primary); }
-.example-card { box-shadow: 0 1px 2px #00000004; border-radius: calc(var(--radius) + 4px); }
-@media(max-width:700px){.playground-page,.example-page{padding:16px}.system-query-card{padding:16px}.feature-example-page{gap:16px}}
+/* App composition depends on sibling or shell-owned state. */
+.template-workspace .layout-primary-pane[data-visually-collapsed='true'] .layout-logo {
+  padding-inline: 8px;
+  justify-content: center;
+}
+.template-workspace .layout-primary-pane[data-visually-collapsed='true'] .playground-brand-name {
+  display: none;
+}
+.template-workspace .template-scope-selector + .breadcrumbs {
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--border);
+}
+@media (max-width: 1000px) {
+  .template-workspace .template-scope-selector { font-size: 0; gap: 0; }
+  .template-workspace .template-scope-selector [role='combobox'] { font-size: 0.75rem; }
+}
 
-.template-workspace { display: contents; }
-.template-workspace .layout-logo { padding-inline: 16px; min-height: var(--layout-header-height); }
-.template-workspace .playground-brand-name { font-size: 14px; }
-.template-workspace .layout-primary-pane[data-visually-collapsed='true'] .layout-logo { padding-inline: 8px; justify-content: center; }
-.template-workspace .layout-primary-pane[data-visually-collapsed='true'] .playground-brand-name { display: none; }
-.template-workspace .template-scope-selector { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 12px; color: var(--muted-foreground); }
-.template-workspace .template-scope-selector select { background: transparent; color: var(--foreground); border: 0; font: inherit; padding: 4px 0; max-width: 100px; }
-.template-workspace .breadcrumbs { font-size: 13px; gap: 6px; white-space: nowrap; }
-.template-workspace .context-actions { gap: 12px; }
-.template-workspace .template-scope-selector + .breadcrumbs { padding-inline-start: 12px; border-inline-start: 1px solid var(--border); }
-.template-workspace .native-data-table .pattern-table-settings summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--radius); color: var(--muted-foreground); }
-.template-workspace .native-data-table .pattern-table-settings summary::-webkit-details-marker { display: none; }
-.template-workspace .native-data-table .pattern-table-settings summary:hover { background: var(--muted); color: var(--foreground); }
-@media(max-width:1000px){.template-workspace .template-scope-selector{font-size:0;gap:0}.template-workspace .template-scope-selector select{font-size:12px}}
+/* Keep this legacy app override unlayered so public bare-class form fallbacks
+   retain their defaults while query cards keep their original action layout. */
+.system-query-card .pattern-form-actions {
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0;
+  margin-top: 16px;
+  border: 0;
+}

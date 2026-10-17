@@ -13,6 +13,7 @@ import {
 import { useTranslation } from '@niubu/locales/react';
 import { createPreferenceManager, PreferenceProvider } from '@niubu/preferences';
 import { Button } from '@niubu/shadcn-ui/button';
+import { Select } from '@niubu/shadcn-ui/select';
 import { tablesCopy } from './copy';
 import {
   loadSyntheticTablePage,
@@ -119,14 +120,15 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
       <p>{t('examples.tables.boundary')}</p>
       <label>
         {t('examples.tables.scope')}
-        <select
-          aria-label={t('examples.tables.scope')}
+        <Select
+          label={t('examples.tables.scope')}
           value={scope}
-          onChange={event => setScope(event.currentTarget.value)}
-        >
-          <option value="north">{t('examples.tables.north')}</option>
-          <option value="south">{t('examples.tables.south')}</option>
-        </select>
+          onValueChange={setScope}
+          options={[
+            { value: 'north', label: t('examples.tables.north') },
+            { value: 'south', label: t('examples.tables.south') },
+          ]}
+        />
       </label>
       <PreferenceProvider manager={preferences.manager}>
         <ClientExamples key={scope} scope={scope} t={t} />

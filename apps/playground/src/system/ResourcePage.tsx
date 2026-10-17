@@ -69,7 +69,7 @@ function RecordDetail({
   t: Translate;
 }) {
   return (
-    <dl className="system-record-detail">
+    <dl className="system-record-detail grid gap-4 [&>div]:grid [&>div]:grid-cols-[minmax(6rem,1fr)_minmax(0,3fr)] [&>div]:gap-3 [&_dt]:text-muted-foreground [&_dd]:break-words [@media(max-width:700px)]:[&>div]:grid-cols-1 [@media(max-width:700px)]:[&>div]:gap-1">
       {['id', ...resourceConfig[resource].fields]
         .filter(name => name in record)
         .map(name => (
@@ -257,7 +257,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
         const record = info.row.original,
           name = recordName(record);
         return (
-          <div className="system-row-actions">
+          <div className="system-row-actions flex flex-nowrap items-center gap-0.5 [&>[data-slot=button]]:shrink-0 [&>[data-action=delete]]:text-destructive">
             <Button
               type="button"
               variant="ghost"
@@ -314,11 +314,13 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
   const shown = panel?.ownerKey === ownerKey ? panel : null;
   const Overlay = shown?.mode === 'create' ? Modal : Drawer;
   return (
-    <section className="playground-page system-resource-page">
-      <header className="system-page-header">
+    <section className="playground-page system-resource-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[1rem] [&>h1]:text-[1.5rem] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_form]:max-w-none">
+      <header className="system-page-header mb-[var(--workspace-section-gap)] flex flex-wrap items-start justify-between gap-[var(--workspace-section-gap)]">
         <div>
-          <h1>{t(config.titleKey)}</h1>
-          <p className="system-demo-notice">{t('system.demoNotice')}</p>
+          <h1 className="mb-[1rem] text-[1.5rem] font-semibold">{t(config.titleKey)}</h1>
+          <p className="system-demo-notice mt-2 max-w-[68ch] text-[length:var(--workspace-caption-font-size)] leading-relaxed text-muted-foreground">
+            {t('system.demoNotice')}
+          </p>
         </div>
         {writable && (
           <Button type="button" disabled={!lookup.ready} onClick={create}>
@@ -326,7 +328,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           </Button>
         )}
       </header>
-      <div className="system-query-card">
+      <div className="system-query-card mb-[var(--workspace-section-gap)] rounded-xl border border-border bg-card p-[var(--workspace-card-padding)]">
         <table.queryForm.Form submitLabel={t('common:search')} resetLabel={t('common:reset')} />
       </div>
       {lookup.error && (

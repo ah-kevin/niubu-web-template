@@ -1,3 +1,4 @@
+import { selectOption } from '../../tests/select-option';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
 import { I18nProvider } from '@niubu/locales/react';
@@ -31,18 +32,18 @@ it('switches query labels while retaining context selection and the current page
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
   const view = render(<I18nProvider instance={i18n}><QueryPage /></I18nProvider>);
   try {
-    fireEvent.change(screen.getByRole('combobox', { name: '合成 scope' }), { target: { value: 'south' } });
+    await selectOption(screen.getByRole('combobox', { name: '合成 scope' }), 'south');
     await screen.findByText('synthetic-reader / south / 0 · 第 1 页 · 条目 1');
     const scope = screen.getByRole('combobox', { name: '合成 scope' });
     await act(() => i18n.changeLocale('en-US', i18n.requiredNamespaces));
     expect(screen.getByRole('combobox', { name: 'Synthetic scope' })).toBe(scope);
-    expect(scope).toHaveValue('south');
+    expect(scope).toHaveTextContent('south');
     expect(screen.getByRole('heading', { name: 'Paginated queries' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next page' })).toBeInTheDocument();
     expect(screen.getByText('Current page: 1')).toBeInTheDocument();
     expect(screen.getByText('synthetic-reader / south / 0 · Page 1 · Item 1')).toBeInTheDocument();
     await act(() => i18n.changeLocale('zh-CN', i18n.requiredNamespaces));
     expect(screen.getByRole('button', { name: '下一页' })).toBeInTheDocument();
-    expect(scope).toHaveValue('south');
+    expect(scope).toHaveTextContent('south');
   } finally { view.unmount(); i18n.dispose(); }
 });

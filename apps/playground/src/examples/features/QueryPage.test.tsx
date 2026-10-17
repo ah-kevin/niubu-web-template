@@ -1,3 +1,4 @@
+import { selectOption } from '../../tests/select-option';
 import { StrictMode } from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,7 +18,7 @@ it('uses real paginated queries, retains the previous page while pending and cha
   expect(page.getByText('synthetic-reader / north / 0 · 第 1 页 · 条目 1')).toBeInTheDocument();
   await page.findByText('synthetic-reader / north / 0 · 第 2 页 · 条目 3');
   fireEvent.click(page.getByRole('button', { name: '下一页' }));
-  fireEvent.change(screen.getByRole('combobox', { name: '合成 scope' }), { target: { value: 'south' } });
+  await selectOption(screen.getByRole('combobox', { name: '合成 scope' }), 'south');
   expect(area('分页查询').queryAllByText(/north.*条目/)).toHaveLength(0);
   await area('分页查询').findByText('synthetic-reader / south / 0 · 第 1 页 · 条目 1');
 });
@@ -46,7 +47,7 @@ it('deduplicates concurrent fetchQuery calls, reuses cache and includes syntheti
   read();
   await cache().findByText('底层 GET 次数：1；两次结果相同：是');
   expect(fetchQuery.mock.calls.at(-1)?.[0].queryKey).toEqual(['playground-features', 'synthetic-reader', 'north', 1, 'concurrent']);
-  fireEvent.change(screen.getByRole('combobox', { name: '合成 identity' }), { target: { value: 'synthetic-other' } });
+  await selectOption(screen.getByRole('combobox', { name: '合成 identity' }), 'synthetic-other');
   read();
   await cache().findByText('底层 GET 次数：1；两次结果相同：是');
   expect(fetchQuery.mock.calls.at(-1)?.[0].queryKey).toEqual(['playground-features', 'synthetic-other', 'north', 1, 'concurrent']);
@@ -100,8 +101,8 @@ it.each([['合成 scope','south','north'],['合成 identity','synthetic-other','
  const retry=()=>area('安全 GET 重试');
  fireEvent.click(retry().getByRole('button',{name:'重试一次后成功'}));
  await retry().findByText('合成 GET 成功；尝试：2');
- fireEvent.change(screen.getByRole('combobox',{name:label}),{target:{value:away}});
- fireEvent.change(screen.getByRole('combobox',{name:label}),{target:{value:back}});
+ await selectOption(screen.getByRole('combobox',{name:label}), away);
+ await selectOption(screen.getByRole('combobox',{name:label}), back);
  fireEvent.click(retry().getByRole('button',{name:'重试一次后成功'}));
  await retry().findByText('合成 GET 成功；尝试：2');
 });

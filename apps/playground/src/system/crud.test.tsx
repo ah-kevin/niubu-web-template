@@ -650,3 +650,38 @@ describe('system UI with controlled API ports (not backend persistence)', () => 
     expect(screen.getByRole('combobox', { name: '角色' })).toHaveTextContent('缺失或不可选引用（roles-1）');
   });
 });
+
+
+describe('compiled system page composition', () => {
+  let rules: import('../tests/compiled-styles').CompiledStyleRule[];
+  beforeAll(async () => {
+    const { compilePlaygroundStyles, readCompiledRules } = await import('../tests/compiled-styles');
+    rules = readCompiledRules(await compilePlaygroundStyles());
+  });
+  it('preserves rem sizing and spacing on the real nested resource heading', async () => {
+    await mount('users');
+    const { matchingRules } = await import('../tests/compiled-styles');
+    const heading = screen.getByRole('heading', { name: '用户管理' });
+    expect(matchingRules(rules, heading, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === '1.5rem')).toBe(true);
+    expect(matchingRules(rules, heading, 'margin-bottom').some(rule => rule.style.getPropertyValue('margin-bottom') === '1rem')).toBe(true);
+    expect(matchingRules(rules, heading, 'font-weight').some(rule => ['600', 'var(--font-weight-semibold)'].includes(rule.style.getPropertyValue('font-weight')))).toBe(true);
+  });
+  it.each(['standard', 'compact'])('keeps query actions above the public legacy fallback in %s density', async density => {
+    await mount('users');
+    const { matchingRules } = await import('../tests/compiled-styles');
+    document.documentElement.dataset.density = density;
+    document.documentElement.style.fontSize = '22px';
+    try {
+      const actions = document.querySelector('.system-query-card .pattern-form-actions')!;
+      const fallback = (property: string) => matchingRules(rules, actions, property).filter(rule => rule.layer === null && rule.media.length === 0).at(-1)?.style.getPropertyValue(property);
+      expect(fallback('justify-content')).toBe('flex-end');
+      expect(fallback('gap')).toBe('8px');
+      expect(fallback('margin-top')).toBe('16px');
+      expect(fallback('padding')).toBe('0px');
+      expect(fallback('border')).toBe('0px');
+    } finally {
+      delete document.documentElement.dataset.density;
+      document.documentElement.style.removeProperty('font-size');
+    }
+  });
+});

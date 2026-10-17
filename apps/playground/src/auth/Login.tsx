@@ -12,7 +12,10 @@ export function LoginForm({ expired = false }: { expired?: boolean }) {
     location = useLocation();
   const [params] = useSearchParams();
   return (
-    <div className="template-auth" data-expired={expired}>
+    <div
+      className="template-auth w-full min-w-0 max-w-[380px] [&_.auth-card]:w-full [&_.auth-card>h1]:mb-[32px] [&_.auth-card>h1]:text-[30px] [&_.auth-card>h1]:leading-snug [&_.auth-card>h1]:tracking-tight data-[expired=true]:max-w-none data-[expired=true]:[&_.auth-card>h1]:mb-[24px] data-[expired=true]:[&_.auth-card>h1]:text-[24px] [@media(max-width:800px)]:[&_.auth-card>h1]:text-[28px]"
+      data-expired={expired}
+    >
       <AuthenticationForm
         mode="login"
         labels={{

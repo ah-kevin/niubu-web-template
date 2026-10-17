@@ -1,3 +1,4 @@
+import { selectOption } from '../../tests/select-option';
 import { StrictMode } from 'react';
 import { CapacityExample } from './TabsPage';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -13,16 +14,16 @@ function mount(node: React.ReactNode) {
   return render(<I18nProvider instance={i18n}>{node}</I18nProvider>);
 }
 describe('confirmed application examples', () => {
-  it('switches synthetic roles/codes/scope through real authorization projection without granting another scope', () => {
+  it('switches synthetic roles/codes/scope through real authorization projection without granting another scope', async () => {
     mount(<AccessPage />);
     expect(screen.getByText('admin 页面：允许')).toBeVisible();
     expect(screen.queryByRole('button', { name: '删除示例' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('合成角色'), { target: { value: 'super' } });
+    await selectOption(screen.getByLabelText('合成角色'), 'super');
     expect(screen.getByText('super 页面：允许')).toBeVisible();
     expect(screen.getByText('admin 页面：拒绝')).toBeVisible();
     fireEvent.click(screen.getByLabelText('授予写权限'));
     expect(screen.getByRole('button', { name: '删除示例' })).toBeEnabled();
-    fireEvent.change(screen.getByLabelText('合成工作空间'), { target: { value: 'other' } });
+    await selectOption(screen.getByLabelText('合成工作空间'), 'other');
     expect(screen.getByText('当前 scope 不在授权列表')).toBeVisible();
     expect(screen.queryByRole('button', { name: '删除示例' })).not.toBeInTheDocument();
   });

@@ -21,10 +21,10 @@ export function ComponentsPage() {
   const [allowArchive, setAllowArchive] = useState(false);
   const [menuResult, setMenuResult] = useState('No menu action');
   return (
-    <main className="example-page">
+    <main className="example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold">
       <h1>{t('title')}</h1>
       <p>{t('help')}</p>
-      <section className="example-card">
+      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('choices')}</h2>
         <RadioGroup aria-label={t('density')} value={density} onValueChange={setDensity}>
           {(['compact', 'comfortable'] as const).map(value => (
@@ -51,7 +51,7 @@ export function ComponentsPage() {
             </label>
           ))}
         </fieldset>
-        <div className="example-toolbar">
+        <div className="example-toolbar my-3 flex flex-wrap items-center gap-3 [&>label]:inline-flex [&>label]:items-center [&>label]:gap-2">
           <Button type="button" onClick={() => setApplied(`${density} · ${channels.join(', ') || 'none'}`)}>
             {t('apply')}
           </Button>
@@ -69,7 +69,7 @@ export function ComponentsPage() {
         </div>
         <output aria-label={t('applied')}>{localize(applied)}</output>
       </section>
-      <section className="example-card">
+      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('menu')}</h2>
         <label htmlFor={`${id}-archive`}>
           <Checkbox
@@ -96,7 +96,7 @@ export function ComponentsPage() {
         </ContextMenu>
         <output aria-label={t('menuResult')}>{localize(menuResult)}</output>
       </section>
-      <section className="example-card">
+      <section className="example-card my-4 min-w-0 rounded-xl border border-border bg-card p-[var(--workspace-card-padding)] shadow-xs">
         <h2>{t('tooltipTitle')}</h2>
         <Tooltip content={t('tooltip')}>
           <Button type="button" variant="outline">

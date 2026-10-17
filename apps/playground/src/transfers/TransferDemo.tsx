@@ -1,3 +1,4 @@
+import { Button } from '@niubu/shadcn-ui/button';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import type { AuthContext } from '@niubu/types';
@@ -228,7 +229,10 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
     progress &&
     t('transfer.acknowledged', { acknowledgedBytes: progress.acknowledgedBytes, totalBytes: progress.totalBytes });
   return (
-    <section className="transfer-demo" aria-labelledby={`${id}-title`}>
+    <section
+      className="transfer-demo mt-8 border-t border-border pt-6 [&>h2]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>p]:max-w-[68ch] [&>p]:text-muted-foreground [&_input[type=file]]:max-w-full"
+      aria-labelledby={`${id}-title`}
+    >
       <h2 id={`${id}-title`}>{t('transfer.title')}</h2>
       <p>{t('transfer.description')}</p>
       <label htmlFor={id}>{t('transfer.file')}</label>
@@ -242,32 +246,32 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
           setView(null);
         }}
       />
-      <div className="transfer-actions">
-        <button
+      <div className="transfer-actions mt-4 flex flex-wrap gap-3">
+        <Button
           type="button"
           disabled={!permitted || !selected || tooLarge || Boolean(visible?.busy)}
           onClick={() => void upload()}
         >
           {t('transfer.upload')}
-        </button>
+        </Button>
         {visible?.busy === 'upload' && (
-          <button type="button" onClick={cancel}>
+          <Button type="button" onClick={cancel}>
             {t('transfer.cancel')}
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
           disabled={!permitted || !visible?.file || Boolean(visible.busy)}
           onClick={() => void download()}
         >
           {t('transfer.download')}
-        </button>
+        </Button>
       </div>
       {!ready ? <p>{t('transfer.unavailable')}</p> : !permitted ? <p>{t('transfer.forbidden')}</p> : null}
       {!selected && permitted && <p>{t('transfer.chooseFile')}</p>}
       {tooLarge && <p role="alert">{t('transfer.limit')}</p>}
       {progress && (
-        <div className="transfer-progress">
+        <div className="transfer-progress mt-4 [&_progress]:w-full [&_progress]:max-w-lg [&_progress]:accent-primary">
           <progress
             aria-label={progressText || undefined}
             max={progress.totalBytes || 1}
@@ -279,7 +283,7 @@ export function TransferDemo({ downloadPorts = browserDownloadPorts }: { downloa
       )}
       {visible?.file && <p role="status">{t('transfer.complete')}</p>}
       {visible?.message && (
-        <p className="transfer-status" role={visible.alert ? 'alert' : 'status'}>
+        <p className="transfer-status [&[role=alert]]:text-destructive" role={visible.alert ? 'alert' : 'status'}>
           {t(visible.message)}
         </p>
       )}

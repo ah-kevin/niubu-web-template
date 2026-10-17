@@ -90,7 +90,10 @@ export function ResourceEditor<K extends ResourceKind>({
   }
   if (recovering)
     return (
-      <section className="system-draft-recovery" aria-label={t('system.draftAvailable')}>
+      <section
+        className="system-draft-recovery flex flex-wrap items-center gap-2 [&>p]:basis-full"
+        aria-label={t('system.draftAvailable')}
+      >
         <p>{t('system.draftAvailable')}</p>
         <Button
           type="button"

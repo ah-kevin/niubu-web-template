@@ -1,3 +1,4 @@
+import { selectOption } from '../../apps/playground/src/tests/select-option';
 import { mockFetchResponse } from './mock-response';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -55,11 +56,11 @@ it('changes workspace grants without reload and preserves the admitted page duri
   expect(await screen.findByRole('heading',{name:'请求示例'})).toBeVisible();
   const router=runtime.router;
   expect(runtime.access().diagnostics.some(item=>item.pageId==='unknown.page')).toBe(true);
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
+  await selectOption(screen.getByLabelText('工作空间'), 'South');
   expect(await screen.findByRole('heading',{name:'无权访问'})).toBeVisible();
   expect(screen.queryByRole('link',{name:'请求示例'})).not.toBeInTheDocument();
   expect(f.reload).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'north'}});
+  await selectOption(screen.getByLabelText('工作空间'), 'North');
   expect(await screen.findByRole('heading',{name:'请求示例'})).toBeVisible();
   fireEvent.change(screen.getByLabelText('回显内容'),{target:{value:'keep draft'}});
   await act(async()=>runtime.auth.markLoginExpired());
@@ -99,7 +100,7 @@ it('renders safe external metadata and removes an embedded frame as soon as its 
   expect(await screen.findByTitle('内嵌页面')).toHaveAttribute('src','/frame-demo.html');
   const external=screen.getByRole('link',{name:'文档'});
   expect(external).toHaveAttribute('target','_blank');expect(external).toHaveAttribute('rel','noopener noreferrer');
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
+  await selectOption(screen.getByLabelText('工作空间'), 'South');
   expect(screen.queryByTitle('内嵌页面')).not.toBeInTheDocument();
   expect(await screen.findByRole('heading',{name:'无权访问'})).toBeVisible();
   expect(f.reload).not.toHaveBeenCalled();
@@ -114,7 +115,7 @@ it('renews exactly once when access expires while workspace grants are being loa
   let now=0;const f=fixture(()=>now);await f.seed();const runtime=await f.mount('/request?scopeKind=workspace&scopeId=north');
   await waitFor(()=>expect(runtime.auth.getSnapshot().status).toBe('ready'));
   now=300_001;
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
+  await selectOption(screen.getByLabelText('工作空间'), 'South');
   await waitFor(()=>expect(runtime.auth.getSnapshot().status).toBe('ready'));
   expect(runtime.auth.getSnapshot()).toMatchObject({scope:{kind:'workspace',id:'south'},loginExpired:false,codes:['demo:read']});
   expect(f.calls.filter(call=>call.path==='/api/auth/refresh')).toHaveLength(1);
@@ -127,7 +128,7 @@ it('clears every retired generation of the prior workspace after same-person rea
   await act(async()=>runtime.auth.markLoginExpired());submit(await screen.findByRole('dialog',{name:'会话已过期'}));
   await waitFor(()=>expect(runtime.auth.getSnapshot().status).toBe('ready'));
   const current=key(runtime.auth.getSnapshot().generation);runtime.queryClient.setQueryData(current,'current value');
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
+  await selectOption(screen.getByLabelText('工作空间'), 'South');
   await waitFor(()=>expect(runtime.auth.getSnapshot().status).toBe('ready'));
   expect(runtime.queryClient.getQueryData(old)).toBeUndefined();expect(runtime.queryClient.getQueryData(current)).toBeUndefined();
 });
@@ -137,8 +138,8 @@ it('a delayed retired cleanup cannot delete a newly re-entered workspace generat
   let release!:()=>void,held=false;const gate=new Promise<void>(done=>{release=done;});
   const cancel=runtime.queryClient.cancelQueries.bind(runtime.queryClient);
   vi.spyOn(runtime.queryClient,'cancelQueries').mockImplementation(async(...args)=>{await cancel(...args);if(!held){held=true;await gate;}});
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
-  fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'north'}});
+  await selectOption(screen.getByLabelText('工作空间'), 'South');
+  await selectOption(screen.getByLabelText('工作空间'), 'North');
   await waitFor(()=>expect(runtime.auth.getSnapshot().status).toBe('ready'));
   const fresh=['playground','identity','demo-user','scope','workspace','north','generation',runtime.auth.getSnapshot().generation,'record'];
   runtime.queryClient.setQueryData(fresh,'fresh value');
@@ -149,7 +150,7 @@ it('a delayed retired cleanup cannot delete a newly re-entered workspace generat
 it('opens actionable reauthentication if renewal fails while workspace grants are loading',async()=>{
   let now=0,denied=false;const f=fixture(()=>now,()=>denied);await f.seed();const runtime=await f.mount('/request?scopeKind=workspace&scopeId=north');
   await waitFor(()=>expect(runtime.auth.getSnapshot().status).toBe('ready'));
-  now=300_001;denied=true;fireEvent.change(screen.getByLabelText('工作空间'),{target:{value:'south'}});
+  now=300_001;denied=true;await selectOption(screen.getByLabelText('工作空间'), 'South');
   expect(await screen.findByRole('dialog',{name:'会话已过期'})).toBeVisible();
   expect(runtime.auth.getSnapshot()).toMatchObject({loginExpired:true,codes:[],menu:[]});
   expect(f.calls.filter(call=>call.path==='/api/auth/refresh')).toHaveLength(1);

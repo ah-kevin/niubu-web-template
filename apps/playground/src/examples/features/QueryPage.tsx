@@ -1,4 +1,5 @@
 import { Button } from '@niubu/shadcn-ui/button';
+import { Select } from '@niubu/shadcn-ui/select';
 import { useFeaturesText } from './copy';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -226,28 +227,26 @@ export function QueryPage(): React.JSX.Element {
     [owner],
   );
   return (
-    <div className="playground-page example-page feature-example-page">
+    <div className="playground-page example-page feature-example-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[12px] [&>h1]:text-[24px] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_output]:my-3 [&_output]:block [&_output]:whitespace-pre-wrap [&_output]:break-words [&_h2]:mb-3 [&_h2]:text-[16px] [&_h2]:font-semibold grid gap-[var(--workspace-section-gap)] [&>section]:min-w-0 [&>section]:rounded-xl [&>section]:border [&>section]:border-border [&>section]:bg-card [&>section]:p-[var(--workspace-card-padding)] [&_section>h2]:mb-3 [&_section>h2]:text-[16px] [&_section>h2]:font-semibold [&_section>[data-slot=button]]:me-2 [&_section>[data-slot=button]]:mt-3 [&_label]:inline-flex [&_label]:flex-wrap [&_label]:items-center [&_label]:gap-2">
       <h1>{t('query.title')}</h1>
       <p>{t('query.help')}</p>
       <label>
         {t('query.identity')}
-        <select
+        <Select
+          label={t('query.identity')}
           value={context.identity}
-          onChange={event => setContext(value => ({ ...value, identity: event.target.value }))}
-        >
-          <option>synthetic-reader</option>
-          <option>synthetic-other</option>
-        </select>
+          onValueChange={identity => setContext(value => ({ ...value, identity }))}
+          options={['synthetic-reader', 'synthetic-other'].map(value => ({ value, label: value }))}
+        />
       </label>
       <label>
         {t('query.scope')}
-        <select
+        <Select
+          label={t('query.scope')}
           value={context.scope}
-          onChange={event => setContext(value => ({ ...value, scope: event.target.value }))}
-        >
-          <option>north</option>
-          <option>south</option>
-        </select>
+          onValueChange={scope => setContext(value => ({ ...value, scope }))}
+          options={['north', 'south'].map(value => ({ value, label: value }))}
+        />
       </label>
       <Button type="button" onClick={() => setContext(value => ({ ...value, generation: value.generation + 1 }))}>
         {t('query.generation')}

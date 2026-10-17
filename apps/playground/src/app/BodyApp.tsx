@@ -28,6 +28,7 @@ import { PlaygroundBrand } from './Brand';
 import { buildPlaygroundBreadcrumbs } from './breadcrumbs';
 import { registry } from '../modules/demo';
 import { icons } from '../icons';
+import { Select } from '@niubu/shadcn-ui/select';
 
 function AppLink({ href, external, target, rel, ...props }: LinkProps) {
   return external || target === '_blank' ? (
@@ -68,7 +69,7 @@ export function BodyApp({ children }: { children: ReactNode }) {
     <>
       <NavigationGuard description={t('common:guard.livePreserveDescription')} />
       <ScopeSync />
-      <div className="template-workspace">
+      <div className="template-workspace contents [&_.workspace-main]:bg-background [&_.layout-logo]:min-h-[var(--layout-header-height)] [&_.layout-logo]:px-[16px] [&_.playground-brand-name]:text-[14px] [&_.breadcrumbs]:gap-[6px] [&_.breadcrumbs]:whitespace-nowrap [&_.breadcrumbs]:text-[13px] [&_.context-actions]:gap-[12px]">
         <BusinessShell
           brand={appConfig.displayName}
           logo={<PlaygroundBrand href={homeHref} />}
@@ -92,26 +93,22 @@ export function BodyApp({ children }: { children: ReactNode }) {
           onNavigateTo={href => void navigate(href)}
           scopeSelector={
             state.user ? (
-              <label className="template-scope-selector">
+              <label className="template-scope-selector inline-flex items-center gap-2 whitespace-nowrap text-[12px] text-muted-foreground">
                 {t('workspace')}
-                <select
-                  aria-label={t('workspace')}
+                <Select
+                  label={t('workspace')}
+                  className="min-w-0 max-w-40"
                   value={state.scope?.kind === 'workspace' ? state.scope.id : ''}
-                  onChange={event => {
-                    const scope = { kind: 'workspace', id: event.target.value };
+                  onValueChange={id => {
+                    const scope = { kind: 'workspace', id };
                     void navigate({
                       pathname: location.pathname,
                       search: withScope(location.search, scope),
                       hash: location.hash,
                     });
                   }}
-                >
-                  {state.user.workspaces.map(scope => (
-                    <option key={`${scope.kind}:${scope.id}`} value={scope.id}>
-                      {scope.name ?? scope.id}
-                    </option>
-                  ))}
-                </select>
+                  options={state.user.workspaces.map(scope => ({ value: scope.id, label: scope.name ?? scope.id }))}
+                />
               </label>
             ) : undefined
           }

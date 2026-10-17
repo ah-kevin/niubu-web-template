@@ -1,3 +1,6 @@
+import { Button } from '@niubu/shadcn-ui/button';
+import { Input } from '@niubu/shadcn-ui/input';
+import { Label } from '@niubu/shadcn-ui/label';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import { usePlaygroundApi } from '../app/api-context';
@@ -39,16 +42,16 @@ export function RequestPage() {
     setPending(false);
   }
   return (
-    <section className="playground-page">
+    <section className="playground-page w-full min-w-0 p-[calc(var(--space-page)-8px)] [@media(max-width:700px)]:p-[16px] [&>h1]:mb-[1rem] [&>h1]:text-[1.5rem] [&>h1]:font-semibold [&>p]:my-3 [&>p]:max-w-[80ch] [&>p]:text-muted-foreground [&>p]:leading-relaxed [&_pre]:mt-4 [&_pre]:whitespace-pre-wrap [&_pre]:break-words">
       <h1>{t('request')}</h1>
-      <form onSubmit={event => void submit(event)}>
-        <label htmlFor={id}>{t('value')}</label>
-        <input id={id} value={value} onChange={event => setValue(event.target.value)} />
+      <form className="grid max-w-lg gap-3" onSubmit={event => void submit(event)}>
+        <Label htmlFor={id}>{t('value')}</Label>
+        <Input id={id} value={value} onChange={event => setValue(event.target.value)} />
         <AccessControl codes={['demo:echo']} strategy="disable">
           {({ disabled }) => (
-            <button type="submit" disabled={pending || disabled}>
+            <Button type="submit" disabled={pending || disabled}>
               {t('send')}
-            </button>
+            </Button>
           )}
         </AccessControl>
       </form>

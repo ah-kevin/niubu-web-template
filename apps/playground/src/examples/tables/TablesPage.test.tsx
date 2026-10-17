@@ -1,3 +1,4 @@
+import { selectOption } from '../../tests/select-option';
 import { StrictMode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -35,7 +36,7 @@ describe('DataTable existing-capability examples', () => {
     expect(client().getByText('已选择 3 条')).toBeInTheDocument();
     fireEvent.click(client().getByRole('button', { name: '清空选择' }));
     expect(client().getByText('已选择 0 条')).toBeInTheDocument();
-    fireEvent.change(client().getByRole('combobox', { name: '每页条数' }), { target: { value: '25' } });
+    await selectOption(client().getByRole('combobox', { name: '每页条数' }), '25');
     expect(ids(client())).toEqual(['sample-4', 'sample-2', 'sample-3', 'sample-1']);
     await screen.findByText('North · Cedar');
   });
@@ -45,20 +46,20 @@ describe('DataTable existing-capability examples', () => {
     fireEvent.click(client().getByText('显示设置'));
     fireEvent.click(client().getByRole('checkbox', { name: '显示 分数' }));
     expect(client().queryByRole('columnheader', { name: /分数/ })).not.toBeInTheDocument();
-    fireEvent.change(client().getByRole('combobox', { name: '固定 名称' }), { target: { value: 'start' } });
+    await selectOption(client().getByRole('combobox', { name: '固定 名称' }), '固定到开头');
     const width = client().getByRole('spinbutton', { name: '名称 列宽' });
     fireEvent.change(width, { target: { value: '240' } });
     fireEvent.blur(width);
     expect(client().getByRole('columnheader', { name: /名称/ })).toHaveStyle({ position: 'sticky', width: '240px', insetInlineStart: '0px' });
-    fireEvent.change(screen.getByRole('combobox', { name: '演示作用域' }), { target: { value: 'south' } });
+    await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'South（合成）');
     expect(client().getByRole('checkbox', { name: '显示 分数' })).toBeChecked();
-    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveValue('none');
-    fireEvent.change(screen.getByRole('combobox', { name: '演示作用域' }), { target: { value: 'north' } });
+    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('取消固定');
+    await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'North（合成）');
     expect(client().getByRole('checkbox', { name: '显示 分数' })).not.toBeChecked();
-    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveValue('start');
+    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('固定到开头');
     fireEvent.click(client().getByRole('button', { name: '恢复默认列' }));
     expect(client().getByRole('checkbox', { name: '显示 分数' })).toBeChecked();
-    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveValue('none');
+    expect(client().getByRole('combobox', { name: '固定 名称' })).toHaveTextContent('取消固定');
     await screen.findByText('North · Cedar');
   });
 
@@ -123,7 +124,7 @@ describe('DataTable existing-capability examples', () => {
     const server = deferredServer();
     const view = render(<TablesPage load={server.load} />);
     await waitFor(() => expect(server.calls).toHaveLength(1));
-    fireEvent.change(screen.getByRole('combobox', { name: '演示作用域' }), { target: { value: 'south' } });
+    await selectOption(screen.getByRole('combobox', { name: '演示作用域' }), 'South（合成）');
     await waitFor(() => expect(server.calls).toHaveLength(2));
     expect(server.calls[0]!.request.signal.aborted).toBe(true);
     expect(server.calls[1]!.scope).toBe('south');
