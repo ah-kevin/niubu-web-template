@@ -1,17 +1,26 @@
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
-import { Label } from '@niubu/shadcn-ui/label';
-import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@niubu/icons';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
-import { Fragment, memo, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import {
+  Fragment,
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import type { Column, Header, ReactTable, Row, RowData } from '@tanstack/react-table';
 import type { listFeatures, selectableListFeatures } from './profiles';
 import type { BaseTableProps, ListSlices, TableLabels } from './types';
-import { clampColumnWidth } from './preferences';
+import { cn } from '@niubu/shadcn-ui/cn';
+import type { ListNativeTable } from './ColumnSettings';
+import { TableToolbar } from './TableToolbar';
 
 export function ReadMessage<T>({
   props,
@@ -93,123 +102,6 @@ function pinnedStyle<T extends RowData>(
     background: pin ? 'var(--table-row-background, var(--card, Canvas))' : undefined,
   };
 }
-function ColumnWidthInput({
-  value,
-  label,
-  onCommit,
-}: {
-  value: number;
-  label: string;
-  onCommit: (value: number) => void;
-}) {
-  const [draft, setDraft] = useState(String(value));
-  return (
-    <NumberInput
-      className="w-20 min-w-0 justify-self-end"
-      valueMode="string"
-      value={draft}
-      onValueChange={setDraft}
-      aria-label={label}
-      min={80}
-      max={640}
-      onBlur={() => {
-        const next = Number(draft);
-        const width = Number.isFinite(next) ? clampColumnWidth(next) : value;
-        setDraft(String(width));
-        onCommit(width);
-      }}
-    />
-  );
-}
-function ColumnSettings<T extends RowData>({
-  table,
-  labels,
-  onResetColumns,
-}: {
-  table: ReactTable<typeof listFeatures, T> | ReactTable<typeof selectableListFeatures, T>;
-  labels: TableLabels;
-  onResetColumns?: () => void;
-}) {
-  const columns = table.getAllLeafColumns();
-  return (
-    <details className="pattern-table-settings group/table-settings relative ms-auto">
-      <Button asChild variant="outline" size="sm">
-        <summary className="list-none [&::-webkit-details-marker]:hidden">
-          {labels.settings}
-          <ChevronDown
-            className="pattern-table-settings-chevron group-open/table-settings:rotate-180"
-            aria-hidden="true"
-          />
-        </summary>
-      </Button>
-      <div className="pattern-column-settings absolute end-0 top-[calc(100%+8px)] z-20 grid max-h-[60dvh] w-[min(360px,calc(100vw-44px))] gap-[var(--workspace-heading-gap)] overflow-y-auto rounded-[var(--radius)] border border-border bg-card p-[var(--workspace-card-padding)] shadow-lg">
-        {columns.map(column => {
-          const name = labels.columnName(column.id);
-          const visible = table.state.columnVisibility[column.id] !== false;
-          return (
-            <fieldset
-              className="grid min-w-0 gap-[var(--workspace-heading-gap)] rounded-[var(--radius)] border border-border p-[var(--workspace-heading-gap)]"
-              key={column.id}
-            >
-              <legend className="px-1 text-[length:var(--workspace-caption-font-size)] font-semibold">{name}</legend>
-              <Label className="pattern-column-setting-toggle flex items-center gap-2">
-                <Checkbox
-                  checked={visible}
-                  aria-label={labels.showColumn(name)}
-                  disabled={!column.getCanHide() || (visible && table.getVisibleLeafColumns().length === 1)}
-                  onCheckedChange={checked => column.toggleVisibility(checked === true)}
-                />
-                {labels.showColumn(name)}
-              </Label>
-              <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2">
-                {labels.columnWidth(name)}
-                <ColumnWidthInput
-                  key={`${column.id}:${column.getSize()}`}
-                  value={column.getSize()}
-                  label={labels.columnWidth(name)}
-                  onCommit={value => table.setColumnSizing(old => ({ ...old, [column.id]: value }))}
-                />
-              </Label>
-              <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2">
-                {labels.pinColumn(name)}
-                <Select
-                  className="w-full min-w-0"
-                  label={labels.pinColumn(name)}
-                  value={column.getIsPinned() || 'none'}
-                  onValueChange={value => column.pin(value === 'start' ? 'start' : value === 'end' ? 'end' : false)}
-                  options={[
-                    { value: 'none', label: labels.unpin },
-                    { value: 'start', label: labels.pinStart },
-                    { value: 'end', label: labels.pinEnd },
-                  ]}
-                />
-              </Label>
-            </fieldset>
-          );
-        })}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          type="button"
-          onClick={() => {
-            if (onResetColumns) {
-              onResetColumns();
-              return;
-            }
-            table.resetColumnVisibility();
-            table.resetColumnSizing();
-            table.resetColumnPinning();
-          }}
-        >
-          {labels.resetColumns}
-        </Button>
-      </div>
-    </details>
-  );
-}
-type ListNativeTable<T extends RowData> =
-  ReactTable<typeof listFeatures, T> | ReactTable<typeof selectableListFeatures, T>;
 type ListNativeHeader<T extends RowData> = Header<typeof listFeatures, T> | Header<typeof selectableListFeatures, T>;
 
 /** Only native header layout/actions are shared; the concrete owner supplies FlexRender. */
@@ -447,17 +339,57 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   isRowSelected?: (row: R) => boolean;
 }) {
   const [initialPageSize] = useState(() => table.state.pagination.pageSize);
+  const [maximized, setMaximized] = useState(false);
+  const section = useRef<HTMLElement>(null);
+  if (maximized && !props.toolbar?.allowMaximize) setMaximized(false);
+  useEffect(() => {
+    if (!maximized) return;
+    const closeMaximized = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (section.current?.closest('[hidden], [inert], [aria-hidden="true"]')) return;
+      if (
+        event.target instanceof Node &&
+        event.target !== document.body &&
+        event.target !== document.documentElement &&
+        !section.current?.contains(event.target)
+      )
+        return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]')
+      )
+        return;
+      event.preventDefault();
+      setMaximized(false);
+    };
+    window.addEventListener('keydown', closeMaximized);
+    return () => window.removeEventListener('keydown', closeMaximized);
+  }, [maximized]);
   return (
-    <section className={nativeTableClassName} aria-label={props.caption}>
-      <div className="pattern-table-toolbar flex flex-wrap items-center justify-between gap-[var(--workspace-heading-gap)] px-[var(--workspace-card-padding)] py-[var(--workspace-heading-gap)] text-[length:var(--workspace-caption-font-size)]">
-        <div className="pattern-table-summary flex min-w-0 flex-auto flex-wrap items-center gap-x-[var(--workspace-section-gap)] gap-y-[var(--workspace-heading-gap)] [&>p]:m-0">
-          {selectionSummary}
-        </div>
-        <ColumnSettings table={table} labels={props.labels} onResetColumns={props.onResetColumns} />
-      </div>
+    <section
+      ref={section}
+      className={cn(
+        nativeTableClassName,
+        maximized && 'pattern-table-maximized fixed inset-0 z-40 flex max-w-none flex-col rounded-none',
+      )}
+      aria-label={props.caption}
+      data-maximized={maximized || undefined}
+    >
+      <TableToolbar
+        table={table}
+        props={props}
+        selectionSummary={selectionSummary}
+        maximized={maximized}
+        onMaximizeChange={setMaximized}
+      />
       <ReadMessage props={props} hasRows={rows.length > 0} />
       {props.readState === 'ready' && rows.length > 0 && (
-        <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
+        <div
+          className={cn(
+            'native-table-scroll max-w-full overflow-x-auto overscroll-x-contain',
+            maximized && 'min-h-0 flex-1 overflow-y-auto',
+          )}
+        >
           <table style={{ width: table.getTotalSize() + (selectionHeader ? 44 : 0), tableLayout: 'fixed' }}>
             <caption className="sr-only">{props.caption}</caption>
             <thead>

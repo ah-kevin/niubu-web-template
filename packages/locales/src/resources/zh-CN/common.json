@@ -113,5 +113,8 @@
   "table.previousPages": "向上跳页",
   "table.nextPages": "向下跳页",
   "table.pageNumber": "第 {{page}} 页",
-  "table.pageSizeOption": "{{size}} 条/页"
+  "table.pageSizeOption": "{{size}} 条/页",
+  "table.search": "搜索",
+  "table.refresh": "刷新",
+  "table.moreColumnSettings": "更多列设置"
 }

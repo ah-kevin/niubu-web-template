@@ -113,5 +113,8 @@
   "table.previousPages": "Jump backward",
   "table.nextPages": "Jump forward",
   "table.pageNumber": "Page {{page}}",
-  "table.pageSizeOption": "{{size}} / page"
+  "table.pageSizeOption": "{{size}} / page",
+  "table.search": "Search",
+  "table.refresh": "Refresh",
+  "table.moreColumnSettings": "More column settings"
 }

@@ -309,7 +309,7 @@ it('keeps header and body in logical pin order with matching offsets and widths,
   expect(screen.getAllByRole('columnheader')[0].style.insetInlineStart).toBe('0px');
   expect(cells[0].style.width).toBe('180px');
   expect(cells[1].style.insetInlineEnd).toBe('0px');
-  fireEvent.click(screen.getByText('列设置'));
+  fireEvent.click(screen.getByRole('button', { name: labels.settings }));
   fireEvent.click(screen.getByRole('checkbox', { name: '显示 id' }));
   expect(screen.getAllByRole('columnheader')).toHaveLength(1);
   expect(screen.getByRole('checkbox', { name: '显示 quantity' })).toBeDisabled();
@@ -318,7 +318,8 @@ it('keeps header and body in logical pin order with matching offsets and widths,
 });
 it('connects keyboard, numeric and native mouse resize with widths clamped to 80 through 640', () => {
   render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} />);
-  fireEvent.click(screen.getByText('列设置'));
+  fireEvent.click(screen.getByRole('button', { name: labels.settings }));
+  fireEvent.click(screen.getByRole('button', { name: '更多列设置' }));
   const resizer = screen.getByRole('button', { name: '调整 id 列宽' });
   const width = () => screen.getByRole('spinbutton', { name: 'id 列宽' });
   fireEvent.keyDown(resizer, { key: 'ArrowRight' });
@@ -886,7 +887,8 @@ it('applies shared select keyboard choices to the page size and column pin owner
   const fifty = await screen.findByRole('option', { name: '50 条/页' });
   fireEvent.keyDown(fifty, { key: 'Enter' });
   expect(pageSize).toHaveTextContent('50');
-  fireEvent.click(screen.getByText(labels.settings));
+  fireEvent.click(screen.getByRole('button', { name: labels.settings }));
+  fireEvent.click(screen.getByRole('button', { name: '更多列设置' }));
   const pin = screen.getByRole('combobox', { name: labels.pinColumn('id') });
   pin.focus();
   fireEvent.keyDown(pin, { key: 'ArrowDown' });

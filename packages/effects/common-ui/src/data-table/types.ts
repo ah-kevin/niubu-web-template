@@ -63,6 +63,13 @@ export type ReadTableProps<T extends RowData> = BaseTableProps<T> & {
   columns: TableOptions<typeof readFeatures, T>['columns'];
 };
 export interface ListSlices {
+  toolbar?: {
+    title?: ReactNode;
+    actions?: ReactNode;
+    search?: { visible: boolean; onVisibleChange: (visible: boolean) => void };
+    onRefresh?: () => void;
+    allowMaximize?: boolean;
+  };
   sorting?: SliceOwner<SortingState>;
   pagination?: SliceOwner<PaginationState>;
   columnVisibility?: SliceOwner<ColumnVisibilityState>;
