@@ -48,6 +48,7 @@
   "search.escape": "Esc 关闭",
   "notifications": "通知",
   "notificationCenter": "通知中心",
+  "notificationEmpty": "暂无通知",
   "notificationDescription": "当前通知只读，未连接消息服务。",
   "workspaceInfo": "工作空间说明",
   "dataAccess": "数据来源与访问范围",

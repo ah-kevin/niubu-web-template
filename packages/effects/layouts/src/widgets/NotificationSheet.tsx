@@ -33,6 +33,11 @@ export default function NotificationSheet({
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <div className="notification-list px-[25px] py-[8px]">
+          {items.length === 0 && (
+            <p role="status" className="py-10 text-center text-sm text-muted-foreground">
+              {t('shell:notificationEmpty')}
+            </p>
+          )}
           {items.map(item => (
             <article className="flex gap-[12px]" key={item.id}>
               <span className="notification-icon grid size-[32px] shrink-0 place-items-center rounded-[8px] bg-secondary text-primary-text">

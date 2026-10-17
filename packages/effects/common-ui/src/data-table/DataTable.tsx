@@ -35,7 +35,7 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
       <ReadMessage props={props} hasRows={rows.length > 0} />
       {props.readState === 'ready' && rows.length > 0 && (
         <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
-          <table>
+          <table className="w-full">
             <caption>{props.caption}</caption>
             <thead>
               {table.getHeaderGroups().map(group => (

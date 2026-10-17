@@ -48,6 +48,7 @@
   "search.escape": "Esc Close",
   "notifications": "Notifications",
   "notificationCenter": "Notification center",
+  "notificationEmpty": "No notifications",
   "notificationDescription": "Notifications are read-only; messaging service not connected.",
   "workspaceInfo": "Workspace information",
   "dataAccess": "Data sources and access scope",
