@@ -1,5 +1,14 @@
 import { systemResources } from './contracts';
-import type { ListQuery, QueryPage, ResourceInput, ResourceRecords, SystemResource, WorkspaceId } from './contracts';
+import type {
+  HierarchyResource,
+  ListQuery,
+  QueryPage,
+  ResourceInput,
+  ResourceRecords,
+  SystemResource,
+  TreeSnapshot,
+  WorkspaceId,
+} from './contracts';
 import { createWorkspaceSeed, navigablePageIds as defaultPageIds } from './fixtures';
 import type { MockSystemSeed } from '../config';
 import { SystemError, validateInput } from './validation';
@@ -113,6 +122,10 @@ export function createSystemRepository(
     throw new Error('Invalid mock config: systemSeeds input or relations');
   }
   return {
+    tree<R extends HierarchyResource>(workspace: WorkspaceId, resource: R): TreeSnapshot<ResourceRecords[R]> {
+      const rows = [...getMap(workspace, resource).values()];
+      return structuredClone({ rows, rowCount: rows.length, complete: true });
+    },
     list<R extends SystemResource>(
       workspace: WorkspaceId,
       resource: R,

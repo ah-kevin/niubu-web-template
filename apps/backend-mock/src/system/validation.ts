@@ -1,4 +1,4 @@
-import type { ListQuery, MenuKind, ResourceInput, SystemResource, WorkspaceId } from './contracts';
+import type { HierarchyResource, ListQuery, MenuKind, ResourceInput, SystemResource, WorkspaceId } from './contracts';
 
 export class SystemError extends Error {
   readonly status: number;
@@ -171,17 +171,29 @@ export function validateQuery(
   resource: SystemResource,
   query: URLSearchParams,
   list: boolean,
-): { workspace: WorkspaceId; listQuery: ListQuery } {
+):
+  | { workspace: WorkspaceId; mode: 'list'; listQuery: ListQuery }
+  | { workspace: WorkspaceId; mode: 'tree'; resource: HierarchyResource } {
+  const tree = list && (resource === 'menus' || resource === 'departments') && query.has('mode');
   const allowed = [
     'scopeKind',
     'scopeId',
-    ...(list ? ['pageIndex', 'pageSize', 'sortBy', 'sortOrder', 'keyword', 'enabled', ...filterKeys[resource]] : []),
+    ...(tree
+      ? ['mode']
+      : list
+        ? ['pageIndex', 'pageSize', 'sortBy', 'sortOrder', 'keyword', 'enabled', ...filterKeys[resource]]
+        : []),
   ];
   for (const key of query.keys())
     if (!allowed.includes(key) || query.getAll(key).length !== 1) invalid('Unknown or repeated query parameter');
   const workspace = query.get('scopeId');
   if (query.get('scopeKind') !== 'workspace' || (workspace !== 'north' && workspace !== 'south'))
     throw new SystemError(403, 'UNKNOWN_SCOPE', 'Unknown workspace scope');
+  if (tree) {
+    if (query.get('mode') !== 'tree' || (resource !== 'menus' && resource !== 'departments'))
+      invalid('Invalid tree mode');
+    return { workspace, mode: 'tree', resource };
+  }
   const sortBy = query.get('sortBy') ?? 'id';
   const sortOrder = query.get('sortOrder') ?? 'asc';
   if (!sortKeys[resource].includes(sortBy) || !['asc', 'desc'].includes(sortOrder)) invalid('Invalid sorting');
@@ -202,5 +214,5 @@ export function validateQuery(
   if (query.has('kind')) result.kind = kind(query.get('kind'));
   if (query.has('parentId'))
     result.parentId = query.get('parentId') === 'null' ? null : reference(query.get('parentId'));
-  return { workspace, listQuery: result };
+  return { workspace, mode: 'list', listQuery: result };
 }

@@ -1,5 +1,6 @@
 export const systemResources = ['users', 'roles', 'menus', 'departments'] as const;
 export type SystemResource = (typeof systemResources)[number];
+export type HierarchyResource = 'menus' | 'departments';
 export type WorkspaceId = 'north' | 'south';
 export interface UserRecord {
   id: string;
@@ -58,4 +59,7 @@ export interface ListQuery {
 export interface QueryPage<R> {
   rows: R[];
   rowCount: number;
+}
+export interface TreeSnapshot<R> extends QueryPage<R> {
+  complete: true;
 }

@@ -26,7 +26,8 @@ export function dispatchSystem(
   query: URLSearchParams,
   profile: { memberships: readonly { id: string }[]; codesFor: (workspace: 'north' | 'south') => readonly string[] },
 ): unknown {
-  const { workspace, listQuery } = validateQuery(route.resource, query, request.method === 'GET' && !route.id);
+  const validated = validateQuery(route.resource, query, request.method === 'GET' && !route.id);
+  const { workspace } = validated;
   if (!profile.memberships.some(membership => membership.id === workspace))
     throw new SystemError(403, 'UNKNOWN_SCOPE', 'Unknown workspace scope');
   const capability = request.method === 'GET' ? 'read' : 'write';
@@ -34,9 +35,10 @@ export function dispatchSystem(
     throw new SystemError(403, 'FORBIDDEN', 'System capability required');
   switch (request.method) {
     case 'GET':
-      return route.id
-        ? repository.get(workspace, route.resource, route.id)
-        : repository.list(workspace, route.resource, listQuery);
+      if (route.id) return repository.get(workspace, route.resource, route.id);
+      return validated.mode === 'tree'
+        ? repository.tree(workspace, validated.resource)
+        : repository.list(workspace, route.resource, validated.listQuery);
     case 'POST':
       return repository.create(workspace, route.resource, parseBody(request.body));
     case 'PUT':

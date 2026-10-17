@@ -125,6 +125,7 @@ pnpm --filter @niubu/backend-mock lint
 | Method/path       | 成功 data                           |
 | ----------------- | ----------------------------------- |
 | `GET base`        | `{ rows, rowCount }`                |
+| `GET base?mode=tree` | `{ rows, rowCount, complete: true }`，仅 menus/departments |
 | `GET base/:id`    | 完整记录                            |
 | `POST base`       | 新记录（后端生成 id）               |
 | `PUT base/:id`    | 全量替换可写字段后的记录（id 不变） |
@@ -133,6 +134,8 @@ pnpm --filter @niubu/backend-mock lint
 所有成功均为 **HTTP 200 / code 0**。详情/更新/删除不存在的记录返回 `404 NOT_FOUND`；不支持的方法 `405 METHOD_NOT_ALLOWED`；验证失败 `400 INVALID_INPUT`；唯一性、引用与父链冲突 `409 CONFLICT`。错误不修改数据、不级联。未登录 `401 UNAUTHENTICATED`，已识别 access 过期仍使用共享 `401 ACCESS_EXPIRED`，不自动重放写入。
 
 列表使用 `pageIndex=0`、`pageSize=10` 默认值，pageSize 仅接受 1–100；分页仅十进制安全整数。排序默认 id 升序，`sortOrder=asc|desc`；users 支持 name/email，roles 与 departments 支持 name/code，menus 支持 title/order；所有排序同值都按 id 升序。`keyword` 最长100字符，对 name/title 及 email/code 不区分大小写包含匹配；`enabled=true|false` 可选。users 另支持 roleId/departmentId，menus 支持 kind，departments 支持 parentId：字面量 `parentId=null` 查根部门、省略查全部、空字符串非法。详情和写操作仅接收 scope query。所有 scalar query 禁重复。
+
+菜单与部门的 collection GET 可使用 `?scopeKind=workspace&scopeId=north&mode=tree` 读取一次完整快照。`rows` 为保留 `parentId` 的完整平面 DTO 数组，包含禁用节点；`rowCount` 等于数组长度，空集合仍返回 `complete: true`。快照在 repository 内同步读取并复制，不分页、不截断。此模式只接受各一个 `scopeKind`、`scopeId`、`mode`，且 mode 必须精确为 `tree`；分页、排序、筛选、未知及重复参数均返回 `400 INVALID_INPUT`。users/roles、详情及写操作不接受 mode。`/api/system/menus/tree` 仍表示 id 为 `tree` 的单条记录。快照沿用原会话、workspace membership 和资源 read 权限，不改变默认分页列表及写入约束。
 
 可写 DTO（id 只在响应中出现）：
 
