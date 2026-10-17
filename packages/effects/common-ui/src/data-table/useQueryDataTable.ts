@@ -17,6 +17,15 @@ import type { OnChangeFn, PaginationState, SortingState } from './types';
 import { createQueryController } from './query-controller';
 import type { QueryDataTableApi, QueryDataTableOptions } from './query-types';
 
+function ownsFormEvent(event: FormEvent<HTMLDivElement>): boolean {
+  // React portal events traverse ancestors even when their form belongs to another DOM owner.
+  return (
+    event.target instanceof HTMLFormElement &&
+    event.currentTarget.contains(event.target) &&
+    event.target === event.currentTarget.querySelector('form')
+  );
+}
+
 export function useQueryDataTable<V extends FieldValues, Q, R, C extends CustomFieldParams = CustomFieldParams>(
   options: QueryDataTableOptions<V, Q, R, C>,
 ): QueryDataTableApi<V, Q, R, C> {
@@ -67,6 +76,7 @@ export function useQueryDataTable<V extends FieldValues, Q, R, C extends CustomF
       } catch {
         if (validationId === validation.current.version && controller.isCurrent(ticket)) controller.cancel();
       } finally {
+        controller.endValidation(ticket);
         if (validation.current.automatic === owner) validation.current.automatic = null;
       }
     },
@@ -147,9 +157,20 @@ export function useQueryDataTable<V extends FieldValues, Q, R, C extends CustomF
     [snapshot, onPaginationChange, onSortingChange],
   );
 
-  const bindings = useRef({ schema, reset, prepare });
+  const submit = useCallback<typeof schema.submit>(
+    async settings => {
+      const ticket = prepare();
+      try {
+        return await schemaRef.current.submit(settings);
+      } finally {
+        controller.endValidation(ticket);
+      }
+    },
+    [controller, prepare],
+  );
+  const bindings = useRef({ schema, reset, submit });
   useLayoutEffect(() => {
-    bindings.current = { schema, reset, prepare };
+    bindings.current = { schema, reset, submit };
   });
   const [Form] = useState(
     () =>
@@ -157,10 +178,14 @@ export function useQueryDataTable<V extends FieldValues, Q, R, C extends CustomF
         return createElement(
           'div',
           {
-            onSubmitCapture: () => {
-              bindings.current.prepare();
+            onSubmitCapture: (event: FormEvent<HTMLDivElement>) => {
+              if (!ownsFormEvent(event)) return;
+              event.preventDefault();
+              event.stopPropagation();
+              void bindings.current.submit();
             },
             onResetCapture: (event: FormEvent<HTMLDivElement>) => {
+              if (!ownsFormEvent(event)) return;
               event.preventDefault();
               event.stopPropagation();
               void bindings.current.reset();
@@ -169,13 +194,6 @@ export function useQueryDataTable<V extends FieldValues, Q, R, C extends CustomF
           createElement(bindings.current.schema.Form, props),
         );
       },
-  );
-  const submit = useCallback<typeof schema.submit>(
-    settings => {
-      prepare();
-      return schemaRef.current.submit(settings);
-    },
-    [prepare],
   );
   return { queryForm: { ...schema, Form, submit, updateFields }, tableState, query, reset, reload, cancel };
 }

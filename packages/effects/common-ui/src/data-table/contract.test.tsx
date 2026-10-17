@@ -888,3 +888,16 @@ it('applies shared select keyboard choices to the page size and column pin owner
   expect(pin).toHaveTextContent(labels.pinEnd);
   expect(screen.getAllByRole('columnheader')[1]).toHaveStyle({ insetInlineEnd: '0px' });
 });
+
+it.each([2, 10])('keeps initial page size %i selectable after changing it', async initialPageSize => {
+  render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: initialPageSize } }} />);
+  const pageSize = screen.getByRole('combobox', { name: labels.pageSize });
+  pageSize.focus();
+  fireEvent.keyDown(pageSize, { key: 'ArrowDown' });
+  fireEvent.keyDown(await screen.findByRole('option', { name: '25' }), { key: 'Enter' });
+  expect(pageSize).toHaveTextContent('25');
+  pageSize.focus();
+  fireEvent.keyDown(pageSize, { key: 'ArrowDown' });
+  fireEvent.keyDown(await screen.findByRole('option', { name: String(initialPageSize) }), { key: 'Enter' });
+  expect(pageSize).toHaveTextContent(String(initialPageSize));
+});

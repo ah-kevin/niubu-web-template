@@ -4,6 +4,7 @@ export type TableTranslator = (key: string, params?: Record<string, string | num
 export function createDataTableLabels(t: TableTranslator, headers: Readonly<Record<string, string>> = {}): TableLabels {
   return {
     pending: t('common:read.loading.title'),
+    cancelled: t('common:table.cancelled'),
     error: t('common:read.error.title'),
     sourceEmpty: t('common:read.source-empty.title'),
     filteredEmpty: t('common:read.empty.title'),

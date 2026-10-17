@@ -26,14 +26,17 @@ export function createQueryController<Q, R>(options: {
   let active = false;
   let epoch = 0;
   let request: AbortController | undefined;
+  let validating = false;
   const listeners = new Set<() => void>();
   const retire = () => {
     ++epoch;
+    validating = false;
     request?.abort();
     request = undefined;
   };
   const publish = (
-    metadata: { readState: 'ready'; resultCount: number } | { readState: 'pending' | 'error'; resultCount: null },
+    metadata:
+      { readState: 'ready'; resultCount: number } | { readState: 'pending' | 'error' | 'cancelled'; resultCount: null },
     rows: readonly R[] = [],
     rowCount = 0,
     error: unknown = null,
@@ -129,7 +132,11 @@ export function createQueryController<Q, R>(options: {
     },
     beginQuery() {
       retire();
+      validating = active;
       return epoch;
+    },
+    endValidation(ticket: number) {
+      if (ticket === epoch) validating = false;
     },
     isCurrent: (ticket: number) => active && epoch === ticket,
     async apply(query: Q, ticket?: number) {
@@ -140,8 +147,9 @@ export function createQueryController<Q, R>(options: {
     },
     reload: () => fetchPage(),
     cancel() {
+      const pending = validating || snapshot.readState === 'pending';
       retire();
-      publish({ readState: 'pending', resultCount: null });
+      if (pending) publish({ readState: 'cancelled', resultCount: null });
     },
     deactivate() {
       retire();

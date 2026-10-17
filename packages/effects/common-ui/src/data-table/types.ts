@@ -18,9 +18,10 @@ export type DataModel<T> =
   { kind: 'client'; rows: readonly T[] } | { kind: 'server'; rows: readonly T[]; rowCount: number };
 export type TableReadMetadata =
   | { readState: 'ready'; sourceCount: number | null; resultCount: number }
-  | { readState: 'pending' | 'error'; sourceCount: null; resultCount: null };
+  | { readState: 'pending' | 'error' | 'cancelled'; sourceCount: null; resultCount: null };
 export interface TableLabels {
   pending: string;
+  cancelled?: string;
   error: string;
   sourceEmpty: string;
   sourceUnknown: string;

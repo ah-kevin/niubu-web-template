@@ -72,6 +72,7 @@ describe.each([['Modal', Modal], ['Drawer', Drawer]] as const)('%s controlled sh
     const { rerender } = render(<Component {...props} footer={<button>自定义</button>}>正文</Component>);
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveStyle({ position: 'fixed', height: '100dvh', 'max-width': 'none', transform: 'none' });
+    expect(dialog.style.translate).toBe('none');
     expect(dialog.style.width).toBe('100vw');
     expect(screen.getByRole('button', { name: '关闭' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: '确定' })).not.toBeInTheDocument();

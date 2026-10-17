@@ -21,6 +21,7 @@ const fullscreenStyle: CSSProperties = {
   maxWidth: 'none',
   maxHeight: 'none',
   transform: 'none',
+  translate: 'none',
   borderRadius: 0,
 };
 
@@ -83,7 +84,11 @@ export function OverlayFrame({
       {open && (
         <Suspense fallback={<PendingOverlay onCancel={() => requestClose('escape')} />}>
           <Content
-            className={`pattern-overlay pattern-overlay-${variant}`}
+            className={
+              variant === 'modal'
+                ? 'pattern-overlay pattern-overlay-modal flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0'
+                : 'pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-hidden sm:max-w-lg'
+            }
             showCloseButton={false}
             data-fullscreen={fullscreen || undefined}
             style={fullscreen ? fullscreenStyle : undefined}
@@ -104,7 +109,7 @@ export function OverlayFrame({
               requestClose('outside');
             }}
           >
-            <Header>
+            <Header className="shrink-0 border-b border-border p-6 pe-14 text-start">
               <Title>{title}</Title>
               {hasDescription && <Description>{description}</Description>}
             </Header>
@@ -117,8 +122,12 @@ export function OverlayFrame({
             >
               ×
             </Button>
-            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto">{children}</div>
-            {actions !== null && actions !== false && <Footer>{actions}</Footer>}
+            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain p-6">
+              {children}
+            </div>
+            {actions !== null && actions !== false && (
+              <Footer className="shrink-0 border-t border-border p-6">{actions}</Footer>
+            )}
           </Content>
         </Suspense>
       )}

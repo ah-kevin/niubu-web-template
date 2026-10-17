@@ -310,8 +310,10 @@ it('retains disabled values and blocks interaction on all focusable group member
 it('shares range help/errors across native date inputs and focuses root or nested errors correctly', async () => {
   const user = userEvent.setup();
   render(<Fixture />);
-  const start = screen.getByLabelText('range start');
-  const end = screen.getByLabelText('range end');
+  const start = screen.getByLabelText('range 开始日期');
+  const end = screen.getByLabelText('range 结束日期');
+  expect(screen.getByText('开始日期', { selector: 'label' })).toHaveAttribute('for', start.id);
+  expect(screen.getByText('结束日期', { selector: 'label' })).toHaveAttribute('for', end.id);
   fireEvent.change(start, { target: { value: '2026-10-01' } });
   fireEvent.change(end, { target: { value: '2026-10-31' } });
   fireEvent.blur(end);
@@ -441,8 +443,8 @@ it('announces a nested date-range error without requiring an earlier root error'
   const user = userEvent.setup();
   render(<Fixture />);
   await user.click(screen.getByText('error end'));
-  const start = screen.getByLabelText('range start');
-  const end = screen.getByLabelText('range end');
+  const start = screen.getByLabelText('range 开始日期');
+  const end = screen.getByLabelText('range 结束日期');
   expect(end).toHaveFocus();
   expect(end).toHaveAccessibleDescription('range help end error');
   expect(start).toHaveAccessibleDescription('range help end error');

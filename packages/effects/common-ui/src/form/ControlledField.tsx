@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@niubu/shadcn-ui/radio-group';
 import { Select } from '@niubu/shadcn-ui/select';
 import { Switch } from '@niubu/shadcn-ui/switch';
 import { Textarea } from '@niubu/shadcn-ui/textarea';
+import { useTranslation } from '@niubu/locales/react';
 import { FieldShell } from './FieldShell';
 import { assertCustomFields, getCustomFieldRenderer, isBuiltinFieldKind } from './registry';
 import type {
@@ -45,39 +46,47 @@ function DateRange<V extends FieldValues, N extends FieldPath<V>>({
   disabled?: boolean;
   componentProps: BuiltinComponentProps;
 }) {
+  const { t } = useTranslation();
   const start = useController({ control, name: `${field.name}.start` as FieldPath<V> });
   const end = useController({ control, name: `${field.name}.end` as FieldPath<V> });
   const range = rangeValue(field.value);
   return (
-    <div role="group" aria-labelledby={shell['aria-labelledby']}>
+    <div
+      className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3"
+      role="group"
+      aria-labelledby={shell['aria-labelledby']}
+    >
       {(['start', 'end'] as const).map(part => {
         const child = part === 'start' ? start : end;
         return (
-          <Input
-            {...componentProps}
-            {...shell}
-            key={part}
-            type="date"
-            id={part === 'start' ? shell.id : `${shell.id}-end`}
-            aria-labelledby={`${shell['aria-labelledby']} ${shell.id}-${part}-label`}
-            name={child.field.name}
-            ref={node => {
-              child.field.ref(node);
-              if (part === 'start') field.ref(node);
-            }}
-            disabled={disabled}
-            value={range[part]}
-            onChange={event => field.onChange({ ...range, [part]: event.currentTarget.value })}
-            onBlur={field.onBlur}
-          />
+          <div className="grid min-w-0 gap-1.5" key={part}>
+            <Label
+              id={`${shell.id}-${part}-label`}
+              htmlFor={part === 'start' ? shell.id : `${shell.id}-end`}
+              className="text-xs text-muted-foreground"
+            >
+              {t(part === 'start' ? 'common:form.rangeStart' : 'common:form.rangeEnd')}
+            </Label>
+            <Input
+              {...componentProps}
+              {...shell}
+              key={part}
+              type="date"
+              id={part === 'start' ? shell.id : `${shell.id}-end`}
+              aria-labelledby={`${shell['aria-labelledby']} ${shell.id}-${part}-label`}
+              name={child.field.name}
+              ref={node => {
+                child.field.ref(node);
+                if (part === 'start') field.ref(node);
+              }}
+              disabled={disabled}
+              value={range[part]}
+              onChange={event => field.onChange({ ...range, [part]: event.currentTarget.value })}
+              onBlur={field.onBlur}
+            />
+          </div>
         );
       })}
-      <span id={`${shell.id}-start-label`} className="sr-only">
-        start
-      </span>
-      <span id={`${shell.id}-end-label`} className="sr-only">
-        end
-      </span>
     </div>
   );
 }
@@ -172,6 +181,7 @@ export function ControlledField<
                 {...(inputProps as React.ComponentProps<typeof Select>)}
                 {...binding}
                 type="button"
+                className={['w-full min-w-0', inputProps.className].filter(Boolean).join(' ')}
                 label={label}
                 value={stringValue(field.value)}
                 onValueChange={field.onChange}

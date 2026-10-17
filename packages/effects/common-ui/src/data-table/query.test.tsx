@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { StrictMode } from 'react';
+import { createPortal } from 'react-dom';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
 import { useQueryDataTable } from './useQueryDataTable';
@@ -35,6 +36,44 @@ const defaults = { term: '', enabled: false };
 const settle = async () => { await Promise.resolve(); await Promise.resolve(); };
 
 describe('query request controller', () => {
+  it('keeps a completed result when cancellation has no active read', async () => {
+    const { controller, replies } = fixture();
+    const done = controller.apply(defaults);
+    replies[0]!.resolve({ rows: [{ id: 'kept' }], rowCount: 1 });
+    await done;
+    const settled = controller.getSnapshot();
+    controller.cancel();
+    expect(controller.getSnapshot()).toBe(settled);
+  });
+  it('publishes cancellation without invented results and ignores the retired reply', async () => {
+    const { controller, requests, replies } = fixture();
+    void controller.apply(defaults);
+    controller.cancel();
+    expect(requests[0]!.signal.aborted).toBe(true);
+    expect(controller.getSnapshot()).toMatchObject({ readState: 'cancelled', sourceCount: null, resultCount: null, model: { rows: [] } });
+    replies[0]!.resolve({ rows: [{ id: 'late' }], rowCount: 1 });
+    await settle();
+    expect(controller.getSnapshot()).toMatchObject({ readState: 'cancelled', model: { rows: [] } });
+  });
+  it('cancels before a validated query has dispatched its first HTTP request', () => {
+    const { controller, requests } = fixture();
+    const ticket = controller.beginQuery();
+    controller.cancel();
+    expect(controller.isCurrent(ticket)).toBe(false);
+    expect(controller.getSnapshot().readState).toBe('cancelled');
+    expect(requests).toHaveLength(0);
+  });
+  it('does not let a completed older validation release the current validation ticket', async () => {
+    const { controller, replies } = fixture();
+    const done = controller.apply(defaults);
+    replies[0]!.resolve({ rows: [{ id: 'kept' }], rowCount: 1 });
+    await done;
+    const older = controller.beginQuery();
+    controller.beginQuery();
+    controller.endValidation(older);
+    controller.cancel();
+    expect(controller.getSnapshot().readState).toBe('cancelled');
+  });
   it('applies new filters from page zero without mutating the applied copy or performing an extra page fetch', async () => {
     const { controller, requests, replies } = fixture();
     void controller.apply(defaults); replies[0]!.resolve({ rows: [], rowCount: 40 }); await settle();
@@ -171,6 +210,70 @@ const columnsHelper = createListColumnHelper<RecordRow>();
 const queryColumns = columnsHelper.columns([columnsHelper.accessor('id', { id: 'id', header: 'ID' })]);
 
 describe('query table with the actual SchemaForm', () => {
+  it.each(['submit', 'reset'])('leaves an independent portal form %s with its own owner', async operation => {
+    const requests: QueryRequest<Filter>[] = [];
+    let api!: QueryDataTableApi<Filter, Filter, RecordRow>;
+    let portalSubmits = 0;
+    let portalResets = 0;
+    function Consumer() {
+      api = useQueryDataTable<Filter, Filter, RecordRow>({
+        queryForm: filterOptions, scopeKey: 'north', enabled: true,
+        load: async request => { requests.push(request); return { rows: [{ id: 'kept' }], rowCount: 1 }; },
+      });
+      return <api.queryForm.Form submitLabel="Apply" resetLabel="Reset">
+        <api.queryForm.Fields />
+        {createPortal(<form aria-label="Independent portal form"
+          onSubmit={event => { event.preventDefault(); event.stopPropagation(); ++portalSubmits; }}
+          onReset={event => { event.preventDefault(); event.stopPropagation(); ++portalResets; }}>
+          <input aria-label="Portal input" defaultValue="portal value" />
+        </form>, document.body)}
+      </api.queryForm.Form>;
+    }
+    render(<Consumer />);
+    await waitFor(() => expect(api.tableState.readState).toBe('ready'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), { target: { value: 'parent draft' } });
+    const portalForm = screen.getByRole('form', { name: 'Independent portal form' });
+    if (operation === 'submit') fireEvent.submit(portalForm); else fireEvent.reset(portalForm);
+    await act(settle);
+    expect(portalSubmits).toBe(operation === 'submit' ? 1 : 0);
+    expect(portalResets).toBe(operation === 'reset' ? 1 : 0);
+    expect(requests).toHaveLength(1);
+    expect(api.queryForm.getValues().term).toBe('parent draft');
+    expect(api.tableState.readState).toBe('ready');
+    expect(api.tableState.model.rows).toEqual([{ id: 'kept' }]);
+  });
+  it.each(['query', 'submit', 'native'])('keeps settled rows when cancelling after an invalid %s has finished', async entry => {
+    const requests: QueryRequest<Filter>[] = [];
+    let api!: QueryDataTableApi<Filter, Filter, RecordRow>;
+    function Consumer() {
+      api = useQueryDataTable<Filter, Filter, RecordRow>({
+        queryForm: {
+          ...filterOptions,
+          fields: [{ name: 'term', kind: 'text', label: 'Filter', schema: z.string().min(1, 'Required') }],
+          defaultValues: { term: 'valid', enabled: false },
+        },
+        scopeKey: 'north', enabled: true,
+        load: async request => { requests.push(request); return { rows: [{ id: 'kept' }], rowCount: 1 }; },
+      });
+      return <api.queryForm.Form submitLabel="Apply" />;
+    }
+    render(<Consumer />);
+    await waitFor(() => expect(api.tableState.readState).toBe('ready'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), { target: { value: '' } });
+    if (entry === 'native') {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+      await waitFor(() => expect(api.queryForm.form.getFieldState('term').error?.message).toBe('Required'));
+      await act(settle);
+    } else {
+      await act(async () => { if (entry === 'query') await api.query(); else await api.queryForm.submit(); });
+    }
+    expect(api.queryForm.form.getFieldState('term').error?.message).toBe('Required');
+    expect(requests).toHaveLength(1);
+    expect(api.tableState.readState).toBe('ready');
+    act(() => api.cancel());
+    expect(api.tableState.readState).toBe('ready');
+    expect(api.tableState.model.rows).toEqual([{ id: 'kept' }]);
+  });
 
   it('ends automatic validation ownership before the applied initial data request completes', async () => {
     const requests: QueryRequest<Filter>[] = [];
@@ -299,6 +402,7 @@ describe('query table with the actual SchemaForm', () => {
     act(() => { pending = result.current.query(); result.current.cancel(); });
     await act(async () => pending);
     expect(requests).toHaveLength(2);
+    expect(result.current.tableState).toMatchObject({ readState: 'cancelled', model: { rows: [] }, sourceCount: null, resultCount: null });
     rerender({ scopeKey: 'south', enabled: false });
     expect(result.current.tableState).toMatchObject({ readState: 'pending', model: { rows: [] }, sourceCount: null, resultCount: null });
     rerender({ scopeKey: 'north', enabled: true });

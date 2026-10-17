@@ -67,7 +67,7 @@ export function validateReadModel<T>(model: DataModel<T>, metadata: TableReadMet
   if (model.kind === 'server') count(model.rowCount, 'rowCount');
   if (metadata.readState !== 'ready') {
     if (model.rows.length || metadata.sourceCount !== null || metadata.resultCount !== null)
-      throw Error('Pending/error reads require no rows and unknown counts');
+      throw Error('Non-ready reads require no rows and unknown counts');
     return;
   }
   if (metadata.resultCount === null) throw Error('Ready reads require resultCount');

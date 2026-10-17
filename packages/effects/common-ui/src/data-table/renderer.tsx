@@ -3,6 +3,8 @@ import { Checkbox } from '@niubu/shadcn-ui/checkbox';
 import { Label } from '@niubu/shadcn-ui/label';
 import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
+import { ArrowDown, ArrowUp } from '@niubu/icons';
+import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
 import { Fragment, memo, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 import type { Column, Header, ReactTable, Row, RowData } from '@tanstack/react-table';
@@ -18,6 +20,14 @@ export function ReadMessage<T>({
   hasRows: boolean;
 }): ReactElement | null {
   const { labels } = props;
+  const { t } = useTranslation();
+  if (props.readState === 'cancelled')
+    return (
+      <div className="px-[18px] py-[32px]" role="status">
+        {labels.cancelled ?? t('common:table.cancelled')}
+        {props.emptyAction}
+      </div>
+    );
   if (props.readState === 'pending')
     return (
       <div className="px-[18px] py-[32px]" role="status" aria-busy="true">
@@ -215,13 +225,24 @@ function HeaderView<T extends RowData>({
       {!header.isPlaceholder &&
         (column.getCanSort() ? (
           <Button
-            className="h-auto justify-start whitespace-normal p-0 text-inherit"
+            className="h-auto w-full min-w-0 justify-start p-0 pe-6 text-start text-inherit"
             variant="ghost"
             type="button"
             aria-label={labels.sortColumn(name)}
+            title={name}
             onClick={column.getToggleSortingHandler()}
           >
-            {children}
+            <span className="min-w-0 truncate">{children}</span>
+            {sorted === 'asc' ? (
+              <ArrowUp aria-hidden="true" />
+            ) : sorted === 'desc' ? (
+              <ArrowDown aria-hidden="true" />
+            ) : (
+              <span aria-hidden="true" className="inline-flex text-muted-foreground [&_svg]:size-3">
+                <ArrowUp />
+                <ArrowDown />
+              </span>
+            )}
           </Button>
         ) : (
           children
@@ -275,10 +296,12 @@ function Pagination<T extends RowData>({
   table,
   labels,
   caption,
+  initialPageSize,
 }: {
   table: ListNativeTable<T>;
   labels: TableLabels;
   caption: string;
+  initialPageSize: number;
 }) {
   const pagination = table.state.pagination;
   return (
@@ -292,7 +315,7 @@ function Pagination<T extends RowData>({
           label={labels.pageSize}
           value={String(pagination.pageSize)}
           onValueChange={value => table.setPageSize(Number(value))}
-          options={[...new Set([25, 50, 100, pagination.pageSize])]
+          options={[...new Set([10, 25, 50, 100, initialPageSize, pagination.pageSize])]
             .sort((a, b) => a - b)
             .map(size => ({ value: String(size), label: String(size) }))}
         />
@@ -341,6 +364,7 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   selectionCell?: (row: R) => ReactNode;
   selectionSummary?: ReactNode;
 }) {
+  const [initialPageSize] = useState(() => table.state.pagination.pageSize);
   return (
     <section
       className="pattern-data-table native-data-table [&_table]:border-separate [&_table]:border-spacing-0 [&_table]:text-start [&_th]:relative [&_th]:box-border [&_th]:h-[var(--row-height)] [&_th]:border-b [&_th]:border-border [&_th]:bg-secondary [&_th]:px-[var(--workspace-card-padding)] [&_th]:py-0 [&_th]:text-start [&_th]:text-[length:var(--workspace-caption-font-size)] [&_td]:box-border [&_td]:border-b [&_td]:border-border [&_td]:px-[var(--workspace-card-padding)] [&_td]:py-[var(--workspace-heading-gap)] [&_td]:text-[length:var(--workspace-body-font-size)] [&_td]:whitespace-normal [&_td]:[overflow-wrap:anywhere] [&_tr[tabindex]]:cursor-pointer [&_tr:focus-visible]:outline-2 [&_tr:focus-visible]:outline-primary [&_tr:focus-visible]:-outline-offset-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card"
@@ -381,7 +405,9 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
           </table>
         </div>
       )}
-      {props.readState === 'ready' && <Pagination table={table} labels={props.labels} caption={props.caption} />}
+      {props.readState === 'ready' && (
+        <Pagination table={table} labels={props.labels} caption={props.caption} initialPageSize={initialPageSize} />
+      )}
     </section>
   );
 }
