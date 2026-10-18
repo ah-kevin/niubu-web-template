@@ -13,9 +13,31 @@ export function RouteRestoration({
   const location = useLocation(),
     navigationType = useNavigationType();
   const live = useRef({ location, navigationType, runtime });
+  const interacted = useRef(false);
   useInsertionEffect(() => {
+    if (live.current.location.key !== location.key) interacted.current = false;
     live.current = { location, navigationType, runtime };
   }, [location, navigationType, runtime]);
+  useLayoutEffect(() => {
+    const pointer = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const label = event.target.closest('label');
+      const owner =
+        event.target.closest(
+          'button,a[href],input,select,textarea,[contenteditable="true"],[tabindex]:not([tabindex="-1"])',
+        ) ?? (label instanceof HTMLLabelElement ? label.control : null);
+      if (owner && !owner.matches(':disabled,[aria-disabled="true"]')) interacted.current = true;
+    };
+    const keyboard = () => {
+      interacted.current = true;
+    };
+    document.addEventListener('pointerdown', pointer, true);
+    document.addEventListener('keydown', keyboard, true);
+    return () => {
+      document.removeEventListener('pointerdown', pointer, true);
+      document.removeEventListener('keydown', keyboard, true);
+    };
+  }, []);
   const committed = useRef<{ pageKey: string; address: string; locationKey: string } | null>(null);
   const entries = useRef(new Map<string, number>()),
     destinations = useRef(new Map<string, number>());
@@ -32,7 +54,20 @@ export function RouteRestoration({
     const focusedOverlay = document.activeElement?.closest(
       '[role="dialog"]:not([data-state="closed"]),[role="alertdialog"]:not([data-state="closed"])',
     );
-    if (different && !focusedOverlay?.isConnected)
+    const active = document.activeElement;
+    // Only a newer interaction retires navigation's default focus; old overlay cleanup alone does not.
+    const chosenFocus =
+      interacted.current &&
+      active instanceof HTMLElement &&
+      active.isConnected &&
+      active !== document.body &&
+      active !== document.documentElement &&
+      active.id !== 'main-content' &&
+      !active.matches(':disabled,[aria-disabled="true"]') &&
+      !active.closest(
+        '[inert],[hidden],[aria-hidden="true"],[data-radix-focus-guard],[role="dialog"][data-state="closed"],[role="alertdialog"][data-state="closed"]',
+      );
+    if (different && !focusedOverlay?.isConnected && !chosenFocus)
       document.getElementById('main-content')?.focus({ preventScroll: true });
     committed.current = { pageKey, address, locationKey };
   }, []);
