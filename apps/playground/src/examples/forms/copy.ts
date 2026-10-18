@@ -87,7 +87,8 @@ export const formsExampleEnglish = {
   infoValue: 'This row is already valid',
   submitFocus: 'Submit and focus',
   focusResult: 'Focus result',
-  focusHelp: 'Submit reveals the collapsed invalid row and focuses the first visible error. No smooth-scroll contract.',
+  focusHelp:
+    'Use the submit action below the fold to expand errors and reveal the first invalid field below fixed chrome. No smooth-scroll contract.',
   compare: 'Compare raw and DTO',
   rawFields: 'Raw example fields',
   dtoFields: 'Output DTO fields',

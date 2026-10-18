@@ -209,7 +209,7 @@
   "examples.forms.infoValue": "此行已有效",
   "examples.forms.submitFocus": "提交并聚焦",
   "examples.forms.focusResult": "聚焦结果",
-  "examples.forms.focusHelp": "提交会展开收起的错误行，并聚焦首个可见错误；没有平滑滚动契约。",
+  "examples.forms.focusHelp": "使用页面下方的提交按钮展开错误，并在固定壳头下方显示、聚焦首个错误字段；没有平滑滚动契约。",
   "examples.forms.compare": "比较原值与 DTO",
   "examples.forms.rawFields": "原始示例字段",
   "examples.forms.dtoFields": "输出 DTO 字段",

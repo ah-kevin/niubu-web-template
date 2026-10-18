@@ -73,6 +73,7 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
   );
   const [finish, setFinish] = useState<(() => void) | null>(null);
   const alive = useRef(true);
+  const request = useRef(0);
   const pending = useRef<(() => void) | null>(null);
   const schema = useExampleForm<NameValues>({
     fields: [
@@ -99,10 +100,16 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
       pending.current = release;
       setFinish(() => release);
       setStatus('pending');
-      await completion;
-      if (alive.current && pending.current === release) {
-        pending.current = null;
-        setFinish(null);
+      signal.addEventListener('abort', release, { once: true });
+      if (signal.aborted) release();
+      try {
+        await completion;
+      } finally {
+        signal.removeEventListener('abort', release);
+        if (alive.current && pending.current === release) {
+          pending.current = null;
+          setFinish(null);
+        }
       }
       if (!signal.aborted && alive.current) setSubmitted(values.name ?? '—');
     },
@@ -116,8 +123,9 @@ function ApiPanel({ saveName }: FormsPageProps = {}) {
     };
   }, []);
   async function submit() {
+    const current = ++request.current;
     const result = await schema.submit();
-    if (alive.current) setStatus(result === 'validated' ? 'valid' : result);
+    if (alive.current && request.current === current) setStatus(result === 'validated' ? 'valid' : result);
   }
   return (
     <>
@@ -548,6 +556,8 @@ function FocusPanel() {
       <p>{text('focusHelp')}</p>
       <schema.Form submitLabel={text('submitFocus')}>
         <ExampleFields form={schema.form} {...schema.presentation} />
+        {/* Keep the existing submit action below the fold so focus reveal is visible in the real shell. */}
+        <div aria-hidden="true" className="focus-example-submit-gap min-h-[65vh]" />
       </schema.Form>
       <output aria-label={text('focusResult')}>{result}</output>
     </>

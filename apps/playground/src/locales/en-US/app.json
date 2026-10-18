@@ -209,7 +209,7 @@
   "examples.forms.infoValue": "This row is already valid",
   "examples.forms.submitFocus": "Submit and focus",
   "examples.forms.focusResult": "Focus result",
-  "examples.forms.focusHelp": "Submit reveals the collapsed invalid row and focuses the first visible error. No smooth-scroll contract.",
+  "examples.forms.focusHelp": "Use the submit action below the fold to expand errors and reveal the first invalid field below fixed chrome. No smooth-scroll contract.",
   "examples.forms.compare": "Compare raw and DTO",
   "examples.forms.rawFields": "Raw example fields",
   "examples.forms.dtoFields": "Output DTO fields",

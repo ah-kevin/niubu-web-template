@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FormsPage } from './FormsPage';
@@ -63,13 +63,60 @@ describe('FormsPage existing form capabilities', () => {
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Valid'));
   });
 
+  it('releases a cancelled synthetic save immediately and permits retry without completing its retired work', async () => {
+    render(<FormsPage />);
+    await scenario('Public API');
+    await userEvent.click(screen.getByRole('button', { name: 'Set example values' }));
+    const submit = screen.getByRole('button', { name: 'Submit values' });
+    await userEvent.click(submit);
+    await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
+    expect(submit).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel submit' }));
+    expect(output('Operation status')).toHaveTextContent('Cancelled');
+    expect(submit).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Complete synthetic save' })).toBeNull();
+    expect(output('Submitted name')).toHaveTextContent('—');
+    await userEvent.click(submit);
+    await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
+    await userEvent.click(screen.getByRole('button', { name: 'Complete synthetic save' }));
+    await waitFor(() => expect(output('Operation status')).toHaveTextContent('Submitted'));
+    expect(output('Submitted name')).toHaveTextContent('Grace');
+    expect(submit).toBeEnabled();
+  });
+
+  it('does not let a retired external completion overwrite a newer pending retry status or result', async () => {
+    const saves: { name: string; signal: AbortSignal; resolve(): void }[] = [];
+    render(<FormsPage saveName={(name, { signal }) => new Promise<void>(resolve => saves.push({ name, signal, resolve }))} />);
+    await scenario('Public API');
+    const submit = screen.getByRole('button', { name: 'Submit values' });
+    await userEvent.click(submit);
+    await waitFor(() => expect(saves).toHaveLength(1));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel submit' }));
+    expect(saves[0].signal.aborted).toBe(true);
+    expect(submit).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Set example values' }));
+    await userEvent.click(submit);
+    await waitFor(() => expect(saves).toHaveLength(2));
+    expect(saves.map(save => save.name)).toEqual(['Ada', 'Grace']);
+    await act(async () => saves[0].resolve());
+    expect(output('Operation status')).toHaveTextContent('Pending');
+    expect(output('Submitted name')).toHaveTextContent('—');
+    expect(submit).toBeDisabled();
+    expect(saves[1].signal.aborted).toBe(false);
+    await act(async () => saves[1].resolve());
+    await waitFor(() => expect(output('Operation status')).toHaveTextContent('Submitted'));
+    expect(output('Submitted name')).toHaveTextContent('Grace');
+    expect(submit).toBeEnabled();
+  });
+
   it('cancels an in-flight save and drops its late completion, then allows a fresh save', async () => {
     render(<FormsPage />);
     await scenario('Public API');
     await userEvent.click(screen.getByRole('button', { name: 'Submit values' }));
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
     await userEvent.click(screen.getByRole('button', { name: 'Cancel submit' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Complete synthetic save' }));
+    expect(screen.queryByRole('button', { name: 'Complete synthetic save' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Submit values' })).toBeEnabled();
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Cancelled'));
     expect(output('Submitted name')).toHaveTextContent('—');
     await userEvent.click(screen.getByRole('button', { name: 'Set example values' }));
@@ -86,7 +133,8 @@ describe('FormsPage existing form capabilities', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Submit values' }));
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Pending'));
     await userEvent.click(screen.getByRole('button', { name: action }));
-    await userEvent.click(screen.getByRole('button', { name: 'Complete synthetic save' }));
+    expect(screen.queryByRole('button', { name: 'Complete synthetic save' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Submit values' })).toBeEnabled();
     await waitFor(() => expect(output('Operation status')).toHaveTextContent('Cancelled'));
     expect(output('Submitted name')).toHaveTextContent('—');
   });
