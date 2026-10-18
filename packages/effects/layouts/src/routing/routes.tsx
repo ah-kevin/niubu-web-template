@@ -20,7 +20,8 @@ export function createRoutes(options: {
   });
   return [
     {
-      element: options.renderRoot(createElement(Outlet)),
+      // The owned outlet may be composed beside other persistent root children.
+      element: options.renderRoot(createElement(Outlet, { key: 'route-outlet' })),
       errorElement: options.errorElement,
       children: [
         { index: true, element: createElement(Navigate, { to: options.homeHref, replace: true }) },

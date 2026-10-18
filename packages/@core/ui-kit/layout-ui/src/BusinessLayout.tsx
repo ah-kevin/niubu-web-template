@@ -214,6 +214,13 @@ export function BusinessLayout(p: AppLayoutProps) {
     '--layout-tab-offset': `${m.tabbarOffset}px`,
     '--layout-content-width': `${m.fixedWidth}px`,
     '--layout-content-padding': `${m.contentPadding}px`,
+    // Upward focus reveal can restore auto-hidden chrome. Reserve its enabled fixed extent,
+    // independent of transient scroll visibility, without changing layout or padding.
+    '--focus-reveal-inset-top': `${Math.max(
+      m.headerEnabled && m.headerFixed ? m.headerHeight : 0,
+      m.tabbarEnabled && m.tabbarFixed ? (m.headerEnabled ? m.headerHeight : 0) + m.tabbarHeight : 0,
+    )}px`,
+    '--focus-reveal-inset-bottom': `${m.footerEnabled && m.footerFixed ? m.footerHeight : 0}px`,
   } as CSSProperties;
   return (
     <div

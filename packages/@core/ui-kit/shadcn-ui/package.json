@@ -14,7 +14,7 @@
     "./cn": "./src/cn.ts",
     "./preference-primitives": "./src/preference-primitives.tsx",
     "./overlay-ownership": "./src/overlay-ownership.ts",
-    "./business-portal-boundary": "./src/business-portal-boundary.tsx",
+    "./business-portal-boundary": "./src/business-portal-boundary.ts",
     "./pending-overlay": "./src/pending-overlay.tsx",
     "./switch": "./src/switch.tsx",
     "./select": "./src/select.tsx",

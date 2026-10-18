@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
-import { corePreferenceDefaults } from '@niubu/core-preferences';
+import { corePreferenceDefaults, type CorePreferences } from '@niubu/core-preferences';
 import type { LinkRenderer, NavigationNode } from '@niubu/menu-ui';
 import { BusinessLayout } from './BusinessLayout';
 import { resolveBusinessLayout } from './layout-model';
@@ -195,4 +195,32 @@ it('follows Vben sidebar configuration for icons independently of desktop collap
       expect(screen.getByRole('button', { name: 'Open', hidden: true }).querySelector('svg')).toHaveAttribute('data-icon', icon);
     }
   }
+});
+
+it.each(['vertical', 'two-column', 'horizontal', 'sidebar', 'mixed-vertical', 'mixed-two-column', 'full-content'] as const)(
+  'declares only document focus insets for fixed chrome in %s on desktop and narrow layouts', mode => {
+    const p = props();
+    for (const viewport of ['desktop', 'mobile'] as const) {
+      const model = resolveBusinessLayout({ ...corePreferenceDefaults, layout: { ...corePreferenceDefaults.layout, mode } }, viewport);
+      const view = render(<BusinessLayout {...p} model={model} />);
+      const shell = view.container.firstElementChild as HTMLElement;
+      expect(shell.style.getPropertyValue('--focus-reveal-inset-top')).toBe(mode === 'full-content' ? '38px' : '88px');
+      expect(shell.style.getPropertyValue('--focus-reveal-inset-bottom')).toBe('0px');
+      view.unmount();
+    }
+  },
+);
+it('reserves restorable auto chrome, excludes static chrome and exposes only an enabled fixed footer', () => {
+  const p = props();
+  const model = (header: CorePreferences['header'], tabbar: CorePreferences['tabbar'] = corePreferenceDefaults.tabbar, footer: CorePreferences['footer'] = corePreferenceDefaults.footer, hidden = false) => resolveBusinessLayout({ ...corePreferenceDefaults, header, tabbar, footer }, 'mobile', { scrollHidden: hidden });
+  const view = render(<BusinessLayout {...p} model={model({ ...corePreferenceDefaults.header, mode: 'static' })} />);
+  const inset = () => (view.container.firstElementChild as HTMLElement).style.getPropertyValue('--focus-reveal-inset-top');
+  expect(inset()).toBe('0px');
+  view.rerender(<BusinessLayout {...p} model={model({ ...corePreferenceDefaults.header, mode: 'auto' }, undefined, undefined, true)} />);
+  expect(inset()).toBe('88px');
+  view.rerender(<BusinessLayout {...p} model={model({ ...corePreferenceDefaults.header, mode: 'auto-scroll' }, undefined, undefined, true)} />);
+  expect(inset()).toBe('88px');
+  view.rerender(<BusinessLayout {...p} model={model({ ...corePreferenceDefaults.header, enabled: false }, { ...corePreferenceDefaults.tabbar, enabled: false }, { ...corePreferenceDefaults.footer, enabled: true, fixed: true })} />);
+  expect(inset()).toBe('0px');
+  expect((view.container.firstElementChild as HTMLElement).style.getPropertyValue('--focus-reveal-inset-bottom')).toBe('32px');
 });

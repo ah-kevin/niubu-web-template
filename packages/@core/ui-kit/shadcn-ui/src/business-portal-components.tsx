@@ -1,10 +1,6 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type ReactElement, type Ref, cloneElement } from 'react';
+import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type ReactElement, type Ref, cloneElement } from 'react';
 
-type PortalScope = { container: HTMLElement | null; locked: boolean; kind: 'business' | 'lock' | 'reauth' };
-const PortalContext = createContext<PortalScope | null>(null);
-type ContentCommit = { commit(): () => void; ref?: Ref<HTMLElement> };
-const ContentCommitContext = createContext<ContentCommit | null>(null);
-
+import { PortalContext, ContentCommitContext, useBusinessPortalScope, type PortalScope } from './business-portal-context';
 /** One business root and one host for the entire mounted shell lifetime. */
 export function BusinessPortalBoundary({ locked, children }: { locked: boolean; children: ReactNode }) {
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
@@ -13,21 +9,12 @@ export function BusinessPortalBoundary({ locked, children }: { locked: boolean; 
   return <PortalContext.Provider value={scope}><div data-business-root="" inert={locked || undefined} style={{ display: 'contents' }}>{children}<div data-business-portal-host="" ref={hostRef} /></div></PortalContext.Provider>;
 }
 
-/** Internal: a business caller cannot override its stable host with an explicit container. */
-export function useBusinessPortalContainer(explicit?: Element | DocumentFragment | null) {
-  const scope = useContext(PortalContext);
-  return { ready: scope === null || scope.container !== null, container: scope ? scope.container : explicit };
-}
-export function usePortalInteractionKind() {
-  return useContext(PortalContext)?.kind ?? 'business';
-}
-
 /** Inside the real Portal, immediately outside the actual Content/Overlay primitives.
  * The latch is written only after this content tree commits, never for a Portal or lazy fallback.
  * Its DOM ref also preserves Radix Presence's existing ref/animation lifetime.
  */
 export function BusinessPortalAdmission({ children, ref }: { children: ReactNode; ref?: Ref<HTMLElement> }) {
-  const scope = useContext(PortalContext);
+  const scope = useBusinessPortalScope();
   const [committed, setCommitted] = useState(false);
   const blocked = scope?.kind === 'business' && scope.locked && !committed;
   const commit = useCallback(() => {

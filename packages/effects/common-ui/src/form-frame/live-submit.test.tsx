@@ -144,37 +144,56 @@ describe('FormFrame explicit live submission', () => {
     },
   );
   it('all draft paths filter sensitive values and outside cancel uses one stable command', async () => {
-    let cancel!: (() => void) | null;
-    const commands: unknown[] = [];
-    const onCancel = vi.fn();
-    const filter = (v: V) => ({ name: v.name });
-    const ready = (c: (() => void) | null) => {
-      commands.push(c);
-      cancel = c;
-    };
-    const view = render(
-      <View onSubmit={async () => {}} draftFilter={filter} onCancel={onCancel} onCancelReady={ready} />,
-    );
-    await userEvent.type(screen.getByLabelText('Password'), 'private');
-    await userEvent.type(screen.getByLabelText('Name'), 'draft');
-    expect(state.readDraft('scope', 'record')).toEqual({ name: 'draft' });
-    const command = cancel;
-    view.rerender(
-      <View
-        onSubmit={async () => {}}
-        draftFilter={filter}
-        onCancel={onCancel}
-        onCancelReady={ready}
-        operationKey="new"
-      />,
-    );
-    expect(cancel).toBe(command);
-    act(() => cancel?.());
-    await userEvent.click(screen.getByRole('button', { name: '保留草稿并离开' }));
-    expect(onCancel).toHaveBeenCalledTimes(1);
-    expect(state.readDraft('scope', 'record')).toEqual({ name: 'draft' });
-    view.unmount();
-    expect(commands.at(-1)).toBeNull();
+    const error = vi.spyOn(console, 'error'); // Call-through: diagnostics stay visible if this boundary regresses.
+    try {
+      let cancel!: (() => void) | null;
+      const commands: unknown[] = [];
+      const onCancel = vi.fn();
+      const filter = (v: V) => ({ name: v.name });
+      const ready = (c: (() => void) | null) => {
+        commands.push(c);
+        cancel = c;
+      };
+      const view = render(
+        <View onSubmit={async () => {}} draftFilter={filter} onCancel={onCancel} onCancelReady={ready} />,
+      );
+      await userEvent.type(screen.getByLabelText('Password'), 'private');
+      const name = screen.getByLabelText('Name');
+      // Keep a focused dirty input without user-event's deferred blur/change workaround nesting act during Radix autofocus.
+      act(() => name.focus());
+      fireEvent.change(name, { target: { value: 'draft' } });
+      expect(state.readDraft('scope', 'record')).toEqual({ name: 'draft' });
+      const command = cancel;
+      view.rerender(
+        <View
+          onSubmit={async () => {}}
+          draftFilter={filter}
+          onCancel={onCancel}
+          onCancelReady={ready}
+          operationKey="new"
+        />,
+      );
+      expect(cancel).toBe(command);
+      expect(name).toHaveFocus();
+      expect(name).toHaveValue('draft');
+      await act(async () => {
+        cancel?.();
+      });
+      await userEvent.click(screen.getByRole('button', { name: '保留草稿并离开' }));
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      expect(state.readDraft('scope', 'record')).toEqual({ name: 'draft' });
+      view.unmount();
+      expect(commands.at(-1)).toBeNull();
+    } finally {
+      const warnings = error.mock.calls.filter(
+        ([message]) =>
+          typeof message === 'string' &&
+          (message.includes('inside a test was not wrapped in act(') ||
+            message.includes('A component suspended inside an `act` scope, but the `act` call was not awaited.')),
+      );
+      error.mockRestore();
+      expect(warnings).toEqual([]);
+    }
   });
 });
 
