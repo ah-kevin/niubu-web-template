@@ -13,22 +13,21 @@ import { buildProvenance } from './build-provenance.ts';
 import { assertThemeInitHead } from './theme-init-plugin.ts';
 
 const workspaceRoot = fileURLToPath(new URL('../../..', import.meta.url));
-const entry = resolve(workspaceRoot, 'apps/playground/src/theme-init.ts');
-// Read the actual app configuration and public key encoder through Node, without
-// adding an app dependency or a runtime preference manager to this tooling package.
+const fixtureRoot = resolve(workspaceRoot, 'internal/vite-config');
+const entry = resolve(fixtureRoot, 'src/tests/fixtures/theme-entry.js');
+// Read the explicit fixture contract through Node without loading an app or preference manager.
 const contractResult = spawnSync(process.execPath, ['--input-type=module', '--eval', `
-  import { appIdentity, appConfig } from ${JSON.stringify(new URL('../../../apps/playground/src/app/config.ts', import.meta.url).href)};
-  import { preferenceStorageKey } from ${JSON.stringify(new URL('../../../packages/preferences/src/pure.ts', import.meta.url).href)};
-  import { AUTH_IDENTITY_HINT_KEY, AUTH_RESTORE_BLOCKED_KEY } from ${JSON.stringify(new URL('../../../apps/playground/src/auth/identity-hint.ts', import.meta.url).href)};
-  console.log(JSON.stringify({
-    appId: appConfig.appId, environment: appIdentity.environment,
-    hintedKey: preferenceStorageKey({ ...appIdentity, identityKey: 'fixture-user' }),
-    anonymousKey: preferenceStorageKey({ ...appIdentity, identityKey: 'anonymous' }),
-    hintKey: AUTH_IDENTITY_HINT_KEY, blockedKey: AUTH_RESTORE_BLOCKED_KEY,
-  }));
+  import { themeContract } from ${JSON.stringify(new URL('./tests/fixtures/theme-contract.js', import.meta.url).href)};
+  console.log(JSON.stringify(themeContract));
 `], { cwd: workspaceRoot, encoding: 'utf8' });
 expect(contractResult.status, contractResult.stderr).toBe(0);
 const contract: { appId: string; environment: string; hintedKey: string; anonymousKey: string; hintKey: string; blockedKey: string } = JSON.parse(contractResult.stdout);
+// Resolve the declared test dependencies through public exports; no app entry is part of this fixture.
+const fixtureAliases = Object.fromEntries(['@niubu/preferences/pure', '@niubu/hooks/storage', '@niubu/hooks/theme-dom'].map(specifier => {
+  const result = resolveWorkspaceImport(readWorkspace(workspaceRoot), entry, specifier);
+  if (result.kind !== 'workspace' || !result.isPublic) throw new Error(`Missing public fixture export: ${specifier}`);
+  return [specifier, result.file];
+}));
 const validHint = JSON.stringify({ version: 1, identityKey: 'fixture-user' });
 function evaluateTheme(code: string, options: { hint?: string | null; blocked?: boolean; missingSessionGetter?: boolean; unavailableStorage?: boolean } = {}) {
   const dataset: Record<string, string> = {}, styles = new Map<string, string>(), reads: string[] = [];
@@ -73,7 +72,7 @@ it('exposes theme exports under the configured classic global', async () => {
     writeFileSync(join(root, 'theme.js'), 'export const initialized = true;');
     writeFileSync(join(root, 'index.html'), '<html><head></head><body></body></html>');
     const result = await build({
-      configFile: false, root, logLevel: 'silent',
+      configFile: false, root, logLevel: 'silent', resolve: { alias: fixtureAliases },
       plugins: [plugin({ entry: join(root, 'theme.js'), globalName: 'TemplateThemeInit' })],
       build: { write: false },
     });
@@ -88,11 +87,11 @@ it('exposes theme exports under the configured classic global', async () => {
   }
 });
 it('only accepts configured theme entry evidence with a real single-entry IIFE module mapping', () => {
-  const provenance = buildProvenance({ appRoot: resolve(workspaceRoot, 'apps/playground'), workspaceRoot, firstScreen: { appName: '@niubu/playground', modules: { themeInit: 'src/theme-init.ts' }, variants: { current: {} } }, themeInit: { entry, appId: contract.appId, environment: contract.environment, globalName: 'TemplateThemeInit' } });
+  const provenance = buildProvenance({ appRoot: fixtureRoot, workspaceRoot, firstScreen: { appName: '@niubu-internal/vite-config', modules: { themeInit: 'src/tests/fixtures/theme-entry.js' }, variants: { current: {} } }, themeInit: { entry, appId: contract.appId, environment: contract.environment, globalName: 'TemplateThemeInit' } });
   const register = (provenance.api as unknown as { registerThemeInitIife?: (evidence: unknown) => void }).registerThemeInitIife;
   expect(typeof register).toBe('function');
   const chunk = { code: '(function(){})();', facadeModuleId: entry, moduleIds: [entry], imports: [], dynamicImports: [], isEntry: true };
-  expect(() => register!({ entry: resolve(workspaceRoot, 'apps/playground/src/main.tsx'), fileName: 'assets/theme.js', chunk })).toThrow(/configured theme entry/i);
+  expect(() => register!({ entry: resolve(fixtureRoot, 'src/index.ts'), fileName: 'assets/theme.js', chunk })).toThrow(/configured theme entry/i);
   expect(() => register!({ entry, fileName: 'assets/theme.js', chunk: { ...chunk, moduleIds: [] } })).toThrow(/module evidence/i);
   expect(() => register!({ entry, fileName: 'assets/theme.js', chunk: { ...chunk, imports: ['react'] } })).toThrow(/self-contained/i);
   const foreign = mkdtempSync(join(tmpdir(), 'niubu-foreign-'));
@@ -109,7 +108,7 @@ it('emits a single self-contained classic IIFE before final stylesheet and modul
     writeFileSync(join(root, 'index.html'), '<html><head></head><body><script type="module" src="/main.js"></script></body></html>');
     writeFileSync(join(root, 'main.js'), "import './style.css'; document.body.dataset.app = 'ready';");
     writeFileSync(join(root, 'style.css'), 'body { color: #123456; }');
-    const result = await build({ configFile: false, root, base: '/nested/', logLevel: 'silent', plugins: [theme], build: { write: false } });
+    const result = await build({ configFile: false, root, resolve: { alias: fixtureAliases }, base: '/nested/', logLevel: 'silent', plugins: [theme], build: { write: false } });
     const built = Array.isArray(result) ? result[0] : result;
     if (!('output' in built)) throw Error('Unexpected watcher');
     const output = built.output;
@@ -151,8 +150,9 @@ it('emits a single self-contained classic IIFE before final stylesheet and modul
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 it('serves the same IIFE using controlled dev middleware and puts it before existing head tags', async () => {
-  const theme = plugin();
-  const resolved = await resolveConfig({ configFile: false, root: resolve(workspaceRoot, 'apps/playground'), base: '/preview/', logLevel: 'silent' }, 'serve');
+  const appId = 'fixture</script>"', environment = 'stage & preview';
+  const theme = plugin({ appId, environment });
+  const resolved = await resolveConfig({ configFile: false, root: fixtureRoot, resolve: { alias: fixtureAliases }, base: '/preview/', logLevel: 'silent' }, 'serve');
   const onResolved = theme.configResolved as (config: typeof resolved) => void;
   onResolved(resolved);
   let middleware: (req: { url: string }, res: unknown, next: () => void) => Promise<void>;
@@ -160,6 +160,8 @@ it('serves the same IIFE using controlled dev middleware and puts it before exis
   const transform = theme.transformIndexHtml as { handler: (html: string) => Promise<string> };
   const html = await transform.handler('<html><head><link rel="stylesheet" href="/a.css"><script type="module" src="/main.ts"></script></head></html>');
   const src = html.match(/<script src="([^"]+)"/)![1];
+  expect(src).toBe(`/preview/@niubu/theme-init/${encodeURIComponent(appId)}/${encodeURIComponent(environment)}.js`);
+  expect(() => assertThemeInitHead(html, src)).not.toThrow();
   expect(html.indexOf(`<script src="${src}"`)).toBeLessThan(html.indexOf('rel="stylesheet"'));
   let body = '', contentType = '', next = 0;
   await middleware!({ url: src + '?v=1' }, { setHeader: (name: string, value: string) => { if (name === 'Content-Type') contentType = value; }, end: (value: string) => { body = value; } }, () => { next++; });
@@ -196,4 +198,5 @@ it('checks the real source closure before tree shaking for forbidden runtime and
   }
   visit(entry);
   expect([...seen]).not.toContain(resolve(workspaceRoot, 'packages/preferences/src/manager.ts'));
+  expect([...seen].every(file => !file.startsWith(resolve(workspaceRoot, 'apps') + '/'))).toBe(true);
 });

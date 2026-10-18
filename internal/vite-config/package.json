@@ -21,7 +21,9 @@
     "eslint": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "@niubu-internal/test-config": "workspace:*"
+    "@niubu-internal/test-config": "workspace:*",
+    "@niubu/hooks": "workspace:*",
+    "@niubu/preferences": "workspace:*"
   },
   "scripts": {
     "build": "tsc --noEmit",

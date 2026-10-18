@@ -588,6 +588,12 @@ importers:
       '@niubu-internal/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@niubu/hooks':
+        specifier: workspace:*
+        version: link:../../packages/effects/hooks
+      '@niubu/preferences':
+        specifier: workspace:*
+        version: link:../../packages/preferences
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
