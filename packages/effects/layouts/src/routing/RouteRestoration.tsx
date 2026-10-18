@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useInsertionEffect, useRef, type ReactNode } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import type { ResolvedPageDescriptor } from '@niubu/stores';
-import { ScrollCommitContext, type PageRoutingRuntime } from './context';
+import { OverlayFocusSettlementContext, ScrollCommitContext, type PageRoutingRuntime } from './context';
 /** One numeric, in-memory document owner. Destination effects wait for the real content commit. */
 export function RouteRestoration({
   children,
@@ -14,8 +14,12 @@ export function RouteRestoration({
     navigationType = useNavigationType();
   const live = useRef({ location, navigationType, runtime });
   const interacted = useRef(false);
+  const focusReturns = useRef(new Set<symbol>());
   useInsertionEffect(() => {
-    if (live.current.location.key !== location.key) interacted.current = false;
+    if (live.current.location.key !== location.key) {
+      interacted.current = false;
+      focusReturns.current.clear();
+    }
     live.current = { location, navigationType, runtime };
   }, [location, navigationType, runtime]);
   useLayoutEffect(() => {
@@ -36,6 +40,13 @@ export function RouteRestoration({
     return () => {
       document.removeEventListener('pointerdown', pointer, true);
       document.removeEventListener('keydown', keyboard, true);
+    };
+  }, []);
+  const beginFocusReturn = useCallback(() => {
+    const token = Symbol();
+    focusReturns.current.add(token);
+    return () => {
+      focusReturns.current.delete(token);
     };
   }, []);
   const committed = useRef<{ pageKey: string; address: string; locationKey: string } | null>(null);
@@ -67,7 +78,7 @@ export function RouteRestoration({
       !active.closest(
         '[inert],[hidden],[aria-hidden="true"],[data-radix-focus-guard],[role="dialog"][data-state="closed"],[role="alertdialog"][data-state="closed"]',
       );
-    if (different && !focusedOverlay?.isConnected && !chosenFocus)
+    if (different && !focusedOverlay?.isConnected && !chosenFocus && focusReturns.current.size === 0)
       document.getElementById('main-content')?.focus({ preventScroll: true });
     committed.current = { pageKey, address, locationKey };
   }, []);
@@ -91,5 +102,9 @@ export function RouteRestoration({
       pageDestinations.set(JSON.stringify([previous.pageKey, previous.address]), scroll.scrollTop);
     };
   }, [location, restore, runtime]);
-  return <ScrollCommitContext value={commit}>{children}</ScrollCommitContext>;
+  return (
+    <OverlayFocusSettlementContext value={beginFocusReturn}>
+      <ScrollCommitContext value={commit}>{children}</ScrollCommitContext>
+    </OverlayFocusSettlementContext>
+  );
 }

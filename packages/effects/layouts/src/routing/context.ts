@@ -39,6 +39,8 @@ export type PageTabsController = Readonly<{
 }>;
 export const ControllerContext = createContext<PageTabsController | null>(null);
 export const ScrollCommitContext = createContext<((descriptor: ResolvedPageDescriptor) => void) | null>(null);
+/** Private entry-scoped handoff while a closing overlay settles its existing focus return. */
+export const OverlayFocusSettlementContext = createContext<(() => () => void) | null>(null);
 export type DescriptorChannel = {
   resolve(view?: string, status?: ResolvedPageDescriptor['status']): ResolvedPageDescriptor;
   resolveTab(descriptor: ResolvedPageDescriptor): PageTab | null;

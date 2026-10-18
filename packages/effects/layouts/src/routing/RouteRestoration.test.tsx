@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { createMemoryRouter, Link, RouterProvider, useLocation } from 'react-router-dom';
@@ -46,7 +46,7 @@ async function fixture() {
   await renderWidgets(<RouterProvider router={router} />);
   await act(async () => { release(); });
   expect(screen.getByRole('main')).toHaveFocus();
-  return { router, commit: () => act(async () => { release(); }) };
+  return { router, release: () => release(), commit: () => act(async () => { release(); }) };
 }
 
 it('focuses main for ordinary navigation even when its initiating link stays focused until content commits', async () => {
@@ -133,4 +133,19 @@ it('restores Back scroll without stealing the notification launcher after reopen
   await view.commit();
   expect(screen.getByRole('main')).toHaveFocus();
   expect(document.documentElement.scrollTop).toBe(220);
+});
+
+it('settles notification return focus when Escape and a late content commit share the closing batch', async () => {
+  const view = await fixture(), user = userEvent.setup();
+  await act(async () => { await view.router.navigate('/two'); });
+  const trigger = screen.getByRole('button', { name: 'Notifications' });
+  await user.click(trigger);
+  const dialog = await screen.findByRole('dialog');
+  expect(dialog.contains(document.activeElement)).toBe(true);
+  act(() => {
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    view.release();
+  });
+  await waitFor(() => expect(trigger).toHaveFocus());
+  expect(screen.queryByRole('dialog')).toBeNull();
 });
