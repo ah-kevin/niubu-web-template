@@ -299,6 +299,9 @@ function BuiltinPanel() {
       <Button type="button" onClick={readPublicFields}>
         {text('preview')}
       </Button>
+      <Button type="button" variant="outline" onClick={() => schema.reset()}>
+        {text('reset')}
+      </Button>
       <pre className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
         <output aria-label={text('builtinPreview')}>{preview}</output>
       </pre>

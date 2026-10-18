@@ -129,6 +129,17 @@ describe('FormsPage existing form capabilities', () => {
     expect(output('Builtin preview')).not.toHaveTextContent('synthetic-only');
   });
 
+  it('resets the builtin selection through the existing form owner and keeps its public preview', async () => {
+    render(<FormsPage />);
+    await scenario('11 builtin fields');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Category' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Research' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Reset values' }));
+    expect(screen.getByRole('combobox', { name: 'Category' })).toHaveTextContent('General');
+    await userEvent.click(screen.getByRole('button', { name: 'Preview public fields' }));
+    expect(JSON.parse(output('Builtin preview').textContent!)).toMatchObject({ category: 'general' });
+  });
+
   it('composes one form with columns, a spanning field and named JSX sections', async () => {
     render(<FormsPage />);
     await scenario('Columns and JSX');
