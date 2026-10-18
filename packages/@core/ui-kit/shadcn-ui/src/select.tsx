@@ -41,7 +41,11 @@ export function Select({
       form={form}
       disabled={disabled}
       value={value === '' && hasEmpty ? emptyValue : value}
-      onValueChange={next => onValueChange(next === emptyValue ? '' : next)}
+      onValueChange={next => {
+        // Radix's native form bridge can emit '' before portal options register during a controlled reset.
+        // Actual empty choices use emptyValue, so this synthetic value must not overwrite the owner.
+        if (next !== '') onValueChange(next === emptyValue ? '' : next);
+      }}
     >
       {hasEmpty && name && <input type="hidden" name={name} form={form} value={value} disabled={disabled} />}
       <SelectPrimitive.Trigger
