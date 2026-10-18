@@ -12,7 +12,7 @@ pnpm format:check   # 格式
 ```
 
 - `pnpm check` 本身是增量的：Turbo 缓存各包的结果，没改动的包直接回放，只重跑改动的包和依赖它的包。代码没变时整条链只要几秒。
-- 改了根 `package.json`、`turbo.json`、`internal/scripts`、`internal/tsconfig` 这类全局文件，缓存会全部失效，下一次 `pnpm check` 相当于全量跑。
+- 缓存按 `turbo.json` 声明的全局输入和各任务输入失效。根依赖清单、锁文件和共享配置会影响全仓；`internal/scripts/src` 通过应用构建任务的输入追踪，ESLint 配置包源码通过 lint 任务的输入追踪，不会因任意脚本改动就清空全部缓存。
 - 不要为了"冷跑"去删或挪走缓存，除非确实怀疑缓存有问题。
 
 开发中只想快速看一个包或一个文件时：
