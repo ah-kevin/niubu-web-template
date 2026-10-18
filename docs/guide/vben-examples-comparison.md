@@ -1,16 +1,22 @@
 # Vben capability comparison and confirmed scope
 
-Human confirmed 2026-10-17: existing capabilities and explicitly available partial subsets only; all gaps deferred.
+Human confirmed 2026-10-17: existing capabilities and explicitly available partial subsets only. Later authorized changes are recorded separately below.
 
-状态：用户于2026-10-17确认8已有及41部分中的现有子集，23缺口保留，并恢复模板写入；原对照判定与边界保留，实施映射见文末。本页不将组件验证称为视觉或E2E验收。
+状态：2026-10-17冻结对照为8已有、41部分、23缺口；该统计保留为历史基线。2026-10-18后续授权已补齐同步树列表和公共表格工具栏，下表E68–E70及实现索引记录当前子集；不能再把这些已实现子集列为当前缺口。其余未授权能力继续保留边界。本页不将组件验证称为视觉或E2E验收。
 
 ### 基线与读法
 
 - Vben：`151d80f9e5fb63f2ed8a8c432e1adf2eba253271`；源码范围 `playground/src/views/examples` 与 `demos`，共107个跟踪文件。下表72个主示例逐项覆盖，35个支撑文件另表逐项归属；8个关联路由另列，避免把引用到范围外组件的入口丢掉。
 - 模板：`6110087a2fbd3db58e5712103c290a8f100b948b`。21包、92公开入口、737条符号记录不等于737个组件；依据实际公开导出和实现核读。对照时Playground只登记9条原有路由；实施后增加11个菜单入口和5个隐藏页面，共25条静态路由，实现索引见文末。
-- 判定按参考页完整行为：**已有 8**，核心机制可用；**部分 41**，只展示明确存在的子集；**缺口 23**，核心能力/成品或公开合约缺失，不默认实现。不同Vue/React API写法不是缺陷，也不承诺Vben API兼容。
+- 原冻结判定按参考页完整行为：**已有 8**，核心机制可用；**部分 41**，只展示明确存在的子集；**缺口 23**，当时核心能力/成品或公开合约缺失。后续授权差量不回写这组历史统计；当前可用范围以具体条目和下节增量为准。不同Vue/React API写法不是缺陷，也不承诺Vben API兼容。
 - 包名可含公开子路径；`useSchemaForm().Fields/Form/form`是返回实例成员，不是独立export；标注“类型契约”的条目不是运行组件。实施只使用app已声明包；`@niubu/core-shared`工具经已声明的`@niubu/utils`重导出使用，不新增依赖。
 - 每行“拟做”可合并到同页的多个场景，不等于新增72个菜单。需要接入现有owner/controller属于示例工作，不能据此声称DOM保活等缺口已存在。只做现有能力；缺口、替代或新增公共能力必须由用户选择。
+
+### 2026-10-18后续授权增量
+
+- **树列表**：`DataTable profile="tree-list"`、`createTreeColumnHelper`与受控/内部`ExpandedState`已落地；`/examples/tables`有三层同步树，系统菜单/部门列表使用完整同步快照。它是真实层级行与展开owner，不是导航树或分页模拟；异步子级加载、树编辑等未声明扩展仍不在该子集。
+- **公共表格工具栏**：标题/动作slot、列设置与重置已落地；查询显隐、刷新和最大化在调用方提供对应toolbar配置时可用。系统CRUD通过原query/reset/reload/cancel与scope owner接线。未引入VXE库，不提供其proxy/keepSource/export协议。
+- **现有控件视觉**：公共Input/Select/Checkbox/Button、弹层与表格采用已确认Vben/Ant及VXE mini视觉；示例复用同一公共组件。此项不代表补齐下表中的上传、富文本、虚拟化等新成品能力。
 
 ### 逐项主表示例
 
@@ -85,8 +91,8 @@ Human confirmed 2026-10-17: existing capabilities and explicitly available parti
 | E65 | `examples/vxe-table/edit-cell.vue`<br>单元格编辑 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable`, `createListColumnHelper` | 行内编辑暂不建页 | 缺口 | DataTableProps无单元格编辑状态/提交事务API；Input存在不等价 |
 | E66 | `examples/vxe-table/edit-row.vue`<br>行编辑 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable`, `createListColumnHelper` | 整行编辑暂不建页 | 缺口 | 无行编辑事务/恢复API；不以自定义input伪装已支持 |
 | E67 | `examples/vxe-table/fixed.vue`<br>固定表头/列 | `@niubu/common-ui/data-table`：`DataTable`, `useTablePreferences` | DataTable/列固定与列设置 | 部分 | 现有表头position:relative，无公开固定表头契约；VXE API不存在 |
-| E68 | `examples/vxe-table/form.vue`<br>查询表单与表格 | `@niubu/common-ui/data-table`：`QueryDataTable`, `useQueryDataTable`；`@niubu/common-ui/form`：`useSchemaForm` | DataTable/查询、重置与作用域取消 | 部分 | VXE表单/导出/zoom工具条API不在现有组件中 |
-| E69 | `examples/vxe-table/remote.vue`<br>远程加载 | `@niubu/common-ui/data-table`：`useQueryDataTable`, `DataTable` | DataTable/远程、取消与刷新 | 部分 | VXE proxy/keepSource/export/zoom接口缺口；不直接复制工具条 |
+| E68 | `examples/vxe-table/form.vue`<br>查询表单与表格 | `@niubu/common-ui/data-table`：`QueryDataTable`, `useQueryDataTable`；`@niubu/common-ui/form`：`useSchemaForm` | DataTable/查询、重置与作用域取消 | 部分 | QueryDataTable/useQueryDataTable与公共toolbar已有组合：查询显隐/刷新/最大化由调用方显式接入；无VXE表单/导出API |
+| E69 | `examples/vxe-table/remote.vue`<br>远程加载 | `@niubu/common-ui/data-table`：`useQueryDataTable`, `DataTable` | DataTable/远程、取消与刷新 | 部分 | 公共刷新/最大化工具栏及scope取消接线已存在；VXE proxy/keepSource/export协议仍缺失，不宣称兼容其接口 |
 | E70 | `examples/vxe-table/tree.vue`<br>树形表格 | `@niubu/common-ui/data-table`：`DataTable profile="tree-list"`, `createTreeColumnHelper`, `ExpandedState` | 表格页三层树示例；系统菜单/部门树 | 部分 | 2026-10-18按用户新授权补齐完整同步树列表、原生展开/层级列与受控owner，系统两页使用完整快照；不据此宣称覆盖Vben其它树扩展。原冻结统计为历史基线。 |
 | E71 | `examples/vxe-table/viewed.vue`<br>已读行标记 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable` | 已读行追踪暂不建页 | 缺口 | 无viewedRows/markKeysAsViewed/持久化契约；ReadColumnHelper意为只读列 |
 | E72 | `examples/vxe-table/virtual.vue`<br>虚拟滚动 | 仅邻近基础：`@niubu/common-ui/data-table`：`DataTable`, `createListColumnHelper` | 虚拟表格暂不建页 | 缺口 | 当前渲染rows.map，无Virtualizer/窗口化profile；滚动容器不等价 |
@@ -152,20 +158,20 @@ Human confirmed 2026-10-17: existing capabilities and explicitly available parti
 
 1. **验证码4种、数字动画、图片裁剪、结构化JSON查看器、通用Motion、VResize、Tiptap**：无对应成品；默认保留缺口、不建页、不装依赖。可另行决定新增能力范围与依赖授权。
 2. **Tippy/省略文本/Loading/ColPage**：只有邻近基础或设计不同的组件。可确认现有字符串Tooltip、ReadState/路由进度、已有外框；不能把取消登记、静态文字/布局或原生滚动当完整高级能力。
-3. **VXE整组**：没有vxe-table库/API。可选择用现有DataTable示范基础/自定义cell/列固定/查询/远程；行内编辑、固定表头、树、已读追踪、虚拟化与VXE工具条缺口保留。不得以分页、普通rows.map或导航树冒充虚拟/树表。
+3. **VXE整组**：没有vxe-table库/API。现有DataTable已示范基础/自定义cell/列固定/查询/远程，后续授权又补齐完整同步树列表与公共工具栏（列设置、可选查询显隐/刷新/最大化）。行内编辑、固定表头、已读追踪、虚拟化，以及VXE proxy/keepSource/export协议继续保留缺口；不得把已实现树列表重新列为缺口，也不能把普通rows.map或导航树冒充虚拟化/树表。
 4. **表单**：可确认11种基础字段、同步校验、纯联动、单向DTO、已有API/布局/查询/提交失败聚焦。跨owner合并、独立折叠、自动标签测宽、数组行管理、异步schema、远程搜索/树控件、双向codec等缺口不默认补。`auto`标签宽度目前表示顶部，focus不是平滑scrollIntoView。
 5. **菜单/路由/标签**：保留现有角色/codes/scope、文本badge、静态链面包屑、新窗口和标签基本操作；菜单可见但403、activeIcon、任意菜单query、dot/颜色、动态标签标题/按route限额/DOM保活等按表区分。新增合成演示数据不等于修改认证策略；不把数据cache当React实例保活。
 6. **请求/Query/水印/下载/剪贴板**：只按已有公开契约示例。长整数无损JSON、四种序列化预设、高级水印和通用浏览器工具封装保持缺口；React Query已在app依赖中，不能照搬Vue import。仅演示安全读的重试，query key带身份/scope/generation；现有RequestOutcome失败需要明确转异常才能触发Query重试。
 
 7. **弹窗/抽屉高级契约**：受控、fullscreen、confirmLoading、alert/confirm及React类型安全组合可示例；拖拽、四向/内容容器、整层loading/lock、动画完成通知、关闭后实例保留、prompt及程序式beforeClose服务契约不默认补。
 
-**本次已确认范围**：先做“已有”及“部分”栏中明确列出的现有子集，并把“缺口”全部保留。任何新第三方依赖仍无授权；如需登记尚未声明的内部workspace引用，也先明确确认，不借转导出绕过依赖边界。
+**2026-10-17初始已确认范围**：先做当时“已有”及“部分”栏中明确列出的现有子集，并保留当时的“缺口”；2026-10-18后续授权增量见前节，不用此历史句子否定已实现树列表/工具栏。任何新第三方依赖仍无授权；如需登记尚未声明的内部workspace引用，也先明确确认，不借转导出绕过依赖边界。
 
-### 当前边界与后续门禁
+### 2026-10-17初始边界与后续门禁（历史）
 
 用户确认原话：“确认，先做已有能力和部分能力里的现有子集，缺口先保留。恢复模板写入通道，需要提权就申请，继续完成2-3，验收通过后合并本地master，不推送。”
 
-本轮只在模板实现现有能力示例，不同步业务仓。公共packages/internal无必要改动时保持不变；如有则独立提交。组件交互、类型/lint/format与冷全量检查及独立审查按执行计划进行；视觉由用户pnpmdev验收，无浏览器/E2E、Docker、远端CI或生产验证。
+该初始示例轮次只在模板实现现有能力示例，当时不同步业务仓；后续业务同步和浏览器复核以各自新授权为准。公共packages/internal无必要改动时保持不变；如有则独立提交。组件交互、类型/lint/format与冷全量检查及独立审查按执行计划进行；视觉由用户pnpmdev验收，无浏览器/E2E、Docker、远端CI或生产验证。
 
 ## 实施索引
 
@@ -174,7 +180,7 @@ Human confirmed 2026-10-17: existing capabilities and explicitly available parti
 | 页面 | 确认项 / 场景 | 源码 |
 | --- | --- | --- |
 | `/examples/forms` | E43/E44/E46/E47/E48/E51/E52/E53/E54：9个场景切换、11字段、API、布局、renderer、derive、查询、校验、focus、DTO | [FormsPage](../../apps/playground/src/examples/forms/FormsPage.tsx) |
-| `/examples/tables` | E63/E64/E67/E68/E69：read/list/selectable、自定义cell、列偏好、query/reset/reload/cancel | [TablesPage](../../apps/playground/src/examples/tables/TablesPage.tsx) |
+| `/examples/tables` | E63/E64/E67/E68/E69/E70：read/list/selectable/tree-list、三层同步树、自定义cell、列偏好与公共工具栏、query/reset/reload/cancel | [TablesPage](../../apps/playground/src/examples/tables/TablesPage.tsx) |
 | `/examples/components` | E33/E38/E61：按钮、单/多选、条件上下文菜单与字符串Tooltip | [ComponentsPage](../../apps/playground/src/examples/components/ComponentsPage.tsx) |
 | `/examples/feedback` | E41/E57/E58；R01–R04：受控Modal/Drawer、typed数据与表单、fullscreen、confirmLoading、队列；读取/静态系统状态 | [FeedbackPage](../../apps/playground/src/examples/components/FeedbackPage.tsx) |
 | `/examples/access` | E01/E02/E03/E05/E06：合成角色admin/super/user、codes any/all与scope授权边界 | [AccessPage](../../apps/playground/src/examples/application/AccessPage.tsx) |
