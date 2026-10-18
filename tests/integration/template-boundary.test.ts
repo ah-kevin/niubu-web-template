@@ -66,9 +66,9 @@ it('owns its boundary policy and keeps the exact E2E authority and CLAUDE refere
   const heading = '## E2E 测试授权';
   expect(agents.split(heading)).toHaveLength(2);
   const section = heading + agents.split(heading)[1];
-  expect(Buffer.byteLength(section)).toBe(684);
+  expect(Buffer.byteLength(section)).toBe(936);
   expect(createHash('sha256').update(section).digest('hex')).toBe(
-    'a0b911eb3b07bb4fbbac6ab5cadccc25e6c7a78d3a4f45c5314c0672df67a220',
+    '73d7312012c4c615e393dcf7caf58ef3e40a94031b025977566bc191b2647c0d',
   );
   expect(readFileSync(join(root, 'CLAUDE.md'), 'utf8')).toBe('@AGENTS.md\n');
 });

@@ -34,4 +34,4 @@ pnpm format:check                           # 格式
 pnpm --filter '@niubu/playground...' test   # 只想快速看某个包时
 ```
 
-`pnpm check` 依次检查边界、翻译、类型、lint、测试、构建和首屏体积，不含 E2E；E2E 授权规则见 [AGENTS.md](AGENTS.md)。HTTP 运行检查 `pnpm verify:playground`、hooks、CI、构建产物与 Docker 见[工程与部署](docs/guide/engineering-deploy.md)。
+`pnpm check` 依次检查边界、翻译、类型、lint、测试、构建和首屏体积，不含自动化 E2E；浏览器操作回归与自动化 E2E 的授权边界见 [AGENTS.md](AGENTS.md)。HTTP 运行检查 `pnpm verify:playground`、hooks、CI、构建产物与 Docker 见[工程与部署](docs/guide/engineering-deploy.md)。
