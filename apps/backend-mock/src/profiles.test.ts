@@ -6,7 +6,7 @@ import { createStarterMockConfig, selectMockConfig } from './profiles';
 describe('independent admin starter profile', () => {
   it('keeps the default playground and rejects unknown profile names', () => {
     expect(selectMockConfig(undefined).accounts[0]?.username).toBe('demo@playground.invalid');
-    expect(() => selectMockConfig('unknown')).toThrow('Unknown mock profile');
+    expect(() => selectMockConfig('unknown/profile')).toThrow('Unknown mock profile');
     expect(createStarterMockConfig().publicMenu).toEqual([]);
   });
 

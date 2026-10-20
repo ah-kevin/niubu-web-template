@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { FieldOption, FormFieldConfig, SchemaFormOptions } from '@niubu/common-ui/form';
 import type { InputByResource, RecordByResource, ResourceKind } from './contracts';
 import { safeMenuHref } from './schemas';
+import { registry } from '../modules/demo';
 import { excludedDescendants, referenceOptions, type Lookups, type Translate } from './resource-config';
 
 export type EditorValues = {
@@ -145,9 +146,9 @@ export function createEditorOptions<K extends ResourceKind>(
   } else {
     const excluded = excludedDescendants(lookups.menus, record?.id);
     const groups = lookups.menus.filter(row => row.kind === 'group');
-    const pageOptions = ['home', 'request', 'system.users', 'system.roles', 'system.menus', 'system.departments'].map(
-      id => ({ value: `starter.${id}`, label: t(id.startsWith('system.') ? id : id) }),
-    );
+    const pageOptions = registry.routes
+      .filter(route => route.navigation)
+      .map(route => ({ value: route.id, label: t(route.titleKey) }));
     fields = [
       field('title', 'text', text, true),
       {

@@ -6,9 +6,22 @@ import { createStarterMockConfig } from '../../apps/backend-mock/src/profiles';
 import { startStarter } from '../../apps/starter/src/main';
 import { appIdentity } from '../../apps/starter/src/app/config';
 import { registry } from '../../apps/starter/src/modules/demo';
+import { createEditorOptions } from '../../apps/starter/src/system/form-schemas';
+import { menuInputSchema } from '../../apps/starter/src/system/schemas';
+import { emptyLookups } from '../../apps/starter/src/system/resource-config';
 import { mockFetchResponse } from './mock-response';
 
 const disposers: (() => void)[] = [];
+it('offers only registered menu pages accepted by both app and mock', () => {
+  const options = createEditorOptions('menus', key => key, emptyLookups);
+  const pages = (options.fields.find(field => field.name === 'pageId')!.componentProps as { options: { value: string; label: string }[] }).options;
+  expect(pages.map(page => page.value)).toEqual(createStarterMockConfig().navigablePageIds);
+  for (const page of pages) {
+    const route = registry.routes.find(route => route.id === page.value)!;
+    expect(page.label).toBe(route.titleKey);
+    expect(menuInputSchema.safeParse({ title: 'Valid page', kind: 'page', pageId: page.value, parentId: null, order: 0, enabled: true }).success).toBe(true);
+  }
+});
 afterEach(async () => {
   await act(async () => disposers.splice(0).reverse().forEach(dispose => dispose()));
   document.body.innerHTML = ''; localStorage.clear(); sessionStorage.clear();
