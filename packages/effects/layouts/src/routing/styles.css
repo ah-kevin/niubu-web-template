@@ -1,4 +1,4 @@
-
+@import '@niubu/tabs-ui/styles.css';
 @keyframes route-progress { from { transform:translateX(-100%); } to { transform:translateX(440%); } }
 @keyframes route-fade { from { opacity:0; } to { opacity:1; } }
 @keyframes route-fade-down { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }

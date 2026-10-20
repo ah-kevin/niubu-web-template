@@ -1,4 +1,9 @@
 /* Exact viewport boundaries preserve launcher reachability and watermark density. */
+/* Header breadcrumbs share one fixed-height row with workspace selectors and tools. */
+.foundation-layout .context-actions > .breadcrumbs { max-width: 100%; flex-wrap: nowrap; overflow: hidden; }
+.foundation-layout .context-actions > .breadcrumbs > .breadcrumb-item { min-width: 0; flex-shrink: 1; overflow: hidden; }
+.foundation-layout .context-actions > .breadcrumbs > .breadcrumb-item > svg { flex-shrink: 0; }
+.foundation-layout .context-actions > .breadcrumbs > .breadcrumb-item > :last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 1150px) { .search-trigger { width: 190px; } }
 @media (max-width: 700px) {
   .search-trigger { width: 32px; height: 32px; padding: 0; justify-content: center; background: transparent; border: 0; }
