@@ -26,7 +26,8 @@
     "test:integration": "vitest run --config tests/integration/vitest.config.ts",
     "hooks:install": "node scripts/git-hooks/install.ts",
     "verify:playground": "node internal/scripts/src/playground-runtime.ts",
-    "dev:starter": "pnpm --filter @niubu/starter dev"
+    "dev:starter": "pnpm --filter @niubu/starter dev",
+    "create:product": "node internal/scripts/src/create-product.ts"
   },
   "devDependencies": {
     "typescript": "catalog:",
