@@ -37,7 +37,7 @@ function workspace(runtime = false) {
     writeFileSync(file,"import runtimeConfig from './src/runtime-config.js';\n"+readFileSync(file,'utf8').replace('createWebViteConfig({appRoot,','createWebViteConfig({appRoot,runtimeConfig,'));
   }
   const actualTasks=JSON.parse(readFileSync(join(repo,'turbo.json'),'utf8')).tasks;
-  const task = actualTasks[`${selectFrontendApp(repo).name}#build`];
+  const task = actualTasks[`${selectFrontendApp(repo, '@niubu/playground').name}#build`];
   expect(Array.isArray(task.inputs)).toBe(true);
   put(root, 'turbo.json', { agentGuidance: false, globalDependencies: ['pnpm-workspace.yaml', 'pnpm-lock.yaml'], tasks: { build: { dependsOn: ['^build'], outputs: [], env: ['VITE_*', 'NODE_ENV'], inputs: actualTasks.build.inputs }, '@fixture/app#build': { dependsOn: ['^build'], outputs: ['dist/**'], env: ['VITE_*', 'NODE_ENV'], inputs: task.inputs } } });
   symlinkSync(join(repo, 'node_modules'), join(root, 'node_modules'), 'dir');
