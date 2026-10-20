@@ -57,3 +57,11 @@ pnpm format:check
 新产品 mock 默认采用产品 profile。另启一个 mock 端口后，前端使用 `MOCK_API_URL=http://127.0.0.1:<端口> pnpm dev -- --app <公开scope>/web`。查看 Playground 时显式选择 `MOCK_PROFILE=playground`；两套前端连接各自配置和端口，不混用菜单。
 
 构建选中产品 app：`pnpm --filter <公开scope>/web build`。生产只交付该 app 的静态产物，mock 不属于生产服务。真实后端接入、动态授权联动、已有产品迁移和发布都需要独立合同。
+
+## 初始化之后的开发
+
+初始化生成器只负责第一次创建产品目录。后续由 Agent 按根 `AGENTS.md` 和[开发指南](./README.md)编写普通源码，在产品自身 `apps/web` 中显式接线，不通过重新生成覆盖已有定制。
+
+- 新页面按[模块接入清单](./modules.md)登记稳定 pageId、静态 loader、registry、菜单权限、语言和样式；查询列表与编辑再按[表单清单](./forms-query-crud.md)接入。
+- Starter 提供产品装配参考，Playground 提供组件示例；生成产品内以自身 app、实际公开 scope 和现有 mock profile 为准，app 之间不互导私有实现。
+- 测试使用[现有装配与检查入口](./engineering-deploy.md)，模板更新按[工作方式](./workflow.md)核对差异；`.template-source.json` 保留初始化来源，不能改写它来隐藏后续定制。

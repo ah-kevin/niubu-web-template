@@ -5,6 +5,21 @@
 | 底层 RHF + Zod + `ControlledField`/`FieldShell` | 特殊布局、复杂交互、需要显式控制字段生命周期 | [form exports](../../packages/effects/common-ui/src/form/index.ts)         |
 | 上层 `useSchemaForm`                            | 标准配置表单、联动、分组、查询条件、统一提交 | [system/form-schemas.ts](../../apps/playground/src/system/form-schemas.ts) |
 
+## 查询列表与新建/编辑接入清单
+
+先完成[普通受保护页清单](./modules.md)，再检查下列接线。现有产品参考为 [Starter ResourcePage](../../apps/starter/src/system/ResourcePage.tsx)、[ResourceEditor](../../apps/starter/src/system/ResourceEditor.tsx)及[运行辅助](../../apps/starter/src/system/resource-runtime.ts)；它们依赖该 app 的系统资源 DTO、API、权限与 owner，不能作为任意业务的通用 CRUD API 直接套用或跨 app 导入。
+
+1. 明确本模块的 DTO、schema、查询/写入结果与字段错误；外部输入和响应经校验后使用，API adapter 复用 app 的唯一请求客户端。系统端口签名仅代表现有系统资源，不据此假定新业务的服务端协议。
+2. 区分输入框草稿与已应用查询，接好查询、重置、分页、排序、计数和 loading/error/empty 状态。查询 key 与 `scopeKey` 隔离 identity/scope/generation；刷新使用已应用条件，不能悄悄提交未查询的输入。
+3. 页面读权限、行操作与新建按钮的 write code 分别检查；后端按同一授权边界验证。只读用户可查看，不出现可执行写入口；系统 mock 的资源修改不会修改登录账号或实际授权。
+4. 用公开 `@niubu/common-ui/data-table`、`/form`、`/form-frame`、`/overlay` 组合现有组件；公开 scope 改名后使用目标项目实际包名。`FormFrame` 与 schema 只保留一个提交 owner，编辑弹层接真实取消入口，避免重建组件身份造成闪动或焦点丢失。
+5. 将保存成功、字段错误、冲突和失效分别处理；成功且 lease 仍有效才关闭编辑器、反馈和刷新缓存，字段错误保留输入并定位对应字段。dirty 取消/导航使用既有确认与草稿过滤，敏感字段不进入草稿或公开 review。
+6. 查看、编辑、lookup、保存、缓存失效等每次 await 前后核对 owner/generation/signal，关闭或卸载取消自有任务，迟到结果不得覆盖新页面或关闭新编辑器。unsafe write 失效后重新确认，不自动重放。
+7. 核对关闭后的焦点恢复：触发器仍存在、owner 与操作代次有效，且用户没有转去其他控件或弹层时才恢复。新页面目录的 Tailwind 扫描、编辑器专用 CSS 与双语文案都需接入目标 app。
+8. 按[现有测试索引](./engineering-deploy.md)验证查询/分页、只读、保存/错误、dirty 取消和迟到结果；弹层位置、焦点及窄屏交互按影响范围做浏览器操作检查。保留已有行为断言，不为新模块复制测试平台。
+
+下文列出清单涉及的现有接口与语义；树表、删除等按实际需求查相应段落，不默认扩展新业务范围。
+
 ## 单 owner 与字段扩展
 
 `useSchemaForm<V, O, C>(options)` 返回 `SchemaFormApi<V, O, C>`。默认输出 `O = DeepPartial<V>`，明确 DTO 则提供 `transform(visibleValues)`。`form` 是唯一 RHF owner，`Form` 与 `Fields` 的组件身份稳定；`fields/defaultValues/schema/customFields` 初始化一次，之后字段变化使用 `updateFields`，不要靠每次重建 options 重置表单。接口见 [schema-types.ts](../../packages/effects/common-ui/src/form/schema-types.ts)。

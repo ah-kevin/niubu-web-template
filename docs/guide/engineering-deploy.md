@@ -42,6 +42,31 @@ pnpm dev:playground           # 默认 127.0.0.1:5174，/api 代理到 mock
 
 `pnpm format:check` 单独运行。E2E 不在这条链里。
 
+## 开发时选择检查
+
+交付门槛沿用[工作方式](./workflow.md)的增量 `pnpm check` 与 `pnpm format:check`，不清缓存。开发中按真实改动选择较小检查，避免每改一行重复整套执行；不要为仅文档或复述实现的改动新增测试。
+
+| 改动 | 检查与现有参考 |
+| --- | --- |
+| 规则、文档与链接 | 对照源码、公开 exports 和实际 package scripts，检查本地链接与格式；不增加运行时测试 |
+| 表单、查询、列表与编辑 | 受影响包/app 的 Vitest + Testing Library 行为；[Starter CRUD 测试](../../apps/starter/src/system/crud.test.tsx)示范受控 API、实际 providers、QueryClient 与 owner 的装配和清理，不证明后端持久化 |
+| 登录恢复、菜单或 app 生命周期 | [Starter 启动集成](../../tests/integration/starter-startup.test.tsx)通过 [mock 响应桥](../../tests/integration/mock-response.ts)连接真实 `createMockBackend` 与 app runtime，不启动外部服务；根集成测试可组合 app 与 mock，页面单测不跨 app 引用私有 fixture |
+| 样式入口、扫描或公共布局 | [Starter 编译样式回归](../../apps/starter/src/styles/shell-styles.test.tsx)使用 [app 本地编译辅助](../../apps/starter/src/tests/compiled-styles.ts)检查真实 CSS；复用时适配目标 app 的入口，不把 jsdom 当作浏览器几何验收 |
+| 模块、语言或包依赖 | 按需跑 `pnpm workspace:check`、`pnpm locale:check`，再做受影响 app/Root 行为检查 |
+| 可见 UI 与交互 | 通过 Chrome 或内置浏览器按影响范围操作菜单/直达、表格/表单/弹层、主题/双语/窄屏；核对位置稳定、取消和焦点恢复 |
+
+测试 context 沿用现有 app provider 和显式 owner，每个测试隔离 QueryClient、认证、语言与存储，结束卸载并释放自有资源、恢复修改过的全局。先在所属测试中按需要适配现有装配，不跨 app 导入测试 helper，也不预先新建公共测试运行时。
+
+例如在模板根目录定位系统页面或启动回归：
+
+```sh
+pnpm --filter @niubu/starter exec vitest run src/system/crud.test.tsx
+pnpm --filter @niubu/starter exec vitest run src/styles/shell-styles.test.tsx
+pnpm test:integration -- tests/integration/starter-startup.test.tsx
+```
+
+生成产品将 app 过滤器换为实际 `<公开scope>/web`；源码与配置路径也按目标项目核对。浏览器操作回归允许，默认不新增、扩展或运行自动化 E2E 脚本或测试运行器；授权边界见[根 Agent 规则](../../AGENTS.md)。以上测试使用既有 Vitest，不启动 Playwright/Cypress。
+
 ## HTTP 运行检查
 
 `pnpm verify:playground`（[playground-runtime.ts](../../internal/scripts/src/playground-runtime.ts)）会临时启动 Playground（`127.0.0.1:5174`）和 mock（`127.0.0.1:5320`），检查首页 HTML 以及经代理的 `/api/health`、`/api/demo/echo`，然后关闭这两个服务。它不在默认检查里，需要时手动运行；运行前先关掉自己开着的开发服务，端口被占用时直接失败，不会关闭别人的服务。它不做浏览器渲染和登录，不是 E2E。

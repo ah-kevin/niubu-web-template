@@ -4,6 +4,8 @@
 
 本仓库是 Web 模板仓库：React + shadcn + Tailwind 的 monorepo 基础，包含管理后台样板 `apps/starter`、示范 app `apps/playground` 和开发用假后端 `apps/backend-mock`。规范、`packages/`、`internal/` 以本仓库为准，业务仓库从这里同步。
 
+首次创建产品使用[新产品起步](docs/guide/product-start.md)中的初始化生成器。日常开发按[开发指南](docs/guide/README.md)查阅现有页面、组件和测试，直接编写普通源码并显式接线；不通过重新生成覆盖已有产品。
+
 ## 必须遵守
 
 1. 动手前先读[开发标准](docs/guide/standards.md)和[工作方式](docs/guide/workflow.md)。写页面、表单、权限、请求之前，读[开发指南](docs/guide/README.md)里对应的专题。

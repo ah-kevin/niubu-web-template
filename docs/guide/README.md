@@ -9,17 +9,18 @@
 | [开发标准](./standards.md)  | 技术栈、目录与依赖、命名、样式、多语言、代码、测试、提交   |
 | [工作方式](./workflow.md)   | 检查怎么跑、Git 流程、模板仓库与业务仓库的同步、记录放哪   |
 
-做具体功能时按主题查：
+开始任务时先明确目标 app、需求与验收，再按下表查阅。首次初始化之后，新增页面和模块直接编写普通源码；初始化生成器不承担日常模块开发或已有产品升级。
 
-| 主题                                          | 入口                                       |
-| --------------------------------------------- | ------------------------------------------ |
-| 目录职责、模板名与产品名、app 生命周期        | [结构与命名](./structure.md)               |
-| 新增模块、稳定 pageId、静态 loader            | [模块登记](./modules.md)                   |
-| 两层表单、查询表格、系统 CRUD                 | [表单、查询与 CRUD](./forms-query-crud.md) |
-| 权限与菜单、请求、上传下载、运行配置、锁屏    | [鉴权与请求](./auth-request.md)            |
-| 工具链、hooks、CI、构建产物与体积、Docker     | [工程与部署](./engineering-deploy.md)      |
-| 已有组件与功能示例，以及与 Vben 的对照        | [Vben 能力对照与示例索引](./vben-examples-comparison.md) |
+| 要做的任务 | 查阅入口 | 现有参考 |
+| --- | --- | --- |
+| 首次创建产品、选择 mock profile 或公开 scope | [新产品起步](./product-start.md) | `apps/starter` 生成到新产品的 `apps/web` |
+| 新增普通页面或模块 | [模块登记与接入清单](./modules.md) | [Starter 首页](../../apps/starter/src/modules/home.tsx)、[registry](../../apps/starter/src/modules/demo.tsx) |
+| 查询列表、新建和编辑表单 | [表单、查询与 CRUD 接入清单](./forms-query-crud.md) | [系统列表](../../apps/starter/src/system/ResourcePage.tsx)、[编辑器](../../apps/starter/src/system/ResourceEditor.tsx) |
+| 菜单、读写权限、请求与失效恢复 | [鉴权与请求](./auth-request.md) | [系统路由读权限](../../apps/starter/src/modules/system.tsx)、[请求与 lease](../../apps/starter/src/system/resource-runtime.ts) |
+| 目录职责、产品标识和 app 生命周期 | [结构与命名](./structure.md) | [Starter 启动入口](../../apps/starter/src/main.tsx) |
+| 选择测试、验证样式、构建或部署 | [工程与部署](./engineering-deploy.md) | 该页的既有测试索引；交付门槛见[工作方式](./workflow.md) |
+| 查已有组件用法和 Vben 视觉对照 | [Vben 能力对照与示例索引](./vben-examples-comparison.md) | Playground 中的现有示例 |
 
-源码是接口的最终依据，优先从 [system 模块](../../apps/playground/src/modules/system.tsx)、[系统 CRUD](../../apps/playground/src/system/ResourcePage.tsx) 和[启动入口](../../apps/playground/src/main.tsx) 查起。mock 的启动、接入和替换数据见 [backend-mock README](../../apps/backend-mock/README.md)。
+源码是接口的最终依据，包的可用入口以 `package.json` 的 exports 为准。Starter 展示产品装配，Playground 展示公共能力；参考源码时在目标 app 内按需适配，app 之间不互相导入。系统资源页面有自己的 DTO、权限和 API，不能当作任意业务的通用 CRUD 接口。
 
-新产品生成、mock profile、scope 与安装验证步骤见 [新产品起步](./product-start.md)。
+mock 的启动、接入和替换数据见 [backend-mock README](../../apps/backend-mock/README.md)。已有产品接收模板更新时，按[工作方式](./workflow.md)核对具体差异并依授权同步。
