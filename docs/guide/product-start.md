@@ -13,7 +13,7 @@ pnpm dev -- --app @niubu/starter
 
 前端地址 `http://127.0.0.1:5175`，开发代理默认连接 `5330`。两个服务各自由启动者管理，前端不隐式启动或接管 mock。Playground 的默认 mock 配置和 `5320/5174` 不变。
 
-合成账号为 `admin@starter.invalid`、`viewer@starter.invalid`，密码均为 `demo-only`。只读账号只有资源 read codes。公开菜单为空，登录后进入默认 workspace。请勿在此填写真实凭据。
+合成账号为 `admin / admin`、`viewer / viewer`。只读账号只有资源 read codes。公开菜单为空，登录后进入默认 workspace。请勿在此填写真实凭据。
 
 用户和角色是分页表格，菜单和部门是树表。四页资源变动只保存在当前 mock 实例中；不会改变登录账号、会话或实际授权，重启恢复种子。角色 `code` 是资源标识，不是权限编辑器。
 

@@ -18,6 +18,7 @@ export function LoginForm({ expired = false }: { expired?: boolean }) {
     >
       <AuthenticationForm
         mode="login"
+        loginIdentifier="username"
         labels={{
           eyebrow: null,
           heading: expired ? t('login') : t('login.welcome'),

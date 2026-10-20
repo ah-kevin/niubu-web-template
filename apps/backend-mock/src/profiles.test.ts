@@ -14,8 +14,8 @@ describe('independent admin starter profile', () => {
     const config = createStarterMockConfig();
     const backend = createMockBackend({ config });
     try {
-      for (const [username, writable] of [['admin@starter.invalid', true], ['viewer@starter.invalid', false]] as const) {
-        const login = readJsonBody(await backend.dispatch({ method: 'POST', path: '/api/auth/login', body: { username, password: 'demo-only' } }));
+      for (const [username, writable] of [['admin', true], ['viewer', false]] as const) {
+        const login = readJsonBody(await backend.dispatch({ method: 'POST', path: '/api/auth/login', body: { username, password: username } }));
         expect(login.code).toBe(0);
         const headers = { Authorization: `Bearer ${(login.data as { accessToken: string }).accessToken}` };
         const query = { scopeKind: 'workspace', scopeId: 'north' };
@@ -40,7 +40,7 @@ describe('independent admin starter profile', () => {
     const config = createStarterMockConfig();
     const backend = createMockBackend({ config });
     try {
-      const login = readJsonBody(await backend.dispatch({ method: 'POST', path: '/api/auth/login', body: { username: 'admin@starter.invalid', password: 'demo-only' } }));
+      const login = readJsonBody(await backend.dispatch({ method: 'POST', path: '/api/auth/login', body: { username: 'admin', password: 'admin' } }));
       const headers = { Authorization: `Bearer ${(login.data as { accessToken: string }).accessToken}` };
       const query = { scopeKind: 'workspace', scopeId: 'north' };
       const seed = config.systemSeeds.north;

@@ -34,8 +34,8 @@ export function createStarterMockConfig(): MockConfig {
   ];
   return {
     accounts: ['admin', 'viewer'].map(role => ({
-      username: `${role}@starter.invalid`,
-      password: 'demo-only',
+      username: role,
+      password: role,
       user: {
         id: `starter-${role}`,
         name: role === 'admin' ? 'Administrator' : 'Read-only user',

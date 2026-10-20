@@ -41,13 +41,13 @@ it('does not start requests or owners after an already cancelled startup', async
   expect(fetcher).not.toHaveBeenCalled(); expect(root.childElementCount).toBe(0);
 });
 
-it.each([['admin@starter.invalid', true], ['viewer@starter.invalid', false]] as const)('restores %s, admits system pages and retires the identity on logout', async (username, writable) => {
+it.each([['admin', true], ['viewer', false]] as const)('restores %s, admits system pages and retires the identity on logout', async (username, writable) => {
   const backend = createMockBackend({ config: createStarterMockConfig() }); disposers.push(() => backend.dispose());
   const fetcher: typeof fetch = async (input, init) => {
     const url = new URL(String(input));
     return mockFetchResponse(await backend.dispatch({ method: init?.method ?? 'GET', path: url.pathname, query: url.searchParams, headers: Object.fromEntries(new Headers(init?.headers)), body: init?.body }));
   };
-  const login = await backend.dispatch({ method: 'POST', path: '/api/auth/login', body: { username, password: 'demo-only' } });
+  const login = await backend.dispatch({ method: 'POST', path: '/api/auth/login', body: { username, password: username } });
   if (login.kind !== 'json') throw new Error('Expected JSON login');
   const values = new Map([['starter.auth.v1', JSON.stringify({ version: 1, tokens: login.body.data })]]);
   const root = document.createElement('div'); document.body.append(root);
