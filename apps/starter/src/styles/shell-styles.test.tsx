@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest';
-import { compileStarterStyles, readCompiledRules } from '../tests/compiled-styles';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { I18nProvider } from '@niubu/locales/react';
+import { CommandSearch } from '@niubu/layouts/widgets';
+import { createStarterI18n } from '../locales';
+import { compileStarterStyles, matchingRules, readCompiledRules } from '../tests/compiled-styles';
 
 it('ships the tab shoulders and glyph sizes through the real app stylesheet', async () => {
   const rules = readCompiledRules(await compileStarterStyles());
@@ -20,4 +24,20 @@ it('keeps constrained header breadcrumbs on one line with shrinkable labels', as
   expect(header?.style.getPropertyValue('overflow')).toBe('hidden');
   const item = rules.find(rule => rule.selector === '.foundation-layout .context-actions > .breadcrumbs > .breadcrumb-item');
   expect(item?.style.getPropertyValue('flex-shrink')).toBe('1');
+});
+
+it('keeps the search border on the standard Input instead of a second field frame', async () => {
+  const rules = readCompiledRules(await compileStarterStyles());
+  const i18n = createStarterI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });
+  await i18n.changeLocale('zh-CN', i18n.requiredNamespaces);
+  const view = render(<I18nProvider instance={i18n}><CommandSearch sessionKey="style-fixture" locale="zh-CN" pages={[]} renderLink={props => <a {...props} />} /></I18nProvider>);
+  try {
+    fireEvent.click(screen.getByRole('button', { name: /搜索页面/ }));
+    const input = await screen.findByRole('searchbox');
+    expect(input).toHaveFocus();
+    const frame = input.closest('.command-input')!;
+    const border = (element: Element) => matchingRules(rules, element, 'border-width').at(-1)?.style.getPropertyValue('border-width') ?? '0px';
+    expect(border(input)).toBe('1px');
+    expect(border(frame)).toBe('0px');
+  } finally { view.unmount(); i18n.dispose(); }
 });

@@ -95,10 +95,13 @@ export default function CommandSearchDialog({
           <DialogDescription>{description ?? t('shell:search.description')}</DialogDescription>
         </DialogHeader>
         <div className="command-body flex min-h-0 flex-col gap-3 overflow-hidden px-5 py-4">
-          <div className="command-input flex items-center gap-[10px] rounded-[8px] border border-border px-[12px] focus-within:outline-2 focus-within:outline-ring">
-            <Search className="text-muted-foreground" size={20} aria-hidden="true" />
+          <div className="command-input relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
-              className="h-[45px] min-w-0 flex-1 rounded-none border-0 bg-transparent p-0 text-[12px] shadow-none focus-visible:ring-0 md:text-[12px] dark:bg-transparent"
+              className="pl-10"
               ref={inputRef}
               type="search"
               aria-label={t('shell:search.input')}

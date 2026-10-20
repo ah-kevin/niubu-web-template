@@ -138,6 +138,20 @@ it('requests desktop collapse without opening the mobile Sheet', () => {
   expect(p.onMobileOpenChange).not.toHaveBeenCalled();
 });
 
+it('changes the header toggle glyph with the actual desktop collapse state', () => {
+  const p = props();
+  const controls = { width: 224, collapsed: false, fixed: true, draggable: false, showCollapse: true, showFixed: false, onWidthChange: vi.fn(), onCollapsedChange: vi.fn(), onFixedChange: vi.fn() };
+  const { rerender } = render(<BusinessLayout {...p} sidebarControls={controls} />);
+  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Collapse' }).querySelector('svg')).toHaveAttribute('data-icon', 'ep:fold');
+  const preferences = { ...corePreferenceDefaults, sidebar: { ...corePreferenceDefaults.sidebar, collapsed: true } };
+  rerender(<BusinessLayout {...p} model={resolveBusinessLayout(preferences, 'desktop')} sidebarControls={{ ...controls, collapsed: true }} />);
+  const expand = within(screen.getByRole('banner')).getByRole('button', { name: 'Expand' });
+  expect(expand).toHaveAttribute('aria-pressed', 'true');
+  expect(expand.querySelector('svg')).toHaveAttribute('data-icon', 'ep:expand');
+  rerender(<BusinessLayout {...p} sidebarControls={controls} />);
+  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Collapse' }).querySelector('svg')).toHaveAttribute('data-icon', 'ep:fold');
+});
+
 it.each([false, true])('respects hidden collapse controls when collapsed=%s without disabling mobile or recovery navigation', collapsed => {
   const p = props();
   const preferences = { ...corePreferenceDefaults, sidebar: { ...corePreferenceDefaults.sidebar, collapsed } };
@@ -172,7 +186,7 @@ it('provides live mobile header and recovery tool slots while preserving documen
   expect(screen.getByRole('button', { name: 'Fallback tools' })).toBeInTheDocument();
 });
 
-it('follows Vben sidebar configuration for icons independently of desktop collapse and drawer visibility', () => {
+it('tracks desktop collapse while retaining configuration-based icons for drawer navigation', () => {
   const p = props();
   const controls = { width: 224, collapsed: false, fixed: true, draggable: false, showCollapse: true, showFixed: false, onWidthChange: vi.fn(), onCollapsedChange: vi.fn(), onFixedChange: vi.fn() };
   const { rerender } = render(<BusinessLayout {...p} sidebarControls={controls} />);
@@ -180,7 +194,7 @@ it('follows Vben sidebar configuration for icons independently of desktop collap
   fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Collapse' }));
   expect(controls.onCollapsedChange).toHaveBeenCalledWith(true);
   rerender(<BusinessLayout {...p} sidebarControls={{ ...controls, collapsed: true }} />);
-  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Expand' }).querySelector('svg')).toHaveAttribute('data-icon', 'ep:fold');
+  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Expand' }).querySelector('svg')).toHaveAttribute('data-icon', 'ep:expand');
   const disabled = { ...corePreferenceDefaults, sidebar: { ...corePreferenceDefaults.sidebar, enabled: false } };
   const horizontal = { ...corePreferenceDefaults, layout: { ...corePreferenceDefaults.layout, mode: 'horizontal' as const } };
   const full = { ...corePreferenceDefaults, layout: { ...corePreferenceDefaults.layout, mode: 'full-content' as const } };

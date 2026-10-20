@@ -167,7 +167,11 @@ export function BusinessLayout(p: AppLayoutProps) {
     </nav>
   );
   const desktopCollapse = m.viewport === 'desktop' && m.sidebarEnabled && controls;
-  const navigationIcon = m.showSidebar ? <MenuFold aria-hidden="true" /> : <MenuExpand aria-hidden="true" />;
+  const navigationIcon = (desktopCollapse ? !controls.collapsed : m.showSidebar) ? (
+    <MenuFold aria-hidden="true" />
+  ) : (
+    <MenuExpand aria-hidden="true" />
+  );
   const opener = desktopCollapse ? (
     controls.showCollapse && (
       <Button
