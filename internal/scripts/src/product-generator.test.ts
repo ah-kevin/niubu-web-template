@@ -11,7 +11,7 @@ afterEach(() => owned.splice(0).forEach(path => rmSync(path, { recursive: true, 
 function fixture() {
   const root = mkdtempSync(join(realpathSync(tmpdir()), 'product-generator-')); owned.push(root);
   function put(path: string, value: string) { mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), value); }
-  put('package.json', JSON.stringify({ name: 'fixture-template', private: true, scripts: { 'dev:starter': 'pnpm --filter @niubu/starter dev' } }));
+  put('package.json', JSON.stringify({ name: 'fixture-template', private: true, niubu: { starterTemplateVersion: 1 }, scripts: { 'dev:starter': 'pnpm --filter @niubu/starter dev' } }));
   put('pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n  - 'packages/*'\n");
   put('pnpm-lock.yaml', "lockfileVersion: '9.0'\nimporters:\n  .: {}\n  apps/starter:\n    dependencies:\n      '@niubu/utils':\n        specifier: workspace:*\n        version: link:../../packages/utils\n  apps/playground: {}\n");
   put('apps/starter/package.json', JSON.stringify({ name: '@niubu/starter', dependencies: { '@niubu/utils': 'workspace:*' } }));
@@ -23,6 +23,7 @@ function fixture() {
   put('packages/utils/src/index.ts', 'export const test = 1;\n');
   put('internal/test-tool/package.json', JSON.stringify({ name: '@niubu-internal/test-tool', dependencies: { '@niubu/utils': 'workspace:*' } }));
   put('apps/backend-mock/src/profiles.ts', "export const profile = 'starter'; export const id = 'starter.home';\n");
+  put('tests/integration/starter-startup.test.tsx', "import { app } from '../../apps/starter/src/main';\n");
   put('.env', 'PRIVATE=must-not-copy\n'); put('dist/secret.txt', 'output');
   execFileSync('git', ['init','-q'], { cwd: root });
   execFileSync('git', ['add','.'], { cwd: root });
@@ -41,6 +42,7 @@ describe('commit-based product generation', () => {
     expect(readFileSync(join(destination,'packages/utils/src/index.ts'),'utf8')).toContain('test = 1');
     expect(readFileSync(join(destination,productPath + '/src/main.ts'),'utf8')).toContain('@acme/utils');
     expect(readFileSync(join(destination,productPath + '/src/main.ts'),'utf8')).toContain('inventory.auth.v1');
+    expect(readFileSync(join(destination,'tests/integration/starter-startup.test.tsx'),'utf8')).toContain('../../' + productPath + '/src/main');
     expect(readFileSync(join(destination,'internal/test-tool/package.json'),'utf8')).toContain('@niubu-internal/test-tool');
     expect(readFileSync(join(destination,'internal/test-tool/package.json'),'utf8')).toContain('@acme/utils');
     expect(readFileSync(join(destination,'pnpm-lock.yaml'),'utf8')).toContain(productPath + ':');

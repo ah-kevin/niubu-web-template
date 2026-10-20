@@ -79,7 +79,8 @@
       "include": [
         "tests/integration/**/*.{test,spec}.{ts,tsx}"
       ]
-    }
+    },
+    "starterTemplateVersion": 1
   },
   "simple-git-hooks": {
     "preserveUnused": true,

@@ -181,6 +181,20 @@ export function planProduct(input: ProductInput): ProductPlan {
     return { ...entry, content };
   });
   const sourceManifest = JSON.parse(blobs.find(file => file.path === 'package.json')!.content.toString());
+  if (sourceManifest.niubu?.starterTemplateVersion !== 1) throw new Error('Unsupported product template version');
+  let repositoryURL: string | undefined;
+  try {
+    const origin = git(sourceRoot, ['config', '--get', 'remote.origin.url']).toString().trim();
+    if (origin.startsWith('https://')) {
+      const url = new URL(origin);
+      repositoryURL = url.origin + url.pathname;
+    } else {
+      const ssh = /^git@([a-zA-Z0-9.-]+):([a-zA-Z0-9_./-]+)$/.exec(origin);
+      if (ssh) repositoryURL = `https://${ssh[1]}/${ssh[2]}`;
+    }
+  } catch {
+    /* A local template fixture need not have an origin. */
+  }
   const identity: ProductIdentity = {
     productSlug: input.productSlug,
     displayNameZh: input.displayNameZh,
@@ -216,6 +230,7 @@ export function planProduct(input: ProductInput): ProductPlan {
     schemaVersion: 1,
     generatorVersion: 1,
     templateCommit: commit,
+    sourceRepository: { name: sourceManifest.name, ...(repositoryURL ? { url: repositoryURL } : {}) },
     templateTime: sourceTime,
     sourcePublicScope,
     targetPublicScope: publicScope,

@@ -62,7 +62,11 @@ export function transformProductFile(
     return input;
   let text = input.toString('utf8');
   if (!Buffer.from(text).equals(input)) throw new Error(`Unsupported text encoding: ${path}`);
-  text = text.replaceAll(sourcePublicScope + '/starter', sourcePublicScope + '/web');
+  const productWiring = !path.startsWith('internal/');
+  if (productWiring) {
+    text = text.replaceAll(sourcePublicScope + '/starter', sourcePublicScope + '/web');
+    text = text.replaceAll(starterPath, productAppPath);
+  }
   if (
     path.startsWith(starterPath + '/') ||
     path === 'apps/backend-mock/src/profiles.ts' ||
@@ -72,8 +76,10 @@ export function transformProductFile(
     text = text.replaceAll('template-starter', identity.productSlug + '-web');
     text = text.replaceAll('starter', identity.productSlug);
   }
-  text = text.replaceAll(starterPath, productAppPath);
-  text = text.replaceAll(sourcePublicScope + '/starter', sourcePublicScope + '/web');
+  if (productWiring) {
+    text = text.replaceAll(starterPath, productAppPath);
+    text = text.replaceAll(sourcePublicScope + '/starter', sourcePublicScope + '/web');
+  }
   if (identity.publicScope !== sourcePublicScope) {
     // Include escaped package separators inside assertion patterns, not the internal tool scope.
     text = text.replaceAll(sourcePublicScope + '\\/', identity.publicScope + '\\/');
@@ -84,6 +90,7 @@ export function transformProductFile(
   if (path === 'package.json') {
     const manifest = JSON.parse(text);
     manifest.name = identity.packageName;
+    if (manifest.niubu) delete manifest.niubu.starterTemplateVersion;
     delete manifest.scripts?.['dev:starter'];
     if (manifest.scripts) manifest.scripts['dev:web'] = `pnpm --filter ${identity.publicScope}/web dev`;
     return Buffer.from(JSON.stringify(manifest, null, 2) + '\n');
