@@ -49,4 +49,4 @@
 - [x] **Step 3:** 在 modules 与 forms-query-crud 补普通页面/列表编辑接入清单，注明 app/生成产品适配、权限、locale、样式、owner、dirty/焦点/迟到保护。
 - [x] **Step 4:** 在 engineering-deploy 补现有测试索引与按改动选检查的说明；核对脚本、链接和 Review Focus 五项。
 - [x] **Step 5:** 检查全部改动文档的相对链接（仓库内文件存在；Spec 外部 vault 链接另核）、引用符号和命令，运行 `git diff --check`、`pnpm check`、`pnpm format:check`。Expected: 链接有效、范围仅文档、全部 exit 0；四份共享规则与业务仓基线不变。
-- [ ] **Step 6:** 本地提交，最终只读审阅后按仓库流程合并 master；将真实命令、结果和本地提交写回 Task/Case。Expected: 文档已本地交付，业务仓不变，无推送发布。
+- [x] **Step 6:** 本地提交，最终只读审阅后按仓库流程合并 master；将真实命令、结果和本地提交写回 Task/Case。Expected: 文档已本地交付，业务仓不变，无推送发布。

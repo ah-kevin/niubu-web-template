@@ -62,7 +62,7 @@ pnpm dev:playground           # 默认 127.0.0.1:5174，/api 代理到 mock
 ```sh
 pnpm --filter @niubu/starter exec vitest run src/system/crud.test.tsx
 pnpm --filter @niubu/starter exec vitest run src/styles/shell-styles.test.tsx
-pnpm test:integration -- tests/integration/starter-startup.test.tsx
+pnpm test:integration tests/integration/starter-startup.test.tsx
 ```
 
 生成产品将 app 过滤器换为实际 `<公开scope>/web`；源码与配置路径也按目标项目核对。浏览器操作回归允许，默认不新增、扩展或运行自动化 E2E 脚本或测试运行器；授权边界见[根 Agent 规则](../../AGENTS.md)。以上测试使用既有 Vitest，不启动 Playwright/Cypress。
