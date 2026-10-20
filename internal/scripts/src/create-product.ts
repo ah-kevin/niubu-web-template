@@ -4,8 +4,9 @@ import { resolve } from 'node:path';
 import { applyProduct, planProduct } from './product-generator.ts';
 
 export function createProductCommand(args: string[], sourceRoot = process.cwd()): void {
-  const { values, positionals } = parseArgs({
+  const { values, positionals, tokens } = parseArgs({
     args,
+    tokens: true,
     allowPositionals: true,
     strict: true,
     options: {
@@ -22,6 +23,12 @@ export function createProductCommand(args: string[], sourceRoot = process.cwd())
       help: { type: 'boolean' },
     },
   });
+  const supplied = new Set<string>();
+  for (const token of tokens) {
+    if (token.kind !== 'option') continue;
+    if (supplied.has(token.name)) throw new Error(`Duplicate product option: --${token.name}`);
+    supplied.add(token.name);
+  }
   if (values.help) {
     console.log(
       'create:product --target-dir PATH --product-slug SLUG --name-zh NAME --name-en NAME [--public-scope @scope] [--template-ref REF] [--apply|--dry-run]\nDefaults to dry-run; no install, services or Git operations.',

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   existsSync,
   lstatSync,
+  statSync,
   readdirSync,
   realpathSync,
   mkdirSync,
@@ -13,7 +14,7 @@ import {
   renameSync,
   rmdirSync,
 } from 'node:fs';
-import { dirname, resolve, relative, isAbsolute, join } from 'node:path';
+import { basename, dirname, resolve, relative, isAbsolute, join } from 'node:path';
 import {
   outputPath,
   productAppPath,
@@ -66,6 +67,11 @@ const rootFiles = new Set([
   'LICENSE.md',
   'boundary.config.json',
   'commitlint.config.js',
+  'commitlint.config.cjs',
+  'deploy/nginx.conf',
+  'deploy/runtime-config.mjs',
+  'deploy/40-runtime-config.sh',
+  'apps/AGENTS.md',
 ]);
 const allowedRoots = [
   'packages/',
@@ -90,9 +96,7 @@ function allowed(path: string) {
   );
 }
 function validateTarget(source: string, target: string): void {
-  const relation = relative(source, target);
-  if (!relation || (!relation.startsWith('..' + '/') && relation !== '..' && !isAbsolute(relation)))
-    throw new Error('Target must be outside source repository');
+  const sourceStat = statSync(source);
   for (let current = target; ; current = dirname(current)) {
     if (
       existsSync(current) ||
@@ -107,12 +111,22 @@ function validateTarget(source: string, target: string): void {
     ) {
       if (lstatSync(current).isSymbolicLink()) throw new Error('Target has a symbolic link component');
       if (!lstatSync(current).isDirectory()) throw new Error('Target is not a directory');
+      const currentStat = statSync(current);
+      // macOS realpath may preserve case aliases; directory identity is authoritative.
+      if (currentStat.dev === sourceStat.dev && currentStat.ino === sourceStat.ino)
+        throw new Error('Target must be outside source repository');
     }
     if (dirname(current) === current) break;
   }
   if (existsSync(target) && readdirSync(target).length) throw new Error('Target must be empty');
   if (!existsSync(dirname(target))) throw new Error('Target parent must exist');
-  const ancestor = relative(target, source);
+  const canonicalTarget = existsSync(target)
+    ? realpathSync(target)
+    : join(realpathSync(dirname(target)), basename(target));
+  const relation = relative(realpathSync(source), canonicalTarget);
+  if (!relation || (!relation.startsWith('..' + '/') && relation !== '..' && !isAbsolute(relation)))
+    throw new Error('Target must be outside source repository');
+  const ancestor = relative(canonicalTarget, realpathSync(source));
   if (!ancestor || (!ancestor.startsWith('..' + '/') && ancestor !== '..' && !isAbsolute(ancestor)))
     throw new Error('Target cannot contain source repository');
 }
@@ -182,6 +196,21 @@ export function planProduct(input: ProductInput): ProductPlan {
   });
   const sourceManifest = JSON.parse(blobs.find(file => file.path === 'package.json')!.content.toString());
   if (sourceManifest.niubu?.starterTemplateVersion !== 1) throw new Error('Unsupported product template version');
+  const boundaryFile = blobs.find(file => file.path === 'boundary.config.json');
+  if (!boundaryFile) throw new Error('Missing source boundary policy');
+  const boundary = JSON.parse(boundaryFile.content.toString()) as { words: string[]; literals: string[] };
+  if (
+    !Array.isArray(boundary.words) ||
+    !boundary.words.every(word => /^[a-z]+$/.test(word)) ||
+    !Array.isArray(boundary.literals) ||
+    !boundary.literals.every(term => typeof term === 'string')
+  )
+    throw new Error('Unsupported source boundary policy');
+  if (
+    boundary.words.some(word => new RegExp(`(?<![a-z])${word}(?![a-z])`).test(publicScope)) ||
+    boundary.literals.some(term => publicScope.includes(term))
+  )
+    throw new Error('Public scope conflicts with source boundary policy');
   let repositoryURL: string | undefined;
   try {
     const origin = git(sourceRoot, ['config', '--get', 'remote.origin.url']).toString().trim();

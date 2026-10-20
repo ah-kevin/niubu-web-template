@@ -37,6 +37,8 @@ pnpm create:product -- --target-dir ../inventory-web --product-slug inventory \
 
 默认保留 `@niubu/*`。生成时可显式增加 `--public-scope @acme`，整体转换公开包的 manifest、依赖、imports、工具配置、文档及 lock 的引用；`@niubu-internal/*` 保持。首版 scope 支持小写字母、数字和连字符，不支持内部工具 scope 改名。模板仓和现有业务仓不会因此改变。
 
+scope 还必须符合来源 commit 的公共包边界规则；与禁用业务词冲突时，dry-run 会拒绝并说明原因。重复 CLI 参数同样拒绝，不采用最后一个值静默覆盖。
+
 生成结果的 `.template-source.json` 记录来源 commit/时间、产品输入、公开/内部 scope 和逐文件 hash/mode；它是生成来源记录，不替代 build-app 的构建 provenance。相同输入产生相同源码与 manifest。遇到非空目标、非法输入或不支持的结构时拒绝写入，没有 force 模式；不会覆盖已有产品来“升级”。
 
 ## 安装、格式与验证

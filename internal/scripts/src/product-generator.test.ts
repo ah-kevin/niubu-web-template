@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, symlinkSync, realpathSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, symlinkSync, realpathSync, chmodSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyProduct, planProduct } from './product-generator';
+import { createProductCommand } from './create-product';
 
 const productPath = ['apps', 'web'].join('/');
 const owned: string[] = [];
@@ -23,6 +24,14 @@ function fixture() {
   put('packages/utils/src/index.ts', 'export const test = 1;\n');
   put('internal/test-tool/package.json', JSON.stringify({ name: '@niubu-internal/test-tool', dependencies: { '@niubu/utils': 'workspace:*' } }));
   put('apps/backend-mock/src/profiles.ts', "export const profile = 'starter'; export const id = 'starter.home';\n");
+  put('apps/backend-mock/src/profiles.test.ts', readFileSync(new URL('../../../apps/backend-mock/src/profiles.test.ts', import.meta.url), 'utf8'));
+  put('boundary.config.json', JSON.stringify({ scan: ['packages', 'internal'], exclude: [], words: ['widget'], literals: [], allow: [] }));
+  put('deploy/nginx.conf', 'server {}\n');
+  put('deploy/runtime-config.mjs', 'export {};\n');
+  put('deploy/40-runtime-config.sh', '#!/bin/sh\nexit 0\n');
+  chmodSync(join(root, 'deploy/40-runtime-config.sh'), 0o755);
+  put('commitlint.config.cjs', 'module.exports = {};\n');
+  put('apps/AGENTS.md', '# App rules\n');
   put('tests/integration/starter-startup.test.tsx', "import { app } from '../../apps/starter/src/main';\n");
   put('.env', 'PRIVATE=must-not-copy\n'); put('dist/secret.txt', 'output');
   execFileSync('git', ['init','-q'], { cwd: root });
@@ -33,6 +42,28 @@ function fixture() {
 function target() { const root=mkdtempSync(join(realpathSync(tmpdir()),'product-target-')); owned.push(root); return join(root,'output'); }
 
 describe('commit-based product generation', () => {
+  it('keeps the unknown-profile negative test invalid for every legal slug', () => {
+    const f = fixture();
+    const plan = planProduct({ ...f.options, targetDir: target(), productSlug: 'unknown' });
+    const tests = plan.files.find(file => file.path === 'apps/backend-mock/src/profiles.test.ts')!.content.toString();
+    const rejected = /selectMockConfig\('([^']+)'\)\)\.toThrow/.exec(tests)![1];
+    expect(rejected).not.toBe('unknown');
+    expect(rejected).not.toMatch(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
+  });
+  it('rejects a scope that conflicts with the committed boundary policy', () => {
+    const f = fixture(), destination = target();
+    expect(() => planProduct({ ...f.options, targetDir: destination, publicScope: '@widget' })).toThrow(/scope.*boundary/i);
+    expect(existsSync(destination)).toBe(false);
+  });
+  it('rejects a case alias of a source descendant on case-insensitive filesystems', () => {
+    const f = fixture(), alias = f.root.replace(/product-generator-/, 'PRODUCT-GENERATOR-');
+    if (!existsSync(alias)) return;
+    expect(() => planProduct({ ...f.options, targetDir: join(alias, 'output') })).toThrow(/source/i);
+    expect(existsSync(join(f.root, 'output'))).toBe(false);
+  });
+  it('rejects repeated CLI options before generation', () => {
+    expect(() => createProductCommand(['--public-scope', '@one', '--public-scope=@two'])).toThrow(/duplicate/i);
+  });
   it('dry-runs without writes, uses committed source and maps scope across the graph', () => {
     const f=fixture(), destination=target();
     f.put('packages/utils/src/index.ts', 'dirty secret');
@@ -50,6 +81,12 @@ describe('commit-based product generation', () => {
     expect(existsSync(join(destination,'.env'))).toBe(false);
     expect(existsSync(join(destination,'dist'))).toBe(false);
     expect(existsSync(join(destination,'.git'))).toBe(false);
+    expect(readFileSync(join(destination,'deploy/nginx.conf'),'utf8')).toBe('server {}\n');
+    expect(existsSync(join(destination,'deploy/runtime-config.mjs'))).toBe(true);
+    expect(existsSync(join(destination,'deploy/40-runtime-config.sh'))).toBe(true);
+    expect(existsSync(join(destination,'commitlint.config.cjs'))).toBe(true);
+    expect(existsSync(join(destination,'apps/AGENTS.md'))).toBe(true);
+    expect(statSync(join(destination,'deploy/40-runtime-config.sh')).mode & 0o777).toBe(0o755);
     expect(() => applyProduct(plan)).toThrow(/empty|exists|changed/i);
   });
   it('keeps deterministic output independently of the destination and preserves default scope', () => {
