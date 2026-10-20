@@ -8,6 +8,17 @@ import { deferred, renderWidgets } from './widget-test-utils';
 const renderLink: SearchConfiguration['renderLink'] = props => <a {...props} />;
 const renderDialog = (props: React.ComponentProps<typeof CommandSearchDialog>) => <CommandSearchDialog {...props} />;
 
+it('keeps search input and results outside the padded popup header', async () => {
+  await renderWidgets(<CommandSearch sessionKey="one" locale="en-US" pages={[{ id: 'page-a', title: 'Page Alpha', href: '/alpha' }]} renderLink={renderLink} renderDialog={renderDialog} />);
+  fireEvent.click(screen.getByRole('button', { name: /Search pages/ }));
+  const dialog = await screen.findByRole('dialog');
+  const header = within(dialog).getByRole('heading').closest('[data-slot="dialog-header"]');
+  expect(header).not.toBeNull();
+  expect(header).not.toContainElement(within(dialog).getByRole('searchbox'));
+  expect(header).not.toContainElement(within(dialog).getByRole('link', { name: 'Page Alpha' }));
+  expect(within(dialog).getByRole('searchbox')).toHaveFocus();
+});
+
 it('focuses the initial search field without native viewport scrolling', async () => {
   const focus = vi.spyOn(HTMLElement.prototype, 'focus');
   try {

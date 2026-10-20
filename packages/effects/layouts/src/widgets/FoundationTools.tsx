@@ -7,7 +7,7 @@ import { usePreferenceManager, usePreferenceSnapshot, type PersistenceResult } f
 import { useTranslation } from '@niubu/locales/react';
 import { Search, SlidersHorizontal, Bell, Sun, Globe, Maximize, RefreshCw, Clock, Settings2 } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@niubu/shadcn-ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@niubu/shadcn-ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -74,16 +74,19 @@ export function FoundationTools({
     return () => observer.disconnect();
   }, [headerAvailable, headerTarget]);
   const lifecycleKey = useMemo(() => ({ sessionKey, manager }), [sessionKey, manager]);
+  const [kind, setKind] = useState<WidgetId>('preferences');
   const overlay = useOverlaySession(
     lifecycleKey,
     () =>
       recovery.current ??
+      document.querySelector<HTMLElement>(
+        `[data-widget-id="${kind}"][data-widget-position="header"], [data-widget-id="${kind}"][data-widget-position="fixed"]`,
+      ) ??
       fixedMenuTrigger.current ??
       menuTrigger.current ??
       document.querySelector<HTMLElement>('[data-widget-id="preferences"]') ??
       document.getElementById('main-content'),
   );
-  const [kind, setKind] = useState<WidgetId>('preferences');
   const [menuOpen, setMenuOpen] = useState(false);
   const [fixedMenuOpen, setFixedMenuOpen] = useState(false);
   const [quickResult, setQuickResult] = useState<PersistenceResult | null>(null);
@@ -101,6 +104,7 @@ export function FoundationTools({
   const open = (next: WidgetId, target?: HTMLElement | null) => {
     setMenuOpen(false);
     setFixedMenuOpen(false);
+    setQuickResult(null);
     setKind(next);
     overlay.openOverlay(target);
   };
@@ -131,6 +135,13 @@ export function FoundationTools({
           : widget === 'fullscreen' && fullscreen.snapshot.active
             ? t('shell:tools.exitFullscreen')
             : t(`shell:tools.${widget}`);
+  const quickFieldLabel = t(
+    kind === 'theme'
+      ? 'shell:preferences.field.theme.mode'
+      : kind === 'language'
+        ? 'shell:preferences.field.locale'
+        : 'shell:preferences.field.general.displayTimeZone',
+  );
   const activate = (widget: WidgetId, target?: HTMLElement | null) => {
     if (widget === 'fullscreen') void fullscreen.toggle();
     else if (widget === 'refresh') onRefresh?.();
@@ -325,62 +336,75 @@ export function FoundationTools({
                   overlay.returnFocus();
                 }}
               >
-                <DialogTitle>{label(kind)}</DialogTitle>
-                <DialogDescription>
-                  {kind === 'timezone' ? t('shell:tools.displayZoneHelp') : t('shell:preferences.description')}
-                </DialogDescription>
-                {kind === 'theme' ? (
-                  <Select
-                    label={t('shell:preferences.field.theme.mode')}
-                    value={core.theme.mode}
-                    options={['light', 'dark', 'system'].map(value => ({
-                      value,
-                      label: t(`shell:preferences.option.${value}`),
-                    }))}
-                    onValueChange={value => updateQuick({ theme: { mode: value as typeof core.theme.mode } })}
-                  />
-                ) : kind === 'language' ? (
-                  <Select
-                    label={t('shell:preferences.field.locale')}
-                    value={core.locale}
-                    options={['zh-CN', 'en-US'].map(value => ({
-                      value,
-                      label: t(`shell:preferences.option.${value}`),
-                    }))}
-                    onValueChange={value => updateQuick({ locale: value as typeof core.locale })}
-                  />
-                ) : (
-                  <Select
-                    label={t('shell:preferences.field.general.displayTimeZone')}
-                    value={core.general.displayTimeZone}
-                    options={[
-                      ...new Set([
-                        core.general.displayTimeZone,
-                        'Asia/Shanghai',
-                        'UTC',
-                        'America/New_York',
-                        'Europe/London',
-                        'Asia/Tokyo',
-                      ]),
-                    ].map(value => ({ value, label: value }))}
-                    onValueChange={value => updateQuick({ general: { displayTimeZone: value } })}
-                  />
-                )}
-                {kind === 'language' && localeStatus.status !== 'ready' && (
-                  <p role="status">
-                    {t(
-                      localeStatus.status === 'error'
-                        ? 'shell:preferences.localeFailed'
-                        : 'shell:preferences.localePending',
-                      { preferred: localeStatus.preferredLocale, active: localeStatus.activeLocale },
-                    )}
-                  </p>
-                )}
-                {quickResult && (
-                  <p role="status">
-                    {quickResult.kind === 'memory' ? t('shell:preferences.notSaved') : t('shell:preferences.saved')}
-                  </p>
-                )}
+                <DialogHeader className="pr-12">
+                  <DialogTitle>{label(kind)}</DialogTitle>
+                  <DialogDescription>
+                    {kind === 'timezone' ? t('shell:tools.displayZoneHelp') : t('shell:preferences.description')}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="foundation-quick-body grid min-w-0 gap-4 p-5">
+                  <label className="text-sm font-medium" htmlFor={`${id}-value`}>
+                    {quickFieldLabel}
+                  </label>
+                  {kind === 'theme' ? (
+                    <Select
+                      id={`${id}-value`}
+                      className="w-full"
+                      label={t('shell:preferences.field.theme.mode')}
+                      value={core.theme.mode}
+                      options={['light', 'dark', 'system'].map(value => ({
+                        value,
+                        label: t(`shell:preferences.option.${value}`),
+                      }))}
+                      onValueChange={value => updateQuick({ theme: { mode: value as typeof core.theme.mode } })}
+                    />
+                  ) : kind === 'language' ? (
+                    <Select
+                      id={`${id}-value`}
+                      className="w-full"
+                      label={t('shell:preferences.field.locale')}
+                      value={core.locale}
+                      options={['zh-CN', 'en-US'].map(value => ({
+                        value,
+                        label: t(`shell:preferences.option.${value}`),
+                      }))}
+                      onValueChange={value => updateQuick({ locale: value as typeof core.locale })}
+                    />
+                  ) : (
+                    <Select
+                      id={`${id}-value`}
+                      className="w-full"
+                      label={t('shell:preferences.field.general.displayTimeZone')}
+                      value={core.general.displayTimeZone}
+                      options={[
+                        ...new Set([
+                          core.general.displayTimeZone,
+                          'Asia/Shanghai',
+                          'UTC',
+                          'America/New_York',
+                          'Europe/London',
+                          'Asia/Tokyo',
+                        ]),
+                      ].map(value => ({ value, label: value }))}
+                      onValueChange={value => updateQuick({ general: { displayTimeZone: value } })}
+                    />
+                  )}
+                  {kind === 'language' && localeStatus.status !== 'ready' && (
+                    <p role="status">
+                      {t(
+                        localeStatus.status === 'error'
+                          ? 'shell:preferences.localeFailed'
+                          : 'shell:preferences.localePending',
+                        { preferred: localeStatus.preferredLocale, active: localeStatus.activeLocale },
+                      )}
+                    </p>
+                  )}
+                  {quickResult && (
+                    <p role="status">
+                      {quickResult.kind === 'memory' ? t('shell:preferences.notSaved') : t('shell:preferences.saved')}
+                    </p>
+                  )}
+                </div>
               </DialogContent>
             </Dialog>
           )}

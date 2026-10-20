@@ -2,7 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent }
 import { useTranslation } from '@niubu/locales/react';
 import { ArrowUpRight, Search } from '@niubu/icons';
 import { Input } from '@niubu/shadcn-ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@niubu/shadcn-ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@niubu/shadcn-ui/dialog';
 import type { ObjectSearchResult, SearchDialogProps, SearchItem, WidgetLinkRenderer } from './types';
 export default function CommandSearchDialog({
   pages,
@@ -73,7 +80,7 @@ export default function CommandSearchDialog({
       <DialogContent
         closeLabel={t('common:close')}
         id={contentId}
-        className="command-dialog max-w-[min(580px,calc(100%_-_32px))] sm:max-w-[min(580px,calc(100%_-_32px))] gap-[13px]"
+        className="command-dialog flex flex-col overflow-hidden max-w-[min(580px,calc(100%_-_32px))] sm:max-w-[min(580px,calc(100%_-_32px))]"
         onCloseAutoFocus={event => {
           event.preventDefault();
           returnFocus();
@@ -83,82 +90,86 @@ export default function CommandSearchDialog({
           inputRef.current?.focus({ preventScroll: true });
         }}
       >
-        <DialogTitle>{t('shell:search.title')}</DialogTitle>
-        <DialogDescription>{description ?? t('shell:search.description')}</DialogDescription>
-        <div className="command-input flex items-center gap-[10px] rounded-[8px] border border-border px-[12px] focus-within:outline-2 focus-within:outline-ring">
-          <Search className="text-muted-foreground" size={20} aria-hidden="true" />
-          <Input
-            className="h-[45px] min-w-0 flex-1 rounded-none border-0 bg-transparent p-0 text-[12px] shadow-none focus-visible:ring-0 md:text-[12px] dark:bg-transparent"
-            ref={inputRef}
-            type="search"
-            aria-label={t('shell:search.input')}
-            placeholder={t('shell:search.placeholder')}
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                resultsRef.current?.querySelector('a')?.focus();
-              }
-            }}
-          />
-        </div>
-        <div className="command-results max-h-[min(400px,48dvh)] overflow-y-auto" ref={resultsRef}>
-          <p className="eyebrow block px-[9px] py-[8px] text-[10px] font-[650] tracking-[1.5px] text-muted-foreground">
-            {query ? t('shell:search.matches', { count: pageMatches.length }) : t('shell:search.accessible')}
-          </p>
-          {pageMatches.map(item => (
-            <SearchResult
-              key={item.id}
-              item={item}
-              renderLink={renderLink}
-              onSelect={() => changeOpen(false)}
-              onKeyDown={move}
+        <DialogHeader className="shrink-0 pr-12">
+          <DialogTitle>{t('shell:search.title')}</DialogTitle>
+          <DialogDescription>{description ?? t('shell:search.description')}</DialogDescription>
+        </DialogHeader>
+        <div className="command-body flex min-h-0 flex-col gap-3 overflow-hidden px-5 py-4">
+          <div className="command-input flex items-center gap-[10px] rounded-[8px] border border-border px-[12px] focus-within:outline-2 focus-within:outline-ring">
+            <Search className="text-muted-foreground" size={20} aria-hidden="true" />
+            <Input
+              className="h-[45px] min-w-0 flex-1 rounded-none border-0 bg-transparent p-0 text-[12px] shadow-none focus-visible:ring-0 md:text-[12px] dark:bg-transparent"
+              ref={inputRef}
+              type="search"
+              aria-label={t('shell:search.input')}
+              placeholder={t('shell:search.placeholder')}
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              onKeyDown={event => {
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault();
+                  resultsRef.current?.querySelector('a')?.focus();
+                }
+              }}
             />
-          ))}
-          {!pageMatches.length && (
-            <p className="empty-search p-[25px] text-center text-[12px] text-muted-foreground">
-              {t('shell:search.noPages')}
-            </p>
-          )}
-          {scopeNote && (
+          </div>
+          <div className="command-results min-h-0 max-h-[min(400px,48dvh)] overflow-y-auto" ref={resultsRef}>
             <p className="eyebrow block px-[9px] py-[8px] text-[10px] font-[650] tracking-[1.5px] text-muted-foreground">
-              {scopeNote}
+              {query ? t('shell:search.matches', { count: pageMatches.length }) : t('shell:search.accessible')}
             </p>
-          )}
-          {loadObjects && !catalog && (
-            <p className="px-[9px] py-[8px]" role="status">
-              {t('shell:search.loading')}
-            </p>
-          )}
-          {catalog?.status === 'error' && (
-            <p className="px-[9px] py-[8px]" role="status">
-              {catalog.message}
-            </p>
-          )}
-          {catalog?.status === 'ready' && (
-            <>
-              <p className="command-object-count px-[9px] py-[8px] text-[length:var(--workspace-caption-font-size)] leading-[1.6] wrap-anywhere text-muted-foreground">
-                {t('shell:search.objectMatches', { count: objects.length })}
+            {pageMatches.map(item => (
+              <SearchResult
+                key={item.id}
+                item={item}
+                renderLink={renderLink}
+                onSelect={() => changeOpen(false)}
+                onKeyDown={move}
+              />
+            ))}
+            {!pageMatches.length && (
+              <p className="empty-search p-[25px] text-center text-[12px] text-muted-foreground">
+                {t('shell:search.noPages')}
               </p>
-              {objects.slice(0, 50).map(item => (
-                <SearchResult
-                  key={item.id}
-                  item={item}
-                  renderLink={renderLink}
-                  onSelect={() => changeOpen(false)}
-                  onKeyDown={move}
-                />
-              ))}
-              {objects.length > 50 && <p className="px-[9px] py-[8px]">{t('shell:search.first50')}</p>}
-              {!objects.length && <p className="px-[9px] py-[8px]">{t('shell:search.noObjects')}</p>}
-            </>
-          )}
+            )}
+            {scopeNote && (
+              <p className="eyebrow block px-[9px] py-[8px] text-[10px] font-[650] tracking-[1.5px] text-muted-foreground">
+                {scopeNote}
+              </p>
+            )}
+            {loadObjects && !catalog && (
+              <p className="px-[9px] py-[8px]" role="status">
+                {t('shell:search.loading')}
+              </p>
+            )}
+            {catalog?.status === 'error' && (
+              <p className="px-[9px] py-[8px]" role="status">
+                {catalog.message}
+              </p>
+            )}
+            {catalog?.status === 'ready' && (
+              <>
+                <p className="command-object-count px-[9px] py-[8px] text-[length:var(--workspace-caption-font-size)] leading-[1.6] wrap-anywhere text-muted-foreground">
+                  {t('shell:search.objectMatches', { count: objects.length })}
+                </p>
+                {objects.slice(0, 50).map(item => (
+                  <SearchResult
+                    key={item.id}
+                    item={item}
+                    renderLink={renderLink}
+                    onSelect={() => changeOpen(false)}
+                    onKeyDown={move}
+                  />
+                ))}
+                {objects.length > 50 && <p className="px-[9px] py-[8px]">{t('shell:search.first50')}</p>}
+                {!objects.length && <p className="px-[9px] py-[8px]">{t('shell:search.noObjects')}</p>}
+              </>
+            )}
+          </div>
         </div>
-        <div className="command-footer flex justify-between border-t border-border pt-[12px] text-[10px] text-muted-foreground">
-          {t('shell:search.keyboard')}
+        <DialogFooter className="command-footer shrink-0 justify-between gap-3 px-5 py-3 text-xs text-muted-foreground">
+          <span>{t('shell:search.keyboard')}</span>
           <span>{t('shell:search.escape')}</span>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
