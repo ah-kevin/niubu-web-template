@@ -20,6 +20,24 @@ function deferred() {
   return { promise, resolve, reject };
 }
 describe('AuthenticationForm', () => {
+  it.each(['login', 'recover', 'invite'] as const)('uses username identifiers only for explicit login, retaining email validation for %s', async mode => {
+    const submit = vi.fn(async () => ({ kind: 'success' as const }));
+    render(<AuthenticationForm {...base} mode={mode} loginIdentifier="username" onSubmit={submit} />);
+    const account = screen.getByLabelText('Email');
+    fireEvent.change(account, { target: { value: 'admin' } });
+    if (mode === 'login') fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'admin' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    if (mode === 'login') {
+      expect(await screen.findByRole('status')).toHaveTextContent('Complete');
+      expect(submit).toHaveBeenCalledWith({ email: 'admin', password: 'admin' }, expect.any(AbortSignal));
+      expect(account).toHaveAttribute('type', 'text');
+      expect(account).toHaveAttribute('autocomplete', 'username');
+    } else {
+      expect(submit).not.toHaveBeenCalled();
+      expect(account).toHaveAttribute('type', 'email');
+      expect(account).toHaveAccessibleDescription('Valid email required');
+    }
+  });
   it('uses shared input and label controls while retaining browser autofill and validation focus', () => {
     render(<AuthenticationForm {...base} fieldIds={{ email: 'shared-email', password: 'shared-password' }} />);
     const email = screen.getByLabelText('Email');

@@ -23,6 +23,7 @@ export interface AuthenticationLinkProps {
 }
 export interface AuthenticationFormProps {
   mode: AuthenticationMode;
+  loginIdentifier?: 'email' | 'username';
   fieldIds?: Readonly<{ email?: string; password?: string }>;
   labels: {
     eyebrow: ReactNode;
@@ -49,7 +50,16 @@ export interface AuthenticationFormProps {
 export function AuthenticationForm(props: AuthenticationFormProps) {
   return <AuthenticationFields key={props.mode} {...props} />;
 }
-function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSubmit }: AuthenticationFormProps) {
+function AuthenticationFields({
+  mode,
+  loginIdentifier = 'email',
+  fieldIds,
+  labels,
+  links,
+  renderLink,
+  onSubmit,
+}: AuthenticationFormProps) {
+  const usernameLogin = mode === 'login' && loginIdentifier === 'username';
   const id = useId();
   const emailId = fieldIds?.email ?? `${id}-email`;
   const passwordId = fieldIds?.password ?? `${id}-password`;
@@ -80,7 +90,7 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
     const email = emailRef.current?.value.trim() ?? '';
     const password = passwordRef.current?.value ?? '';
     const next = {
-      email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+      email: usernameLogin ? !email : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
       password: mode === 'login' && !password,
     };
     setErrors(next);
@@ -137,9 +147,9 @@ function AuthenticationFields({ mode, fieldIds, labels, links, renderLink, onSub
             className="h-[var(--control-height-lg)] rounded-[var(--control-radius-lg)] py-[var(--control-padding-block-lg)] text-[length:var(--control-font-size-lg)] leading-[var(--control-line-height-lg)]"
             id={emailId}
             ref={emailRef}
-            type="email"
+            type={usernameLogin ? 'text' : 'email'}
             name="email"
-            autoComplete="email"
+            autoComplete={usernameLogin ? 'username' : 'email'}
             placeholder={labels.emailPlaceholder}
             required
             aria-invalid={errors.email}
