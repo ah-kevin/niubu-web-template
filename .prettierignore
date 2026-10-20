@@ -1,6 +1,11 @@
 # Format application and package source only. Tests, the large synthetic static data, generated shadcn ui, evidence and generated files keep their layout.
 *
 !*/
+!apps/starter/**/*.ts
+!apps/starter/**/*.tsx
+!apps/starter/**/*.json
+apps/starter/**/*.test.ts
+apps/starter/**/*.test.tsx
 !apps/playground/**/*.ts
 !apps/playground/**/*.tsx
 !apps/playground/**/*.json

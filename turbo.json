@@ -80,6 +80,23 @@
         "$TURBO_ROOT$/internal/scripts/src/**",
         "$TURBO_ROOT$/internal/node-utils/src/**"
       ]
+    },
+    "@niubu/starter#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*", "NODE_ENV"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**",
+        "public/**",
+        "scripts/**",
+        "tools/**",
+        ".env*",
+        "!dist/**",
+        "!.turbo/**",
+        "$TURBO_ROOT$/internal/scripts/src/**",
+        "$TURBO_ROOT$/internal/node-utils/src/**"
+      ]
     }
   }
 }

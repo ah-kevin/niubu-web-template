@@ -1,0 +1,33 @@
+/* App composition depends on sibling or shell-owned state. */
+.template-workspace .layout-primary-pane[data-visually-collapsed='true'] .layout-logo {
+  padding-inline: 8px;
+  justify-content: center;
+}
+.template-workspace .layout-primary-pane[data-visually-collapsed='true'] .starter-brand-name {
+  display: none;
+}
+.template-workspace .template-scope-selector + .breadcrumbs {
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--border);
+}
+@media (max-width: 1000px) {
+  .template-workspace .template-scope-selector { font-size: 0; gap: 0; }
+  .template-workspace .template-scope-selector [role='combobox'] { font-size: 0.75rem; }
+}
+
+/* Query fields share the app's flex row. Match the public unlayered fallback
+   here so editor and other form owners retain their configured grids. */
+.system-query-fields .pattern-field-grid.pattern-schema-grid {
+  display: contents;
+}
+
+/* Match the unlayered public fallback without changing other form owners. */
+.starter-tables-query .pattern-form-actions {
+  justify-content: flex-start;
+}
+
+@media (min-width: 701px) and (max-width: 1150px) {
+  .starter-builtin-form .pattern-field-grid.pattern-schema-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

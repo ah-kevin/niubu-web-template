@@ -1,0 +1,6 @@
+/* Branding belongs to this app; public controls keep semantic theme tokens. */
+.starter-brand {
+  --starter-brand-foreground: #fff;
+  --starter-brand-gradient: linear-gradient(145deg, #6c80fc, #4168ed 55%, #3e45bb);
+  --starter-brand-shadow: 0 3px 8px #4265df24, inset 0 1px 1px #ffffff45;
+}

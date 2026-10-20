@@ -19,7 +19,7 @@ it('keeps a standalone template root and every original integration suite', () =
     .filter(path => existsSync(join(root, 'apps', path, 'package.json')))
     .map(path => json('apps/' + path + '/package.json').name)
     .sort();
-  expect(apps).toEqual(['@niubu/backend-mock', '@niubu/playground']);
+  expect(apps).toEqual(['@niubu/backend-mock', '@niubu/playground', '@niubu/starter']);
   const suites = [
     'auth-adapter',
     'auth-renewal',

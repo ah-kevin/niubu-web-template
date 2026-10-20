@@ -25,7 +25,8 @@
     "dev:backend-mock": "pnpm --filter @niubu/backend-mock dev",
     "test:integration": "vitest run --config tests/integration/vitest.config.ts",
     "hooks:install": "node scripts/git-hooks/install.ts",
-    "verify:playground": "node internal/scripts/src/playground-runtime.ts"
+    "verify:playground": "node internal/scripts/src/playground-runtime.ts",
+    "dev:starter": "pnpm --filter @niubu/starter dev"
   },
   "devDependencies": {
     "typescript": "catalog:",

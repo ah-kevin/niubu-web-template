@@ -4,6 +4,8 @@
 
 ## 独立启动
 
+管理后台样板使用独立 profile：`MOCK_PROFILE=starter pnpm dev:backend-mock --port 5330`。未提供该环境变量时继续加载 `mock.config.ts`；显式 `MOCK_PROFILE=playground` 使用原 Playground 配置，未知 profile 拒绝启动。starter 账号为 `admin@starter.invalid`、`viewer@starter.invalid`，密码均 `demo-only`；仅默认 north workspace，固定 read/write grants，不与系统资源 CRUD 联动。
+
 在仓库根目录运行：
 
 ```sh

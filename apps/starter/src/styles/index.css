@@ -1,0 +1,26 @@
+@import 'tailwindcss' source(none);
+@import '@niubu/styles/tokens.css';
+@import '@niubu/styles/base.css';
+@import '@niubu/common-ui/styles.css';
+@import '@niubu/common-ui/auth/styles.css';
+@import '@niubu/menu-ui/styles.css';
+@import '@niubu/layout-ui/styles.css';
+@import '@niubu/layouts/widgets/styles.css';
+@import '@niubu/layouts/routing/styles.css';
+@import './visual.css';
+
+@source '../app';
+@source '../auth';
+@source '../modules';
+@source '../system';
+@source '../examples';
+@source '../transfers';
+@source '../../../../packages/effects/layouts/src/widgets';
+@source '../../../../packages/effects/layouts/src/routing';
+@source '../../../../packages/effects/common-ui/src';
+@source '../../../../packages/@core/ui-kit/shadcn-ui/src';
+@source '../../../../packages/@core/ui-kit/layout-ui/src';
+@source '../../../../packages/@core/ui-kit/menu-ui/src';
+@source '../../../../packages/@core/ui-kit/tabs-ui/src';
+@source not '../**/*.{test,spec}.{ts,tsx}';
+@source not '../../../../packages/**/src/**/*.{test,spec}.{ts,tsx}';

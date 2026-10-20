@@ -1,0 +1,48 @@
+/* Login artwork is app-specific; public controls own their own visual states. */
+.template-login-layout {
+  --starter-login-gradient: radial-gradient(ellipse at 45% 48%, #dfe7ff 0, #edf1ff 47%, #f4f7ff 100%);
+  --starter-art-ink: #7187dc;
+  --starter-art-tone-1: #fff;
+  --starter-art-tone-2: #e7ecff;
+  --starter-art-tone-3: #8a9dfb;
+  --starter-art-tone-4: #4f66e7;
+  --starter-art-tone-5: #cfd8fb;
+  --starter-art-tone-6: #dce2f8;
+  --starter-art-tone-7: #8496e1;
+  --starter-art-tone-8: #b9c5ef;
+  --starter-art-tone-9: #d4dcf5;
+  --starter-art-tone-10: #e5eaff;
+  --starter-art-tone-11: #a7b7f2;
+  --starter-art-tone-12: #6e85ec;
+  --starter-art-tone-13: #b6c4f4;
+  --starter-art-tone-14: #ced7fa;
+  --starter-art-tone-15: #e8edff;
+  --starter-art-tone-16: #758aed;
+  --starter-art-tone-17: white;
+  --starter-art-tone-18: #d4ddfc;
+  --starter-art-tone-19: #7d91ed;
+  --starter-art-tone-20: #a9b9f8;
+  --starter-art-tone-21: #93a5ed;
+}
+.template-login-layout::before {
+  content: '';
+  position: absolute;
+  inset: 0 50% 0 0;
+  z-index: -1;
+  background: var(--starter-login-gradient);
+}
+/* The public shell slots share the full viewport geometry of the login artwork. */
+.template-login-layout .public-header { position: absolute; inset: 0 0 auto; z-index: 1; height: 100px; padding: 0 40px; }
+.template-login-layout .public-grid { min-height: 100dvh; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.template-login-layout .public-main { min-width: 0; padding: 112px 40px 80px; }
+.template-login-layout .public-footer { display: none; }
+.template-auth .auth-card > .eyebrow:empty, .template-auth .auth-card > .auth-intro:empty { display: none; }
+:root[data-theme='dark'] .template-login-layout {
+  --starter-login-gradient: radial-gradient(ellipse at 45% 48%, #242f53, #1a2138 60%, #191e2d);
+}
+@media (max-width: 800px) {
+  .template-login-layout::before, .template-login-art { display: none; }
+  .template-login-layout .public-grid { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100dvh; }
+  .template-login-layout .public-header { height: 88px; padding: 0 24px; }
+  .template-login-layout .public-main { min-height: 100dvh; padding: 128px 24px 64px; }
+}

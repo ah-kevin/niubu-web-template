@@ -1,0 +1,64 @@
+{
+  "name": "@niubu/starter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5175 --strictPort",
+    "preview": "vite preview --host 127.0.0.1 --port 5175 --strictPort",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src *.config.ts --config ../../eslint.config.js",
+    "build": "tsc --noEmit && node ../../internal/scripts/src/build-app.ts",
+    "budget:check": "node ../../internal/scripts/src/budget.ts"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "zod": "catalog:",
+    "@niubu/access": "workspace:*",
+    "@niubu/common-ui": "workspace:*",
+    "@niubu/core-design": "workspace:*",
+    "@niubu/core-preferences": "workspace:*",
+    "@niubu/hooks": "workspace:*",
+    "@niubu/icons": "workspace:*",
+    "@niubu/layouts": "workspace:*",
+    "@niubu/locales": "workspace:*",
+    "@niubu/preferences": "workspace:*",
+    "@niubu/request": "workspace:*",
+    "@niubu/stores": "workspace:*",
+    "@niubu/styles": "workspace:*",
+    "@niubu/types": "workspace:*",
+    "@niubu/utils": "workspace:*",
+    "@niubu/layout-ui": "workspace:*",
+    "@niubu/menu-ui": "workspace:*",
+    "@niubu/shadcn-ui": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "eslint": "catalog:",
+    "vitest": "catalog:",
+    "@types/node": "catalog:",
+    "@niubu-internal/tsconfig": "workspace:*",
+    "@niubu-internal/test-config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "jsdom": "catalog:",
+    "@niubu-internal/vite-config": "workspace:*"
+  },
+  "niubu": {
+    "test": {
+      "include": [
+        "src/**/*.{test,spec}.{ts,tsx}",
+        "plugins/**/*.{test,spec}.ts"
+      ]
+    }
+  }
+}

@@ -2,12 +2,15 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineNitroPlugin } from 'nitropack/runtime';
 import { BodyError, readRequestBody } from '../src/body';
 import config from '../mock.config';
+import { selectMockConfig } from '../src/profiles';
 import { createMockBackend, failureResponse } from '../src/dispatcher';
 import type { MockResponse } from '../src/dispatcher';
 import { sendMockResponse } from '../src/transfers/bridge';
 
 export default defineNitroPlugin(nitroApp => {
-  const backend = createMockBackend({ config });
+  const backend = createMockBackend({
+    config: process.env.MOCK_PROFILE ? selectMockConfig(process.env.MOCK_PROFILE) : config,
+  });
   nitroApp.hooks.hook('close', () => backend.dispose());
 
   nitroApp.h3App.use(

@@ -437,6 +437,121 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.2)(jsdom@30.1.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
 
+  apps/starter:
+    dependencies:
+      '@niubu/access':
+        specifier: workspace:*
+        version: link:../../packages/effects/access
+      '@niubu/common-ui':
+        specifier: workspace:*
+        version: link:../../packages/effects/common-ui
+      '@niubu/core-design':
+        specifier: workspace:*
+        version: link:../../packages/@core/base/design
+      '@niubu/core-preferences':
+        specifier: workspace:*
+        version: link:../../packages/@core/preferences
+      '@niubu/hooks':
+        specifier: workspace:*
+        version: link:../../packages/effects/hooks
+      '@niubu/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
+      '@niubu/layout-ui':
+        specifier: workspace:*
+        version: link:../../packages/@core/ui-kit/layout-ui
+      '@niubu/layouts':
+        specifier: workspace:*
+        version: link:../../packages/effects/layouts
+      '@niubu/locales':
+        specifier: workspace:*
+        version: link:../../packages/locales
+      '@niubu/menu-ui':
+        specifier: workspace:*
+        version: link:../../packages/@core/ui-kit/menu-ui
+      '@niubu/preferences':
+        specifier: workspace:*
+        version: link:../../packages/preferences
+      '@niubu/request':
+        specifier: workspace:*
+        version: link:../../packages/effects/request
+      '@niubu/shadcn-ui':
+        specifier: workspace:*
+        version: link:../../packages/@core/ui-kit/shadcn-ui
+      '@niubu/stores':
+        specifier: workspace:*
+        version: link:../../packages/stores
+      '@niubu/styles':
+        specifier: workspace:*
+        version: link:../../packages/styles
+      '@niubu/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@niubu/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@tanstack/react-query':
+        specifier: 'catalog:'
+        version: 5.104.2(react@19.3.0)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.0(react@19.3.0)
+      react-router-dom:
+        specifier: 'catalog:'
+        version: 7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@niubu-internal/test-config':
+        specifier: workspace:*
+        version: link:../../internal/test-config
+      '@niubu-internal/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
+      '@niubu-internal/vite-config':
+        specifier: workspace:*
+        version: link:../../internal/vite-config
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@testing-library/jest-dom':
+        specifier: 'catalog:'
+        version: 7.0.1(@testing-library/dom@10.4.2)(vitest@5.0.3(@types/node@24.19.2)(jsdom@30.1.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)))
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@testing-library/user-event':
+        specifier: 'catalog:'
+        version: 14.6.7(@testing-library/dom@10.4.2)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.12.0(jiti@2.7.0)(supports-color@10.2.2)
+      jsdom:
+        specifier: 'catalog:'
+        version: 30.1.2
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.2)(jsdom@30.1.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
+
   internal/lint-configs/eslint-config:
     dependencies:
       '@eslint/js':

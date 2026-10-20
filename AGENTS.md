@@ -2,7 +2,7 @@
 
 这是 Agent 的唯一规则入口，`CLAUDE.md` 只引用本文件。
 
-本仓库是 Web 模板仓库：React + shadcn + Tailwind 的 monorepo 基础，包含示范 app `apps/playground` 和开发用假后端 `apps/backend-mock`。规范、`packages/`、`internal/` 以本仓库为准，业务仓库从这里同步。
+本仓库是 Web 模板仓库：React + shadcn + Tailwind 的 monorepo 基础，包含管理后台样板 `apps/starter`、示范 app `apps/playground` 和开发用假后端 `apps/backend-mock`。规范、`packages/`、`internal/` 以本仓库为准，业务仓库从这里同步。
 
 ## 必须遵守
 
