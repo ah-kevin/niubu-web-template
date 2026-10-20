@@ -22,6 +22,7 @@ function fixture() {
   put('apps/playground/package.json', JSON.stringify({ name: '@niubu/playground' }));
   put('packages/utils/package.json', JSON.stringify({ name: '@niubu/utils', exports: './src/index.ts' }));
   put('packages/utils/src/index.ts', 'export const test = 1;\n');
+  put('scripts/locate.ts', "export const scope = '../node_modules/@niubu'; export const tools = '../node_modules/@niubu-internal';\n");
   put('internal/test-tool/package.json', JSON.stringify({ name: '@niubu-internal/test-tool', dependencies: { '@niubu/utils': 'workspace:*' } }));
   put('apps/backend-mock/src/profiles.ts', "export const profile = 'starter'; export const id = 'starter.home';\n");
   put('apps/backend-mock/src/profiles.test.ts', readFileSync(new URL('../../../apps/backend-mock/src/profiles.test.ts', import.meta.url), 'utf8'));
@@ -76,6 +77,8 @@ describe('commit-based product generation', () => {
     expect(readFileSync(join(destination,'tests/integration/starter-startup.test.tsx'),'utf8')).toContain('../../' + productPath + '/src/main');
     expect(readFileSync(join(destination,'internal/test-tool/package.json'),'utf8')).toContain('@niubu-internal/test-tool');
     expect(readFileSync(join(destination,'internal/test-tool/package.json'),'utf8')).toContain('@acme/utils');
+    expect(readFileSync(join(destination,'scripts/locate.ts'),'utf8')).toContain('../node_modules/@acme');
+    expect(readFileSync(join(destination,'scripts/locate.ts'),'utf8')).toContain('../node_modules/@niubu-internal');
     expect(readFileSync(join(destination,'pnpm-lock.yaml'),'utf8')).toContain(productPath + ':');
     expect(readFileSync(join(destination,'pnpm-lock.yaml'),'utf8')).not.toContain('apps/starter:');
     expect(existsSync(join(destination,'.env'))).toBe(false);

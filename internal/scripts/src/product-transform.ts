@@ -84,8 +84,13 @@ export function transformProductFile(
     // Include escaped package separators inside assertion patterns, not the internal tool scope.
     text = text.replaceAll(sourcePublicScope + '\\/', identity.publicScope + '\\/');
     text = text.replaceAll(sourcePublicScope + '/', identity.publicScope + '/');
-    for (const quote of ["'", '"', '`'])
+    for (const quote of ["'", '"', '`']) {
       text = text.replaceAll(quote + sourcePublicScope + quote, quote + identity.publicScope + quote);
+      text = text.replaceAll(
+        'node_modules/' + sourcePublicScope + quote,
+        'node_modules/' + identity.publicScope + quote,
+      );
+    }
   }
   if (path === 'package.json') {
     const manifest = JSON.parse(text);
