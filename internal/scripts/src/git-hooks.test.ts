@@ -12,6 +12,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -44,7 +45,7 @@ function git(root: string, args: string[], allowFailure = false) {
   return result;
 }
 function fixture() {
-  const root = realpathSync(mkdtempSync('/private/tmp/niubu-stage7-hooks-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'niubu-stage7-hooks-')));
   roots.push(root);
   git(root, ['init', '--quiet', '--template=']);
   git(root, ['config', '--local', 'user.name', 'Stage7 Fixture']);
@@ -195,7 +196,7 @@ describe('staged checks', () => {
     const root = fixture();
     put(root, 'dir/file.js', 'export const value={x:1}\n');
     git(root, ['add', '--', 'dir/file.js']);
-    const outside = realpathSync(mkdtempSync('/private/tmp/niubu-stage7-hooks-outside-'));
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'niubu-stage7-hooks-outside-')));
     roots.push(outside);
     put(outside, 'file.js', 'synthetic outside\n');
     rmSync(join(root, 'dir'), { recursive: true });
@@ -286,7 +287,7 @@ describe('hook installation conflicts', () => {
 
   it('refuses symlinked Git directories without writing through them', () => {
     const root = fixture();
-    const outside = realpathSync(mkdtempSync('/private/tmp/niubu-stage7-hooks-outside-'));
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'niubu-stage7-hooks-outside-')));
     roots.push(outside);
     cpSync(join(root, '.git'), join(outside, 'fixture-git'), { recursive: true });
     rmSync(join(root, '.git'), { recursive: true });
@@ -311,7 +312,7 @@ describe('hook installation conflicts', () => {
     expect(git(root, ['config', '--get', 'core.hooksPath']).stdout.trim()).toBe('user-hooks');
     git(root, ['config', '--local', '--unset', 'core.hooksPath']);
     rmSync(join(root, '.git/hooks'), { recursive: true, force: true });
-    const outside = realpathSync(mkdtempSync('/private/tmp/niubu-stage7-hooks-outside-'));
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'niubu-stage7-hooks-outside-')));
     roots.push(outside);
     symlinkSync(outside, join(root, '.git/hooks'), 'dir');
     expect(await installHooks({ root })).not.toBe(0);
