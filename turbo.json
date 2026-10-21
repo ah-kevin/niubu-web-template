@@ -43,6 +43,7 @@
     },
     "test": {
       "dependsOn": ["^build"],
+      "env": ["CI"],
       "inputs": ["$TURBO_DEFAULT$", "src/**", "tests/**", "vitest.config.*", "package.json"],
       "outputs": []
     },

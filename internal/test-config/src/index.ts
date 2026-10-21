@@ -9,6 +9,7 @@ export function createTestConfig(options: {
   include: string[];
   setupFiles?: string[];
 }): UserConfig {
+  const ci = process.env.CI === 'true' || process.env.CI === '1';
   return defineConfig({
     root: options.root,
     plugins: options.environment === 'jsdom' ? [react()] : [],
@@ -19,8 +20,8 @@ export function createTestConfig(options: {
       setupFiles: options.setupFiles,
       clearMocks: true,
       restoreMocks: true,
-      // Half the cores keeps the machine usable and avoids load-induced timeouts.
-      maxWorkers: '50%',
+      // Keep local runs small while preserving the CI worker budget.
+      maxWorkers: ci ? '50%' : 2,
     },
   });
 }
