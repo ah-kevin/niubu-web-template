@@ -11,7 +11,7 @@
 1. 动手前先读[开发标准](docs/guide/standards.md)和[工作方式](docs/guide/workflow.md)。写页面、表单、权限、请求之前，读[开发指南](docs/guide/README.md)里对应的专题。
 2. 公共包不依赖 app，不写产品专用内容；包之间只用对方声明的 exports。
 3. 新增或修改公共能力时，在 Playground 补上示例。Playground 是业务仓库参照的标准写法。
-4. 检查默认跑 `pnpm check` 和 `pnpm format:check`。`pnpm check` 靠缓存增量执行，不要删缓存冷跑。
+4. 日常开发与普通业务小改交付按[工作方式](docs/guide/workflow.md)选择相关测试、类型和修改文件检查；CI或公共基础变更执行完整 `pnpm check` 与 `pnpm format:check`。复用现有目录/缓存，本地最多2个测试worker，同仓重检查不叠加，不删缓存冷跑。
 5. 新增第三方依赖、安装、启动服务、推送、发布，都按用户当次授权执行。
 6. 验证与交付记录不提交进本仓库，结论写回任务卡。
 7. 自动化 E2E 默认不做；浏览器操作回归允许按任务需要执行，见下方规则。

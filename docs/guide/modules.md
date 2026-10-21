@@ -17,7 +17,7 @@
 7. backend 模式核对目标 app/profile 的后端菜单 pageId、允许导航的页面及读写 codes；页面 `requiredCodes` 配读权限，按钮检查相应 write code，直达仍经过 Guard，服务端负责最终授权。菜单隐藏不能替代路由检查。账号与资源 CRUD 的 mock 边界见[新产品起步](./product-start.md)。
 8. 检查目标 app 的样式入口。当前 [Starter CSS](../../apps/starter/src/styles/index.css)使用 `source(none)` 和显式 `@source`，新增目录需纳入扫描；专用非 utility CSS 还需按公开入口导入，扫描不会代替 `@import`。测试文件不作为生产样式来源，不以绕过排除规则补齐缺失类名。
 9. 使用 app 已有的 auth、QueryClient、i18n、stores 等 owner；参照[启动入口](../../apps/starter/src/main.tsx)，不在模块顶层创建产品单例或第二套运行时。页面自己持有的监听、请求和资源在关闭/卸载时清理，异步结果遵守[请求与 lease 边界](./auth-request.md)。
-10. 按[工程与验证说明](./engineering-deploy.md)选择受影响的组件、Root、locale、workspace/boundary 和样式检查；核对菜单、直达、只读状态及双语资源。完整交付仍遵循[工作方式](./workflow.md)，不为接入新模块跳过既有检查。
+10. 按[工程与验证说明](./engineering-deploy.md)选择受影响的组件、Root、locale、workspace/boundary 和样式检查；核对菜单、直达、只读状态及双语资源。按[工作方式](./workflow.md)判断日常/小改相关检查或基础变更完整回归，记录影响与实际结果，不因接入新模块漏掉相关消费者。
 
 [createModuleRegistry](../../packages/effects/access/src/module-registry.ts) 拒绝重复 module id/pageId/路由身份、冲突 loader、未知菜单页面与 parentId。它汇总并冻结 routes/loaders/menus/permissions/namespaces，不替 app 登录或代替后端授权。菜单与 scoped query 的边界见[鉴权与请求](./auth-request.md)。
 

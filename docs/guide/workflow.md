@@ -4,28 +4,52 @@
 
 ## 检查怎么跑
 
-默认用这两条，提交或合并前都可以跑：
+日常开发和普通业务小改交付按影响验证；CI、公共运行基础、工程工具或全局依赖/配置变更执行完整回归。
+
+| 场景 | 检查范围 |
+| --- | --- |
+| 开发中定位 | 相关测试文件或场景，必要时扩大到所属域和实际消费者 |
+| 普通业务小改交付 | 相关测试、受影响 app/package 类型检查、修改文件的 lint/格式；按实际影响补 locale、workspace、路由/权限/来源合同 |
+| 纯文档/注释 | 核内容、链接、命令和适用格式，不默认 Vitest、build或完整check |
+| 可见 UI、样式或资源接线 | 相关组件/实际 CSS 消费检查与受影响页面浏览器操作；样式入口/扫描、lazy资源或首屏依赖变化时追加受影响 app build/budget |
+| 公共基础变更、CI | 完整 `pnpm check` 与 `pnpm format:check`，保留所有测试和断言，利用现有缓存 |
+
+小改按实际影响判断，不按行数。共享协议、跨域权限/scope/runtime等基础变化需要说明影响并扩大相应回归；不能仅因改了 app 就默认整 app，也不能把判断不清的影响当作局部通过。
+
+执行局部测试的现有命令：
 
 ```sh
-pnpm check          # 边界、翻译 key、类型、lint、测试、构建、首屏体积，任何一步失败就停
-pnpm format:check   # 格式
+pnpm --filter @niubu/common-ui exec vitest run src/form/schema-form.test.tsx --maxWorkers=2
+pnpm --filter @niubu/common-ui typecheck
+pnpm test:integration tests/integration/session-login-cancellation.test.ts --maxWorkers=2
 ```
 
-- `pnpm check` 本身是增量的：Turbo 缓存各包的结果，没改动的包直接回放，只重跑改动的包和依赖它的包。代码没变时整条链只要几秒。
-- 缓存按 `turbo.json` 声明的全局输入和各任务输入失效。根依赖清单、锁文件和共享配置会影响全仓；`internal/scripts/src` 通过应用构建任务的输入追踪，ESLint 配置包源码通过 lint 任务的输入追踪，不会因任意脚本改动就清空全部缓存。
-- 不要为了"冷跑"去删或挪走缓存，除非确实怀疑缓存有问题。
+文件只是定位示例，按真实改动选择。Root 集成用具体文件过滤；不要先运行根 `pnpm test` 的全部 Root 测试，再误以为追加参数已经缩小范围。格式/lint使用原规则，仅检查有关文件；不以编译孤立文件替代 app/package 的类型检查。
 
-开发中只想快速看一个包或一个文件时：
+完整入口保持原语义：
 
 ```sh
-pnpm --filter @niubu/common-ui test             # 单个包；typecheck、lint 同理
-pnpm --filter '@niubu/common-ui...' test        # 连同它依赖的包
-pnpm --filter @niubu/common-ui exec vitest run src/form/schema-form.test.tsx   # 单个测试文件
+pnpm check          # 边界、locale、类型、lint、测试、构建与首屏体积；失败即停
+pnpm format:check   # 完整格式检查
 ```
 
-- 验收别人的交付时，如果对方已经给出完整检查的命令、退出码和日志，就只核对这些证据，再跑改动相关的测试，不再整套重跑。
-- 测试进程数默认是 CPU 核数的一半（见 `internal/test-config`），机器负载高时测试不容易超时误报。不要为了快改回全核。
-- 自动化 E2E 不在任何默认检查里；新增、扩展或通过测试脚本/测试运行器执行自动化 E2E 需用户明确授权。通过 Chrome 或内置浏览器操作、截图和执行浏览器回归矩阵无需另行申请 E2E 授权，见根规则。
+### 选择范围与复用结果
+
+- 交付前核完整任务变更：起始基线到 HEAD 的全部提交，加暂存、未暂存与 Git 未忽略的未跟踪文件；删除/rename 两端都纳入，不只看最后一次提交。
+- Agent按现有源码、依赖与测试职责选择相关用例，在任务记录简述影响、选测依据、实际命令/退出码和局部/全量范围；不新增自动选测工具或范围登记系统。
+- 需要测试的运行变化却找不到测试时，补必要验证；零用例不等于通过。纯文档说明测试不适用，不写复述文案的测试。
+- 同一源码/配置/工具输入与范围已有通过记录时可复用；不为提交、合并、推送机械重复完整回归。冲突解决、新输入、失败或具体疑点出现后重跑受影响检查。推送成功不代表CI通过。
+- 验收已有交付先核命令、退出码、日志和输入，再补实际缺口，不重复同一份完整检查。验证记录不提交进仓库，结论写回任务卡。
+
+### 工作目录、缓存与本地资源
+
+- 连续工作复用已有checkout、依赖和缓存，不为小任务复制临时项目或反复安装。同一checkout不能交给独立writer并行修改；需要隔离时使用正规关联Git worktree。
+- 用 `git worktree list --porcelain` 核关联；Turbo可复用主仓本地缓存，显式cacheDir会改变默认机制。必要时用已有Turbo的 `--dry=json` 核实际HIT/MISS，不为核缓存真实跑全量；连续工作不反复预演。
+- HIT表示任务复用；合法源码/依赖/配置或命令输入变化导致MISS时正常验证。Root集成等非Turbo步骤仍执行，不把回放日志称为新跑测试。不删/挪缓存冷跑或改输入伪造命中。
+- worktree不自动共享node_modules；不强行复制/软链其他checkout依赖。依赖准备遵循当次授权。缓存产物不会改写内部绝对路径，需要时核真实消费，不强制套用旧产物。
+- 本地测试默认最多2个worker（`internal/test-config`），可降到1，不得通过CLI或伪装CI提高上限。真实CI标记 `CI=true` 或 `CI=1` 保留原50%策略，其他值采用本地策略。
+- 测试包保持串行。同仓多Agent由主写者协调，只运行一组本地重测试/check/build链，其他任务等待或复用已核结果，不各自启动2worker叠加消耗。此为执行规则及测试默认配置，不是全机进程限额或调度服务。
+- 限并发主要降低CPU/内存峰值，可能增加耗时；不为提速关闭隔离、放宽断言/超时或改变半核CI策略。自动化E2E仍不在默认检查里；Chrome/IAB浏览器操作范围见根规则。
 
 ## Git
 
