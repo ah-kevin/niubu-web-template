@@ -51,7 +51,7 @@
 - Consumes: Task1已完整验证固定提交的index.ts/Root合同/workflow/internal规则；业务现有单Web配置/指南。
 - Produces: 两仓公共一致、业务291/67/disabled保持，局部验证和两仓基础回归/本地master交付的真实记录。
 
-- [ ] **Step 1:** 模板通过并提交后才建业务分支，同步index.ts、Root合同、workflow、internal规则为固定blob；turbo与业务指南定点修改，不复制模板多app/生成器断言。
-- [ ] **Step 2:** 运行业务同名Root合同、选择已有route-scope/user-shell相关测试展示局部交付，并做业务LOCAL/CI dry-run；随后业务完整pnpm check/format，均exit0。不修改业务功能来演示。
-- [ ] **Step 3:** 公共改动与指南分开本地提交；核公共字节/模式、四共享规则、所有非目标hash和无工具/依赖/CI变化；最终一次fresh-context只读整分支审阅，处理实质问题。
-- [ ] **Step 4:** 已授权两仓快进合并本地master，复用相同源树已通过检查，不机械重跑；安全删除本轮分支和自有scratch。写Task/Case实际回执，无push/release/自动化E2E。
+- [x] **Step 1:** 模板通过并提交后才建业务分支，同步index.ts、Root合同、workflow、internal规则为固定blob；turbo与业务指南定点修改，不复制模板多app/生成器断言。
+- [x] **Step 2:** 运行业务同名Root合同、选择已有route-scope/user-shell相关测试展示局部交付，并做业务LOCAL/CI dry-run；随后业务完整pnpm check/format，均exit0。不修改业务功能来演示。
+- [x] **Step 3:** 公共改动与指南分开本地提交；核公共字节/模式、四共享规则、所有非目标hash和无工具/依赖/CI变化；最终一次fresh-context只读整分支审阅，处理实质问题。
+- [x] **Step 4:** 已授权两仓快进合并本地master，复用相同源树已通过检查，不机械重跑；安全删除本轮分支和自有scratch。写Task/Case实际回执，无push/release/自动化E2E。
