@@ -1,3 +1,4 @@
+import { columnAlignment } from './alignment';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
@@ -17,7 +18,7 @@ import {
 } from 'react';
 import type { Column, Header, ReactTable, Row, RowData } from '@tanstack/react-table';
 import type { listFeatures, selectableListFeatures, treeFeatures } from './profiles';
-import type { BaseTableProps, ListSlices, TableLabels, TreeListTableProps } from './types';
+import type { TableAlignment, BaseTableProps, ListSlices, TableLabels, TreeListTableProps } from './types';
 import { cn } from '@niubu/shadcn-ui/cn';
 import type { ListNativeTable, PresentationTable } from './ColumnSettings';
 import { TableToolbar } from './TableToolbar';
@@ -110,10 +111,12 @@ function HeaderView<T extends RowData>({
   header,
   labels,
   children,
+  alignment,
 }: {
   header: ListNativeHeader<T>;
   labels: TableLabels;
   children: ReactNode;
+  alignment: TableAlignment;
 }) {
   const column = header.column;
   const sorted = column.getIsSorted();
@@ -123,7 +126,7 @@ function HeaderView<T extends RowData>({
     <th
       scope={header.colSpan > 1 ? 'colgroup' : 'col'}
       colSpan={header.colSpan}
-      style={{ ...pinnedStyle(column), width, minWidth: width, maxWidth: width }}
+      style={{ ...pinnedStyle(column), width, minWidth: width, maxWidth: width, textAlign: alignment }}
       aria-sort={
         column.getCanSort() ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined
       }
@@ -131,7 +134,14 @@ function HeaderView<T extends RowData>({
       {!header.isPlaceholder &&
         (column.getCanSort() ? (
           <Button
-            className="h-auto w-full min-w-0 justify-start gap-1 p-0 pe-6 text-start text-[12px] text-inherit [font-weight:inherit] [&_svg]:size-[12px]"
+            className={cn(
+              'h-auto w-full min-w-0 gap-1 p-0 text-[12px] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
+              alignment === 'start'
+                ? 'justify-start pe-6 text-start'
+                : alignment === 'center'
+                  ? 'justify-center px-6 text-center'
+                  : 'justify-end px-6 text-end',
+            )}
             variant="ghost"
             type="button"
             aria-label={labels.sortColumn(name)}
@@ -188,12 +198,14 @@ function HeaderView<T extends RowData>({
 function CellView<T extends RowData>({
   column,
   children,
+  alignment,
 }: {
   column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T> | Column<typeof treeFeatures, T>;
   children: ReactNode;
+  alignment: TableAlignment;
 }) {
   return (
-    <td style={pinnedStyle(column)}>
+    <td style={{ ...pinnedStyle(column), textAlign: alignment }}>
       <div className="pattern-cell-content">{children}</div>
     </td>
   );
@@ -446,13 +458,13 @@ export function ListView<T extends RowData>({
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels}>
+        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(props, header.column.id)}>
           <table.FlexRender header={header} />
         </HeaderView>
       )}
       renderCells={row =>
         row.getVisibleCells().map(cell => (
-          <CellView<T> key={cell.id} column={cell.column}>
+          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(props, cell.column.id)}>
             <table.FlexRender cell={cell} />
           </CellView>
         ))
@@ -488,13 +500,13 @@ export function SelectableView<T extends RowData>({
       selectionSummary={selectionSummary}
       isRowSelected={selectionCell ? row => table.state.rowSelection[row.id] === true : undefined}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels}>
+        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(props, header.column.id)}>
           <table.FlexRender header={header} />
         </HeaderView>
       )}
       renderCells={row =>
         row.getVisibleCells().map(cell => (
-          <CellView<T> key={cell.id} column={cell.column}>
+          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(props, cell.column.id)}>
             <table.FlexRender cell={cell} />
           </CellView>
         ))
@@ -518,17 +530,27 @@ export function TreeView<T extends RowData>({
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels}>
+        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(props, header.column.id)}>
           <table.FlexRender header={header} />
         </HeaderView>
       )}
       renderCells={row =>
         row.getVisibleCells().map(cell => (
-          <CellView<T> key={cell.id} column={cell.column}>
+          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(props, cell.column.id)}>
             {cell.column.id === props.treeColumnId ? (
               <div
-                className="pattern-tree-cell flex min-w-0 items-center"
-                style={{ paddingInlineStart: row.depth * 20 }}
+                className={cn(
+                  'pattern-tree-cell flex min-w-0 items-center',
+                  columnAlignment(props, cell.column.id) === 'center'
+                    ? 'justify-center'
+                    : columnAlignment(props, cell.column.id) === 'end'
+                      ? 'justify-end'
+                      : 'justify-start',
+                )}
+                style={{
+                  paddingInlineStart: columnAlignment(props, cell.column.id) === 'end' ? 0 : row.depth * 20,
+                  paddingInlineEnd: columnAlignment(props, cell.column.id) === 'end' ? row.depth * 20 : 0,
+                }}
               >
                 <span className="inline-flex w-[18px] shrink-0 items-center">
                   {row.getCanExpand() && (

@@ -118,5 +118,8 @@
   "table.refresh": "Refresh",
   "table.moreColumnSettings": "More column settings",
   "table.expandRow": "Expand {{name}}",
-  "table.collapseRow": "Collapse {{name}}"
+  "table.collapseRow": "Collapse {{name}}",
+  "table.moreActions": "More",
+  "table.moreRowActions": "More actions for {{name}}",
+  "table.itemCount": "{{count}} items"
 }

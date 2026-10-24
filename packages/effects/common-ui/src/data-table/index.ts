@@ -10,6 +10,7 @@ export { validateRowIds } from './identity';
 export { tablePreferences, cleanTablePreferences } from './preferences';
 export type { TablePreferences } from './preferences';
 export type {
+  TableAlignment,
   DataTableProps,
   ReadTableProps,
   ListTableProps,
@@ -46,3 +47,10 @@ export type {
   QueryDataTableApi,
   QueryDataTableProps,
 } from './query-types';
+
+export { RowActions } from './RowActions';
+export type { RowAction, RowActionsProps } from './RowActions';
+export { CellText } from './CellText';
+export type { CellTextProps } from './CellText';
+export { CollectionCell } from './CollectionCell';
+export type { CollectionCellProps } from './CollectionCell';

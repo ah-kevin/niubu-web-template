@@ -118,5 +118,8 @@
   "table.refresh": "刷新",
   "table.moreColumnSettings": "更多列设置",
   "table.expandRow": "展开 {{name}}",
-  "table.collapseRow": "收起 {{name}}"
+  "table.collapseRow": "收起 {{name}}",
+  "table.moreActions": "更多",
+  "table.moreRowActions": "{{name}} 的更多操作",
+  "table.itemCount": "{{count}} 项"
 }

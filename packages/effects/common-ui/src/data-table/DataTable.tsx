@@ -1,3 +1,4 @@
+import { columnAlignment } from './alignment';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { rowActivation } from './row-activation';
@@ -42,7 +43,12 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
               {table.getHeaderGroups().map(group => (
                 <tr key={group.id}>
                   {group.headers.map(header => (
-                    <th key={header.id} colSpan={header.colSpan} scope={header.colSpan > 1 ? 'colgroup' : 'col'}>
+                    <th
+                      style={{ textAlign: columnAlignment(props, header.column.id) }}
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      scope={header.colSpan > 1 ? 'colgroup' : 'col'}
+                    >
                       {!header.isPlaceholder && <table.FlexRender header={header} />}
                     </th>
                   ))}
@@ -53,7 +59,7 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
               {rows.map(row => (
                 <tr key={row.id} data-row-id={row.id} {...rowActivation(row.original, props.onRowActivate)}>
                   {row.getAllCells().map(cell => (
-                    <td key={cell.id}>
+                    <td key={cell.id} style={{ textAlign: columnAlignment(props, cell.column.id) }}>
                       <table.FlexRender cell={cell} />
                     </td>
                   ))}
