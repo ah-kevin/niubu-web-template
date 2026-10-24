@@ -1,3 +1,4 @@
+import { PresentationExample } from './PresentationExample';
 import { DocumentationLink } from '../DocumentationLink';
 import { ExampleDetails, ExamplePage } from '../ExamplePage';
 import { useEffect, useMemo, useRef, useState, type FocusEventHandler, type RefObject, type ReactNode } from 'react';
@@ -11,6 +12,7 @@ import {
   useQueryDataTable,
   useTablePreferences,
   type TableTranslator,
+  type TableAlignment,
 } from '@niubu/common-ui/data-table';
 import { useTranslation } from '@niubu/locales/react';
 import { createPreferenceManager, PreferenceProvider } from '@niubu/preferences';
@@ -133,6 +135,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
           <ClientExamples key={scope} scope={scope} t={t} />
           <ServerExample scope={scope} load={load} t={t} />
           <TreeExample key={`tree:${scope}`} scope={scope} t={t} />
+          <PresentationExample scope={scope} />
         </div>
       </PreferenceProvider>
       <ExampleDetails title={t('examples.ui.details')}>
@@ -171,6 +174,7 @@ function ExampleGroup({
 type TreeSample = { id: string; name: string; children?: readonly TreeSample[] };
 const treeHelper = createTreeColumnHelper<TreeSample>();
 function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
+  const [align, setAlign] = useState<TableAlignment>('start');
   const columns = useMemo(
     () =>
       treeHelper.columns([
@@ -190,8 +194,24 @@ function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
   );
   return (
     <ExampleGroup title={t('examples.tables.tree')}>
+      <label className="m-4 grid w-fit gap-1 text-sm">
+        {t('examples.tables.treeAlignment')}
+        <Select
+          label={t('examples.tables.treeAlignment')}
+          value={align}
+          onValueChange={value => {
+            if (value === 'start' || value === 'center' || value === 'end') setAlign(value);
+          }}
+          options={[
+            { value: 'start', label: t('examples.tables.alignStart') },
+            { value: 'center', label: t('examples.tables.alignCenter') },
+            { value: 'end', label: t('examples.tables.alignEnd') },
+          ]}
+        />
+      </label>
       <DataTable
         profile="tree-list"
+        align={align}
         model={{ kind: 'client', rows: roots }}
         readState="ready"
         sourceCount={3}

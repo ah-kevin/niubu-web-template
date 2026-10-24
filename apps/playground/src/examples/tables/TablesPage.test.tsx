@@ -262,3 +262,11 @@ it('retires pagination focus intent on a scope change and ignores the old scoped
   expect(document.body).toHaveFocus();
   expect(screen.queryByText('North late')).not.toBeInTheDocument();
 });
+
+it('lets the tree example choose end alignment while keeping its visible depth inset', async () => {
+  render(<TablesPage />);
+  const tree = () => region('三层树表');
+  await selectOption(screen.getByRole('combobox', { name: '树表对齐' }), '末端');
+  fireEvent.click(tree().getByRole('button', { name: '展开 North' }));
+  expect(tree().getByRole('cell', { name: 'Branch' }).querySelector('.pattern-tree-cell')).toHaveStyle({ paddingInlineEnd: '20px' });
+});
