@@ -548,5 +548,17 @@
   "examples.tables.recordDetails": "记录详情",
   "examples.tables.localOnly": "全部为合成数据；确认只更新本页提示，不发起业务请求。",
   "examples.tables.confirmedDemo": "已确认本地演示。",
-  "examples.tables.treeAlignment": "树表对齐"
+  "examples.tables.treeAlignment": "树表对齐",
+  "examples.application.contextTitle": "工作上下文",
+  "examples.application.contextIntro": "一个入口展开为组织与范围两级；浏览其他组织不会提前选中范围，确认切换后再加载。此处仅改变合成示例。",
+  "examples.application.contextOrganization": "组织",
+  "examples.application.contextRange": "范围",
+  "examples.application.contextNorth": "北方示例组织",
+  "examples.application.contextSouth": "南方示例组织",
+  "examples.application.contextAll": "组织范围",
+  "examples.application.contextTeam": "项目团队",
+  "examples.application.contextFixed": "固定示例组织",
+  "examples.application.contextSwitch": "切换到该组织",
+  "examples.application.contextSwitchHint": "切换组织后，查看该组织的可用范围。",
+  "examples.application.contextEmpty": "暂无可用范围"
 }

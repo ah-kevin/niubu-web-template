@@ -138,9 +138,10 @@ export function ResourceEditor<K extends ResourceKind>({
   return (
     <div
       data-resource={resource}
-      className="system-record-editor [&_.pattern-page-header]:hidden [&_.pattern-form-group]:rounded-none [&_.pattern-form-group]:border-0 [&_.pattern-form-group]:p-0 [&_.pattern-form-group>legend]:sr-only"
+      className="system-record-editor [&_.pattern-form-group]:rounded-none [&_.pattern-form-group]:border-0 [&_.pattern-form-group]:p-0 [&_.pattern-form-group>legend]:sr-only"
     >
       <FormFrame
+        headerMode="external"
         form={schema.form}
         title={t(record ? 'system.editTitle' : 'system.createTitle', {
           resource: t(resourceConfig[resource].titleKey),

@@ -662,7 +662,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
           ? Modal
           : Drawer;
   return (
-    <section className="system-resource-page grid min-w-0 gap-3 p-4 [margin:calc(-1*max(var(--workspace-card-padding),var(--layout-content-padding,0px)))] [&_form]:max-w-none">
+    <section className="system-resource-page grid min-w-0 gap-3 [&_form]:max-w-none">
       <h1 className="sr-only">{t(config.titleKey)}</h1>
       <div
         hidden={!queryVisible}
@@ -735,7 +735,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
               }}
               getRowId={row => row.id}
               caption={t(config.titleKey)}
-              labels={createDataTableLabels(t, headers)}
+              labels={{ ...createDataTableLabels(t, headers), sourceUnknown: t('common:read.empty.title') }}
               columnPinning={{
                 kind: 'internal',
                 initial: { start: [resource === 'menus' ? 'title' : 'name'], end: [] },
@@ -761,7 +761,7 @@ function ResourcePageBody<K extends ResourceKind>({ resource }: { resource: K })
               columns={columns}
               getRowId={row => row.id}
               caption={t(config.titleKey)}
-              labels={createDataTableLabels(t, headers)}
+              labels={{ ...createDataTableLabels(t, headers), sourceUnknown: t('common:read.empty.title') }}
               {...table.tableState}
               columnPinning={{ kind: 'internal', initial: { start: [], end: ['actions'] } }}
               toolbar={{

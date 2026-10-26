@@ -529,5 +529,6 @@
   "system.append": "Create child",
   "system.appendAction": "Create child of {{name}}",
   "examples.tables.tree": "Three-level tree",
-  "productName": "Admin Starter"
+  "productName": "Admin Starter",
+  "system.list.menus": "Menu list"
 }

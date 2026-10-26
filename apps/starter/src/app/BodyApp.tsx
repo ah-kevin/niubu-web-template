@@ -5,7 +5,7 @@ import { flattenNavigation } from '@niubu/access';
 import { BusinessShell } from '@niubu/layouts';
 import { NavigationGuard, PageTabsBinding, PageTabsView } from '@niubu/layouts/routing';
 import { useStarterRouting } from './page-routing';
-import { FoundationTools, Copyright, Breadcrumbs } from '@niubu/layouts/widgets';
+import { FoundationTools, Copyright, Breadcrumbs, WorkspaceContext } from '@niubu/layouts/widgets';
 import { ManagedPreferenceDrawer } from '@niubu/common-ui/preferences';
 import { useAppStoreSnapshot, useAppStores } from '@niubu/stores/react';
 import { usePreferenceSnapshot } from '@niubu/preferences';
@@ -28,7 +28,6 @@ import { StarterBrand } from './Brand';
 import { buildStarterBreadcrumbs } from './breadcrumbs';
 import { registry } from '../modules/demo';
 import { icons } from '../icons';
-import { Select } from '@niubu/shadcn-ui/select';
 
 function AppLink({ href, external, target, rel, ...props }: LinkProps) {
   return external || target === '_blank' ? (
@@ -65,11 +64,43 @@ export function BodyApp({ children }: { children: ReactNode }) {
     registry.routes,
   );
   const homeHref = `/home${withScope('', state.scope)}`;
+  const workspacePicker = (appearance: 'sidebar' | 'header', compact = false) =>
+    state.user ? (
+      <WorkspaceContext
+        label={t('workspace')}
+        groupLabel={t('workspace')}
+        rangeLabel={t('workspace')}
+        placeholder={t('system.choose')}
+        emptyLabel={t('common:read.empty.title')}
+        groupValue="workspaces"
+        value={state.scope?.kind === 'workspace' ? state.scope.id : ''}
+        groups={[
+          {
+            value: 'workspaces',
+            label: t('workspace'),
+            options: state.user.workspaces.map(scope => ({ value: scope.id, label: scope.name ?? scope.id })),
+          },
+        ]}
+        appearance={appearance}
+        compact={compact}
+        disabled={state.status !== 'ready' || state.loginExpired}
+        onValueChange={id => {
+          if (!state.user?.workspaces.some(scope => scope.id === id)) return;
+          const scope = { kind: 'workspace', id };
+          void navigate({
+            pathname: location.pathname,
+            search: withScope(location.search, scope),
+            hash: location.hash,
+          });
+        }}
+      />
+    ) : undefined;
+
   const content = (
     <>
       <NavigationGuard description={t('common:guard.livePreserveDescription')} />
       <ScopeSync />
-      <div className="template-workspace contents [&_.workspace-main]:bg-background [&_.layout-logo]:min-h-[var(--layout-header-height)] [&_.layout-logo]:px-[16px] [&_.starter-brand-name]:text-[14px] [&_.breadcrumbs]:gap-[6px] [&_.breadcrumbs]:whitespace-nowrap [&_.breadcrumbs]:text-[13px] [&_.context-actions]:gap-[12px]">
+      <div className="template-workspace contents [&_.workspace-frame]:bg-background [&_.workspace-main]:bg-background [&_.layout-logo]:min-h-[var(--layout-header-height)] [&_.layout-logo]:px-[16px] [&_.starter-brand-name]:text-[14px] [&_.breadcrumbs]:gap-[6px] [&_.breadcrumbs]:whitespace-nowrap [&_.breadcrumbs]:text-[13px] [&_.context-actions]:gap-[12px]">
         <BusinessShell
           brand={appConfig.displayName}
           logo={<StarterBrand href={homeHref} />}
@@ -91,27 +122,8 @@ export function BodyApp({ children }: { children: ReactNode }) {
           navigation={navigation}
           renderLink={props => <AppLink {...props} />}
           onNavigateTo={href => void navigate(href)}
-          scopeSelector={
-            state.user ? (
-              <label className="template-scope-selector inline-flex items-center gap-2 whitespace-nowrap text-[12px] text-muted-foreground">
-                {t('workspace')}
-                <Select
-                  label={t('workspace')}
-                  className="min-w-0 max-w-40"
-                  value={state.scope?.kind === 'workspace' ? state.scope.id : ''}
-                  onValueChange={id => {
-                    const scope = { kind: 'workspace', id };
-                    void navigate({
-                      pathname: location.pathname,
-                      search: withScope(location.search, scope),
-                      hash: location.hash,
-                    });
-                  }}
-                  options={state.user.workspaces.map(scope => ({ value: scope.id, label: scope.name ?? scope.id }))}
-                />
-              </label>
-            ) : undefined
-          }
+          sidebarContext={({ compact }) => workspacePicker('sidebar', compact)}
+          scopeSelector={workspacePicker('header')}
           userMenu={
             state.user ? (
               <>
@@ -124,6 +136,7 @@ export function BodyApp({ children }: { children: ReactNode }) {
           mobileAccount={state.user ? <ShellActions showUpdates={false} /> : <Link to="/login">{t('login')}</Link>}
           foundationTools={({ headerAvailable, headerTarget }) => (
             <FoundationTools
+              quickAppearance
               sessionKey={`starter:${state.user?.id ?? 'anonymous'}`}
               headerAvailable={headerAvailable}
               headerTarget={headerTarget}

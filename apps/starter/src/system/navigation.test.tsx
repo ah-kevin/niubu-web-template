@@ -1,4 +1,4 @@
-import { selectOption } from '../tests/select-option';
+import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -20,6 +20,12 @@ const disposers: (() => void)[] = [];
 afterEach(() => { cleanup(); disposers.splice(0).reverse().forEach(dispose => dispose()); });
 const north = { kind: 'workspace', id: 'north' } as const;
 const south = { kind: 'workspace', id: 'south' } as const;
+
+async function chooseWorkspace(name: string) {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: '工作空间: 工作空间 / north' }));
+  await user.click(await screen.findByRole('button', { name }));
+}
 
 async function mount() {
   const user: StarterUser = { id: 'routing-user', name: 'Routing user', roles: [], workspaces: [north, south] };
@@ -74,7 +80,7 @@ describe('workspace navigation commits before auth scope changes', () => {
     const native = f.auth.requestContext();
     const input = screen.getByRole('textbox', { name: 'Editor name' });
     fireEvent.change(input, { target: { value: 'Keep draft' } });
-    await selectOption(screen.getByRole('combobox', { name: '工作空间' }), 'south');
+    await chooseWorkspace('south');
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('返回后可选择恢复；未保存的更改不会提交。');
     expect(f.router.state.location.search).toBe('?view=table&scopeKind=workspace&scopeId=north');
@@ -100,7 +106,7 @@ describe('workspace navigation commits before auth scope changes', () => {
     const committedAtSwitch: string[] = [];
     const original = f.originalSwitchScope;
     f.switchScope.mockImplementation(scope => { committedAtSwitch.push(f.router.state.location.search); return original(scope); });
-    await selectOption(screen.getByRole('combobox', { name: '工作空间' }), 'south');
+    await chooseWorkspace('south');
     const dialog = await screen.findByRole('alertdialog');
     expect(f.switchScope).not.toHaveBeenCalled(); expect(native.signal.aborted).toBe(false);
     await act(async () => { fireEvent.click(within(dialog).getByRole('button', { name: '保留草稿并离开' })); });

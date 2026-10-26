@@ -11,8 +11,13 @@
   border-inline-start: 1px solid var(--border);
 }
 @media (max-width: 1000px) {
-  .template-workspace .template-scope-selector { font-size: 0; gap: 0; }
-  .template-workspace .template-scope-selector [role='combobox'] { font-size: 0.75rem; }
+  .template-workspace .template-scope-selector {
+    font-size: 0;
+    gap: 0;
+  }
+  .template-workspace .template-scope-selector [role='combobox'] {
+    font-size: 0.75rem;
+  }
 }
 
 /* Query fields share the app's flex row. Match the public unlayered fallback
@@ -30,4 +35,10 @@
   .starter-builtin-form .pattern-field-grid.pattern-schema-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Match toolbar gutters while keeping horizontal scrolling inside the card. */
+.template-workspace .native-table-scroll {
+  margin-inline: 8px;
+  max-width: calc(100% - 16px);
 }

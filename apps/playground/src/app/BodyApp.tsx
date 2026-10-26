@@ -124,6 +124,7 @@ export function BodyApp({ children }: { children: ReactNode }) {
           mobileAccount={state.user ? <ShellActions showUpdates={false} /> : <Link to="/login">{t('login')}</Link>}
           foundationTools={({ headerAvailable, headerTarget }) => (
             <FoundationTools
+              quickAppearance
               sessionKey={`playground:${state.user?.id ?? 'anonymous'}`}
               headerAvailable={headerAvailable}
               headerTarget={headerTarget}

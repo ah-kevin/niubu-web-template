@@ -529,5 +529,6 @@
   "system.append": "新增下级",
   "system.appendAction": "新增下级 {{name}}",
   "examples.tables.tree": "三层树表",
-  "productName": "管理后台样板"
+  "productName": "管理后台样板",
+  "system.list.menus": "菜单列表"
 }

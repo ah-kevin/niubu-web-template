@@ -548,5 +548,17 @@
   "examples.tables.recordDetails": "Record details",
   "examples.tables.localOnly": "All data is synthetic. Confirmation updates only this page and sends no business request.",
   "examples.tables.confirmedDemo": "Local demonstration confirmed.",
-  "examples.tables.treeAlignment": "Tree alignment"
+  "examples.tables.treeAlignment": "Tree alignment",
+  "examples.application.contextTitle": "Work context",
+  "examples.application.contextIntro": "One trigger opens organizations and scopes. Browsing another organization does not select a scope; switching loads its scopes. This only changes the synthetic example.",
+  "examples.application.contextOrganization": "Organization",
+  "examples.application.contextRange": "Scope",
+  "examples.application.contextNorth": "Northern example",
+  "examples.application.contextSouth": "Southern example",
+  "examples.application.contextAll": "Organization scope",
+  "examples.application.contextTeam": "Project team",
+  "examples.application.contextFixed": "Fixed example",
+  "examples.application.contextSwitch": "Switch to this organization",
+  "examples.application.contextSwitchHint": "Switch organizations to load its available scopes.",
+  "examples.application.contextEmpty": "No available scopes"
 }

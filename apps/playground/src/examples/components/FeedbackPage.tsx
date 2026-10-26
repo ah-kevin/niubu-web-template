@@ -100,6 +100,7 @@ function RecordEditor({
   }
   return (
     <Shell
+      size={kind === 'Drawer' ? 'wide' : undefined}
       open
       onOpenChange={open => {
         if (!open) close();

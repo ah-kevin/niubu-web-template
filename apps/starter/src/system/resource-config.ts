@@ -29,7 +29,7 @@ export const resourceConfig = {
   },
   menus: {
     titleKey: 'system.menus',
-    listTitleKey: null,
+    listTitleKey: 'system.list.menus',
     createKey: 'system.create.menus',
     icon: 'menu',
     fields: ['title', 'kind', 'parentId', 'order', 'pageId', 'href', 'openInNewWindow', 'enabled'],
