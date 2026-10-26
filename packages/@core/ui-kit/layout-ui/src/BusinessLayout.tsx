@@ -70,6 +70,7 @@ export type AppLayoutProps = {
   notifications?: ReactNode;
   userMenu?: ReactNode;
   scopeSelector?: ReactNode;
+  sidebarContext?: (options: { compact: boolean }) => ReactNode;
   sidebarBottom?: ReactNode;
   mobileAccount?: ReactNode;
   breadcrumbs?: ReactNode;
@@ -283,6 +284,11 @@ export function BusinessLayout(p: AppLayoutProps) {
           }}
         >
           <div className="layout-logo flex shrink-0 items-center overflow-hidden px-[12px]">{p.logo}</div>
+          {p.sidebarContext && (
+            <div className="layout-sidebar-context shrink-0 min-w-0 px-2 pb-3 pt-1">
+              {p.sidebarContext({ compact: m.sidebarVisuallyCollapsed || m.primaryKind === 'rail' })}
+            </div>
+          )}
           <div className="layout-navigation-scroll">
             {m.primaryKind === 'rail'
               ? selectors(p.primaryNodes ?? [], p.labels.navigation, p.selectedPrimaryId, p.onSelectPrimary)
@@ -397,6 +403,7 @@ export function BusinessLayout(p: AppLayoutProps) {
       >
         <div className="context-actions flex min-w-0 items-center gap-[8px]">
           {opener}
+          {(!p.sidebarContext || !m.sidebarEnabled) && p.scopeSelector}
           {p.breadcrumbs}
           {m.recoveryRequired && (
             <Button variant="outline" onClick={p.onRestoreLayout}>
@@ -404,7 +411,6 @@ export function BusinessLayout(p: AppLayoutProps) {
             </Button>
           )}
           {m.headerPlacement === 'full' && !m.sidebarEnabled && p.logo}
-          {p.scopeSelector}
           {p.mode && (
             <section className="workspace-page-context relative min-w-0 shrink-0" aria-label={p.labels.pageContext}>
               {p.mode}

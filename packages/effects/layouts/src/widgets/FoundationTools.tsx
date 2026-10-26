@@ -1,11 +1,33 @@
-import { lazy, Suspense, useId, useRef, useState, useMemo, useLayoutEffect, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useId,
+  useRef,
+  useState,
+  useMemo,
+  useLayoutEffect,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import type { WidgetId } from '@niubu/core-preferences';
 import { widgetIds } from '@niubu/core-preferences';
 import { PendingOverlay } from '@niubu/layout-ui';
 import { usePreferenceManager, usePreferenceSnapshot, type PersistenceResult } from '@niubu/preferences';
 import { useTranslation } from '@niubu/locales/react';
-import { Search, SlidersHorizontal, Bell, Sun, Globe, Maximize, RefreshCw, Clock, Settings2 } from '@niubu/icons';
+import {
+  Search,
+  SlidersHorizontal,
+  Bell,
+  Sun,
+  Moon,
+  Check,
+  Globe,
+  Maximize,
+  RefreshCw,
+  Clock,
+  Settings2,
+} from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@niubu/shadcn-ui/dialog';
 import {
@@ -35,6 +57,12 @@ const icons = {
   refresh: RefreshCw,
   notification: Bell,
 };
+const systemDark = () => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+const subscribeSystemDark = (notify: () => void) => {
+  const media = window.matchMedia?.('(prefers-color-scheme: dark)');
+  media?.addEventListener('change', notify);
+  return () => media?.removeEventListener('change', notify);
+};
 /** One stable shell owner; moving a launcher never recreates a manager, route, or overlay owner. */
 export function FoundationTools({
   search,
@@ -46,10 +74,13 @@ export function FoundationTools({
   headerTarget,
   onRefresh,
   shortcutsEnabled = true,
+  quickAppearance = false,
 }: FoundationToolsProps) {
   const { t, snapshot: localeStatus } = useTranslation();
   const manager = usePreferenceManager();
   const { core } = usePreferenceSnapshot();
+  const prefersDark = useSyncExternalStore(subscribeSystemDark, systemDark);
+  const dark = core.theme.mode === 'dark' || (core.theme.mode === 'system' && prefersDark);
   const recovery = useRef<HTMLButtonElement>(null);
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const fixedMenuTrigger = useRef<HTMLButtonElement>(null);
@@ -143,7 +174,8 @@ export function FoundationTools({
         : 'shell:preferences.field.general.displayTimeZone',
   );
   const activate = (widget: WidgetId, target?: HTMLElement | null) => {
-    if (widget === 'fullscreen') void fullscreen.toggle();
+    if (quickAppearance && widget === 'theme') updateQuick({ theme: { mode: dark ? 'light' : 'dark' } });
+    else if (widget === 'fullscreen') void fullscreen.toggle();
     else if (widget === 'refresh') onRefresh?.();
     else open(widget, target);
   };
@@ -168,7 +200,73 @@ export function FoundationTools({
   const fixedMenuWidgets = narrowWindow || groups.fixed.length > 3 ? groups.fixed.splice(0) : [];
   if (!available) fixedMenuWidgets.push(...groups['user-dropdown'].splice(0));
   const trigger = (widget: WidgetId, menu = false, owner: 'header' | 'fixed' = 'header'): ReactNode => {
-    const Icon = icons[widget];
+    const Icon = quickAppearance && widget === 'theme' ? (dark ? Moon : Sun) : icons[widget];
+    if (quickAppearance && (widget === 'language' || widget === 'timezone')) {
+      const values =
+        widget === 'language'
+          ? ['zh-CN', 'en-US']
+          : [
+              ...new Set([
+                core.general.displayTimeZone,
+                'Asia/Shanghai',
+                'UTC',
+                'America/New_York',
+                'Europe/London',
+                'Asia/Tokyo',
+              ]),
+            ];
+      const selected = widget === 'language' ? core.locale : core.general.displayTimeZone;
+      const choices = values.map(locale => (
+        <DropdownMenuItem
+          key={locale}
+          onSelect={() => {
+            updateQuick(
+              widget === 'language'
+                ? { locale: locale as typeof core.locale }
+                : { general: { displayTimeZone: locale } },
+            );
+            setMenuOpen(false);
+            setFixedMenuOpen(false);
+          }}
+        >
+          <Check size={14} aria-hidden="true" className={selected === locale ? '' : 'invisible'} />
+          {widget === 'language' ? t(`shell:preferences.option.${locale}`) : locale}
+        </DropdownMenuItem>
+      ));
+      if (menu)
+        return (
+          <div key={widget} role="group" aria-label={label(widget)}>
+            <p className="px-2 pt-2 pb-1 text-xs text-muted-foreground">{label(widget)}</p>
+            {choices}
+          </div>
+        );
+      return (
+        <DropdownMenu key={widget}>
+          <Tooltip
+            content={widget === 'timezone' ? `${label(widget)} · ${core.general.displayTimeZone}` : label(widget)}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="foundation-tool-trigger size-[30px] p-0"
+                variant="ghost"
+                size="icon"
+                aria-label={label(widget)}
+                data-widget-id={widget}
+                data-widget-position={resolveWidgetPlacement(core.widget[widget].position, available)}
+              >
+                <Icon size={17} aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+          </Tooltip>
+          <DropdownMenuPortal>
+            <DropdownMenuContent align="end" sideOffset={6}>
+              {choices}
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenu>
+      );
+    }
+    const direct = ['fullscreen', 'refresh'].includes(widget) || (quickAppearance && widget === 'theme');
     const disabled =
       (widget === 'refresh' && !onRefresh) ||
       (widget === 'fullscreen' &&
@@ -188,16 +286,22 @@ export function FoundationTools({
         }
         data-widget-id={widget}
         data-widget-position={menu ? 'user-dropdown' : resolveWidgetPlacement(core.widget[widget].position, available)}
-        data-slot={widget === 'notification' ? 'sheet-trigger' : 'dialog-trigger'}
+        data-slot={direct ? undefined : widget === 'notification' ? 'sheet-trigger' : 'dialog-trigger'}
         data-state={overlay.open && kind === widget ? 'open' : 'closed'}
         variant="ghost"
         size={menu ? 'default' : 'icon'}
         aria-label={label(widget)}
-        aria-controls={id}
-        aria-haspopup={['fullscreen', 'refresh'].includes(widget) ? undefined : 'dialog'}
-        aria-expanded={['fullscreen', 'refresh'].includes(widget) ? undefined : overlay.open && kind === widget}
+        aria-controls={direct ? undefined : id}
+        aria-haspopup={direct ? undefined : 'dialog'}
+        aria-expanded={direct ? undefined : overlay.open && kind === widget}
         disabled={disabled}
-        aria-pressed={widget === 'fullscreen' ? fullscreen.snapshot.active : undefined}
+        aria-pressed={
+          widget === 'fullscreen'
+            ? fullscreen.snapshot.active
+            : quickAppearance && widget === 'theme'
+              ? dark
+              : undefined
+        }
         aria-busy={(widget === 'fullscreen' && fullscreen.snapshot.status === 'pending') || undefined}
         onClick={event =>
           activate(
@@ -289,6 +393,19 @@ export function FoundationTools({
           role="status"
         >
           {t('shell:tools.fullscreenError')}
+        </p>
+      )}
+      {quickAppearance && (localeStatus.status !== 'ready' || quickResult?.kind === 'memory') && (
+        <p
+          role="status"
+          className="foundation-tool-status fixed right-3 bottom-3 z-40 max-w-sm rounded-md border border-border bg-card p-3 text-sm"
+        >
+          {localeStatus.status !== 'ready'
+            ? t(
+                localeStatus.status === 'error' ? 'shell:preferences.localeFailed' : 'shell:preferences.localePending',
+                { preferred: localeStatus.preferredLocale, active: localeStatus.activeLocale },
+              )
+            : t('shell:preferences.notSaved')}
         </p>
       )}
       {overlay.open && (

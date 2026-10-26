@@ -62,6 +62,7 @@ export {
   Tractor,
   Trash2,
   TriangleAlert,
+  UserRound,
   Users,
   Wrench,
   X,

@@ -321,3 +321,15 @@ it('restorable legacy forms optionally filter a stored draft before reset, witho
   expect(form.getValues().password).not.toBe('never restore');
   expect(form.formState.isDirty).toBe(true);
 });
+
+it('uses an external title while retaining a named form and dirty cancellation',async()=>{
+ render(<View headerMode="external" onSubmit={async()=>{}} />);
+ expect(screen.getByRole('form',{name:'Live editor'})).toBeInTheDocument();
+ expect(screen.queryByRole('heading',{name:'Live editor'})).not.toBeInTheDocument();
+ expect(screen.queryByText('请核对资料后保存。')).not.toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Name'),{target:{value:'Keep this input'}});
+ fireEvent.click(screen.getByRole('button',{name:'取消'}));
+ const guard=await screen.findByRole('alertdialog');
+ fireEvent.click(within(guard).getByRole('button',{name:'继续编辑'}));
+ expect(screen.getByLabelText('Name')).toHaveValue('Keep this input');
+});

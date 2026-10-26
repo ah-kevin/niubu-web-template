@@ -44,3 +44,37 @@ export function formatQuantity(
   if (quality !== 'known') return `${labels[quality]}${measure.unit ? ` · ${measure.unit}` : ''}`;
   return `${new Intl.NumberFormat(locale, options).format(measure.value!)}${measure.unit ? ` ${measure.unit}` : ''}`;
 }
+
+/** Wall-clock input uses an explicit IANA zone, independently from the host OS. */
+export function formatLocalDateTime(at: number, timeZone: string): string {
+  if (typeof timeZone !== 'string' || !timeZone) throw new RangeError('Explicit IANA timezone required');
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(at);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value ?? '';
+  return `${part('year').padStart(4, '0')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}:${part('second')}`;
+}
+/** Reject missing/ambiguous DST wall times rather than silently selecting an offset. */
+export function parseLocalInstant(value: string, timeZone: string): string {
+  if (typeof timeZone !== 'string' || !timeZone) throw new RangeError('Explicit IANA timezone required');
+  const wall = value.length === 16 ? value + ':00' : value;
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(wall)) throw new RangeError('Invalid local time');
+  const nominal = Date.parse(wall + 'Z');
+  if (!Number.isFinite(nominal) || new Date(nominal).toISOString().slice(0, 19) !== wall)
+    throw new RangeError('Invalid local time');
+  const offsets = new Set<number>();
+  for (let hours = -36; hours <= 36; hours += 6) {
+    const at = nominal + hours * 3600_000;
+    offsets.add(Date.parse(formatLocalDateTime(at, timeZone) + 'Z') - at);
+  }
+  const matches = [...offsets].map(offset => nominal - offset).filter(at => formatLocalDateTime(at, timeZone) === wall);
+  if (matches.length !== 1) throw new RangeError('Missing or ambiguous local time');
+  return new Date(matches[0]!).toISOString();
+}

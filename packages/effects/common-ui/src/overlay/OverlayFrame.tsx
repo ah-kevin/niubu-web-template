@@ -41,7 +41,8 @@ export function OverlayFrame({
   onRequestClose,
   confirmLabel,
   cancelLabel,
-}: OverlayProps & { variant: 'modal' | 'drawer' }) {
+  size = 'default',
+}: OverlayProps & { size?: 'default' | 'wide'; variant: 'modal' | 'drawer' }) {
   const labels = useOverlayLabels();
   const previousFocus = useRef<HTMLElement | null>(null);
   const Root = variant === 'modal' ? Dialog : Sheet;
@@ -89,7 +90,7 @@ export function OverlayFrame({
             className={
               variant === 'modal'
                 ? 'pattern-overlay pattern-overlay-modal flex max-h-[calc(90dvh-1rem)] flex-col gap-0 overflow-hidden p-0'
-                : 'pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-hidden sm:max-w-lg [@media(max-width:700px)]:w-full [@media(max-width:700px)]:max-w-full'
+                : `pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-hidden ${size === 'wide' ? 'w-[min(56rem,100vw)] sm:max-w-4xl' : 'sm:max-w-lg'} [@media(max-width:700px)]:w-full [@media(max-width:700px)]:max-w-full`
             }
             showCloseButton={false}
             data-fullscreen={fullscreen || undefined}

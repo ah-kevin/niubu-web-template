@@ -54,6 +54,10 @@ export type FormFrameProps<T extends FieldValues> = {
   children: ReactNode;
   review?: ReactNode;
   headingLevel?: 1 | 2;
+  /** External containers provide the visible heading; the form keeps its accessible name. */
+  headerMode?: 'visible' | 'external';
+  /** Omit to keep default guidance, or pass null when no introduction is needed. */
+  description?: string | null;
   reviewReady?: boolean;
   onCancelRequest?: () => void;
   onSubmit?: (values: T, context: { signal: AbortSignal }) => Promise<void>;
@@ -78,6 +82,8 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
     children,
     review,
     headingLevel = 1,
+    headerMode = 'visible',
+    description,
     reviewReady = true,
     operationKey,
     draftFilter,
@@ -259,15 +265,22 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
       <form
         ref={formElement}
         id={formId}
+        aria-label={headerMode === 'external' ? title : undefined}
         className="pattern-form-frame min-w-0 max-w-full"
         noValidate
         onSubmit={reviewInputs}
       >
-        <PageHeader
-          headingLevel={headingLevel}
-          title={title}
-          description={t(onSubmit ? 'common:form.liveDescription' : 'common:form.description')}
-        />
+        {headerMode === 'visible' && (
+          <PageHeader
+            headingLevel={headingLevel}
+            title={title}
+            description={
+              description === undefined
+                ? t(onSubmit ? 'common:form.liveDescription' : 'common:form.description')
+                : (description ?? undefined)
+            }
+          />
+        )}
         {hasErrors && checked && (
           <div
             className="pattern-form-error-summary mb-[var(--workspace-section-gap)] rounded-[var(--radius)] border border-destructive border-l-[3px] bg-card p-[var(--workspace-card-padding)] text-[length:var(--workspace-caption-font-size)] leading-[1.8] text-destructive [&_ul]:mt-[8px] [&_ul]:pl-[18px]"

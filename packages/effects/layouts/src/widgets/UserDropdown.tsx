@@ -1,6 +1,7 @@
 import { useId, type ReactElement, type ReactNode } from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import { Button } from '@niubu/shadcn-ui/button';
+import { UserRound } from '@niubu/icons';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -27,8 +28,19 @@ export function UserDropdown({ displayName, profile, trigger, lock, logout, chil
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {trigger ?? (
-          <Button type="button" variant="ghost" aria-label={t('user.menu')}>
-            {displayName}
+          <Button
+            type="button"
+            variant="ghost"
+            className="max-[520px]:size-[var(--control-height)] max-[520px]:p-0"
+            aria-label={t('user.menu')}
+          >
+            <span
+              className="max-w-44 truncate max-[900px]:max-w-24 max-[700px]:max-w-16 max-[520px]:hidden"
+              title={displayName}
+            >
+              {displayName}
+            </span>
+            <UserRound size={16} aria-hidden="true" className="hidden max-[520px]:block" />
           </Button>
         )}
       </DropdownMenuTrigger>

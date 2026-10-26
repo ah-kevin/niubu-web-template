@@ -6,6 +6,8 @@ export type FoundationToolsProps = {
   headerTarget: HTMLElement | null;
   onRefresh?: () => void;
   shortcutsEnabled?: boolean;
+  /** Use a direct light/dark toggle and compact locale menu. Defaults to the existing dialogs. */
+  quickAppearance?: boolean;
   search: SearchOptions;
   notifications: NotificationOptions;
   renderPreferences: OverlayRenderer;

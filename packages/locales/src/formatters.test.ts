@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateOnly, formatInstant, formatCurrency, formatQuantity } from './formatters';
+import { formatDateOnly, formatInstant, formatCurrency, formatQuantity, formatLocalDateTime, parseLocalInstant } from './formatters';
 import { businessDateAt } from '@niubu/core-shared';
 describe('explicit display formatters preserve facts', () => {
   it('uses a UTC calendar carrier with medium dates and validates real calendar days', () => {
@@ -54,4 +54,19 @@ it('never falls back to machine locale or machine timezone when an explicit opti
   expect(() => formatDateOnly('2026-10-11', { locale: undefined } as never)).toThrow(RangeError);
   expect(formatInstant('2026-10-11T00:00:00Z', { locale: 'en-US', timeZone: undefined } as never)).toBe('Time unknown');
   expect(() => formatCurrency(12, { locale: undefined, currency: 'CNY', precision: 2 } as never)).toThrow(RangeError);
+});
+
+it('converts explicit IANA wall times independently from the OS and rejects DST ambiguity',()=>{
+ expect(formatLocalDateTime(Date.parse('2026-10-25T00:00:00Z'),'Asia/Shanghai')).toBe('2026-10-25T08:00:00');
+ expect(parseLocalInstant('2026-10-25T08:00','UTC')).toBe('2026-10-25T08:00:00.000Z');
+ expect(parseLocalInstant('2026-07-01T08:00','America/New_York')).toBe('2026-07-01T12:00:00.000Z');
+ expect(()=>parseLocalInstant('2026-11-01T01:30','America/New_York')).toThrow();
+ expect(()=>parseLocalInstant('2026-03-08T02:30','America/New_York')).toThrow();
+});
+
+it('requires explicit nonempty runtime timezones for local wall-time conversion',()=>{
+ for(const timeZone of [undefined as never,'']) {
+  expect(()=>formatLocalDateTime(Date.parse('2026-10-25T00:00:00Z'),timeZone)).toThrow(RangeError);
+  expect(()=>parseLocalInstant('2026-10-25T08:00',timeZone)).toThrow(RangeError);
+ }
 });

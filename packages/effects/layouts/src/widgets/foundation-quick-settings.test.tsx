@@ -79,3 +79,45 @@ it('returns to the same visible header tool when its portal host was replaced wh
     await waitFor(() => expect(current).toHaveFocus());
   } finally { first.remove(); second.remove(); vi.unstubAllGlobals(); }
 });
+
+async function mountCompact() {
+  const manager = makeManager();
+  manager.update({ locale: 'en-US' });
+  const view = await renderWidgets(<FoundationTools quickAppearance sessionKey="compact" headerAvailable={false} headerTarget={null}
+    search={{ locale: 'en-US', pages: [], renderLink: props => <a {...props} /> }}
+    notifications={{ items: [], renderLink: props => <a {...props} /> }} renderPreferences={() => null} />, manager);
+  return view;
+}
+
+it('toggles the effective theme immediately from the overflow menu without opening a dialog', async () => {
+  const { manager } = await mountCompact();
+  manager.update({ theme: { mode: 'light' } });
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Workspace tools' }));
+  await user.click(await screen.findByRole('menuitem', { name: 'Choose theme' }));
+  expect(manager.getSnapshot().core.theme.mode).toBe('dark');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  await user.click(screen.getByRole('button', { name: 'Workspace tools' }));
+  await user.click(await screen.findByRole('menuitem', { name: 'Choose theme' }));
+  expect(manager.getSnapshot().core.theme.mode).toBe('light');
+});
+
+it('chooses language directly in the compact tools menu and returns focus to the tools trigger', async () => {
+  const { manager } = await mountCompact();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Workspace tools' }));
+  await user.click(await screen.findByRole('menuitem', { name: 'Simplified Chinese' }));
+  expect(manager.getSnapshot().core.locale).toBe('zh-CN');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Workspace tools' })).toHaveFocus());
+});
+
+it('chooses display timezone directly without opening a dialog', async () => {
+  const { manager } = await mountCompact();
+  manager.update({ widget: { timezone: { enabled: true } } });
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Workspace tools' }));
+  await user.click(await screen.findByRole('menuitem', { name: 'UTC' }));
+  expect(manager.getSnapshot().core.general.displayTimeZone).toBe('UTC');
+  expect(screen.queryByRole('dialog')).toBeNull();
+});

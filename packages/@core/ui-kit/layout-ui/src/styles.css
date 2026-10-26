@@ -79,6 +79,7 @@
 .foundation-layout .layout-primary-pane[data-visually-collapsed='true'] .sidebar-bottom { padding-inline: 4px; }
 @media (max-width: 1150px) {
   .foundation-layout .context-actions > .breadcrumbs { max-width: 16vw; }
+  .foundation-layout .context-actions:has(.workspace-context-switcher) > .breadcrumbs { display: none; }
   .foundation-layout .header-actions { flex-basis: 196px; }
 }
 @media (max-width: 700px) {

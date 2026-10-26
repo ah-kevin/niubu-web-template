@@ -24,3 +24,5 @@ export * from '../hooks';
 
 export { Breadcrumbs } from './Breadcrumbs';
 export type { BreadcrumbsProps, BreadcrumbItem } from './Breadcrumbs';
+export { WorkspaceContext } from './WorkspaceContext';
+export type { WorkspaceContextProps, WorkspaceContextGroup, WorkspaceContextOption } from './WorkspaceContext';

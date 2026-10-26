@@ -19,7 +19,7 @@ export type OverlayProps = {
 };
 
 export type ModalProps = OverlayProps;
-export type DrawerProps = OverlayProps;
+export type DrawerProps = OverlayProps & { size?: 'default' | 'wide' };
 export type OverlayOptions = { title: ReactNode; description?: ReactNode; signal?: AbortSignal };
 export type OverlayApi = {
   confirm: (options: OverlayOptions) => Promise<boolean>;

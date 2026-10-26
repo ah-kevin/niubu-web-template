@@ -238,3 +238,12 @@ it('reserves restorable auto chrome, excludes static chrome and exposes only an 
   expect(inset()).toBe('0px');
   expect((view.container.firstElementChild as HTMLElement).style.getPropertyValue('--focus-reveal-inset-bottom')).toBe('32px');
 });
+
+it('places context below the desktop brand and uses the header fallback on mobile or without a sidebar',()=>{
+ const p=props(),renderContext=vi.fn(({compact}:{compact:boolean})=><button>{compact?'Compact context':'Sidebar context'}</button>),view=render(<BusinessLayout {...p} sidebarContext={renderContext} scopeSelector={<button>Header context</button>}/>);
+ const sidebar=screen.getByRole('complementary',{name:'Sidebar'});expect(within(sidebar).getByRole('button',{name:'Sidebar context'})).toBeVisible();expect(sidebar.querySelector('.layout-logo')!.nextElementSibling).toContainElement(screen.getByRole('button',{name:'Sidebar context'}));expect(screen.queryByRole('button',{name:'Header context'})).toBeNull();
+ view.rerender(<BusinessLayout {...p} model={resolveBusinessLayout({...corePreferenceDefaults,sidebar:{...corePreferenceDefaults.sidebar,collapsed:true}},'desktop')} sidebarContext={renderContext} scopeSelector={<button>Header context</button>}/>);expect(screen.getByRole('button',{name:'Compact context'})).toBeVisible();
+ view.rerender(<BusinessLayout {...p} model={resolveBusinessLayout(corePreferenceDefaults,'mobile')} sidebarContext={renderContext} scopeSelector={<button>Header context</button>}/>);expect(screen.getByRole('button',{name:'Header context'})).toBeVisible();expect(screen.queryByRole('button',{name:'Sidebar context'})).toBeNull();
+ view.rerender(<BusinessLayout {...p} model={resolveBusinessLayout({...corePreferenceDefaults,sidebar:{...corePreferenceDefaults.sidebar,enabled:false}},'desktop')} sidebarContext={renderContext} scopeSelector={<button>Header context</button>}/>);expect(screen.getByRole('button',{name:'Header context'})).toBeVisible();
+ view.rerender(<BusinessLayout {...p} model={resolveBusinessLayout({...corePreferenceDefaults,layout:{...corePreferenceDefaults.layout,mode:'full-content'}},'desktop')} sidebarContext={renderContext} scopeSelector={<button>Header context</button>}/>);expect(within(screen.getByRole('region',{name:'Layout recovery'})).getByRole('button',{name:'Header context'})).toBeVisible();
+});
