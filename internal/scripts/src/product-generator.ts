@@ -87,6 +87,7 @@ const allowedRoots = [
 function allowed(path: string) {
   const parts = path.split('/');
   return (
+    !path.startsWith('internal/scripts/src/template-sync') &&
     !parts.some(
       part =>
         ['node_modules', 'dist', '.git', '.turbo', '.superpowers', '.pnpm-store', '.output', '.nitro'].includes(part) ||
