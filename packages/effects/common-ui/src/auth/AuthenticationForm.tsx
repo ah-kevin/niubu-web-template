@@ -24,6 +24,8 @@ export interface AuthenticationLinkProps {
 export interface AuthenticationFormProps {
   mode: AuthenticationMode;
   loginIdentifier?: 'email' | 'username';
+  /** Optional initial field values; subsequent renders preserve user edits. */
+  defaultValues?: Readonly<AuthenticationValues>;
   fieldIds?: Readonly<{ email?: string; password?: string }>;
   labels: {
     eyebrow: ReactNode;
@@ -53,6 +55,7 @@ export function AuthenticationForm(props: AuthenticationFormProps) {
 function AuthenticationFields({
   mode,
   loginIdentifier = 'email',
+  defaultValues,
   fieldIds,
   labels,
   links,
@@ -149,6 +152,7 @@ function AuthenticationFields({
             ref={emailRef}
             type={usernameLogin ? 'text' : 'email'}
             name="email"
+            defaultValue={defaultValues?.email}
             autoComplete={usernameLogin ? 'username' : 'email'}
             placeholder={labels.emailPlaceholder}
             required
@@ -179,6 +183,7 @@ function AuthenticationFields({
               ref={passwordRef}
               type="password"
               name="password"
+              defaultValue={defaultValues?.password}
               autoComplete="current-password"
               placeholder={labels.passwordPlaceholder}
               required

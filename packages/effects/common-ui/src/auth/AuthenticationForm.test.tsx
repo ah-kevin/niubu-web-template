@@ -239,3 +239,15 @@ describe('AuthenticationForm cancellation', () => {
     expect(form).toHaveAttribute('aria-busy', 'false');
   });
 });
+
+
+it('uses explicit initial values without overwriting later edits on rerender', async () => {
+ const submit=vi.fn(async()=>({kind:'success' as const}));
+ const view=render(<AuthenticationForm {...base} defaultValues={{email:'demo@example.invalid',password:'synthetic'}} onSubmit={submit}/>);
+ expect(screen.getByLabelText('Email')).toHaveValue('demo@example.invalid');
+ expect(screen.getByLabelText('Password')).toHaveValue('synthetic');
+ fill();view.rerender(<AuthenticationForm {...base} defaultValues={{email:'other@example.invalid',password:'other'}} onSubmit={submit}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Continue'}));
+ expect(await screen.findByRole('status')).toHaveTextContent('Complete');
+ expect(submit).toHaveBeenCalledWith({email:'reader@example.invalid',password:' example password '},expect.any(AbortSignal));
+});
