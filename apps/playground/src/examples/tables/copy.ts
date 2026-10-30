@@ -40,6 +40,7 @@ export const tablesCopy = {
   'examples.tables.viewDetails': '查看详情',
   'examples.tables.openDialog': '打开对话框',
   'examples.tables.unavailableAction': '不可用动作',
+  'examples.tables.openLink': '链接动作',
   'examples.tables.confirmDemo': '确认演示动作',
   'examples.tables.recordDetails': '记录详情',
   'examples.tables.localOnly': '全部为合成数据；确认只更新本页提示，不发起业务请求。',

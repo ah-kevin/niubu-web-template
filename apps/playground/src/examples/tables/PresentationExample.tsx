@@ -40,6 +40,7 @@ function PresentationActionCell({ row }: { row: { original: Sample } }) {
       actions={[
         { id: 'view', label: t('examples.tables.viewDetails'), onSelect: () => owner.onAction(record, 'detail') },
         { id: 'dialog', label: t('examples.tables.openDialog'), onSelect: () => owner.onAction(record, 'detail') },
+        { id: 'link', label: t('examples.tables.openLink'), href: '#table-presentation' },
         {
           id: 'unavailable',
           label: t('examples.tables.unavailableAction'),

@@ -551,6 +551,7 @@
   "examples.tables.viewDetails": "View details",
   "examples.tables.openDialog": "Open dialog",
   "examples.tables.unavailableAction": "Unavailable action",
+  "examples.tables.openLink": "Link action",
   "examples.tables.confirmDemo": "Confirm demo action",
   "examples.tables.recordDetails": "Record details",
   "examples.tables.localOnly": "All data is synthetic. Confirmation updates only this page and sends no business request.",

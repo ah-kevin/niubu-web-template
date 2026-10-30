@@ -37,3 +37,8 @@ it('confirms only a local demonstration and displays no fabricated business resu
  const dialog=await screen.findByRole('dialog',{name:'确认演示动作'});fireEvent.click(within(dialog).getByRole('button',{name:'确定'}));
  await screen.findByText('已确认本地演示。');expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
+it('offers a link action that is a real anchor inside the row menu', async () => {
+ render(<PresentationExample scope="north" />);
+ fireEvent.pointerDown(screen.getByRole('button',{name:'演示记录 A 的更多操作'}),{button:0,ctrlKey:false});
+ expect(await screen.findByRole('menuitem',{name:'链接动作'})).toHaveAttribute('href','#table-presentation');
+});

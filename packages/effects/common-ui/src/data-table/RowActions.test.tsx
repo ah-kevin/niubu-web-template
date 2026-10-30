@@ -1,7 +1,7 @@
 import { flushSync } from 'react-dom';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import { RowActions, type RowAction } from './RowActions';
 import { Modal } from '../overlay';
@@ -92,4 +92,42 @@ it.each(['disabled', 'owner', 'unmount'] as const)('rechecks selected work after
   render(<Fixture />);const menu=await openMenu();armed=true;
   fireEvent.click(within(menu).getByRole('menuitem',{name:'编辑'}));
   await waitFor(()=>expect(armed).toBe(false));expect(edit).not.toHaveBeenCalled();
+});
+
+it('renders a primary href action as a link and never as a button', () => {
+  render(renderActions([{ id: 'details', label: '详情', href: '/tenants/detail?id=1' }]));
+  expect(screen.getByRole('link', { name: '详情' })).toHaveAttribute('href', '/tenants/detail?id=1');
+  expect(screen.queryByRole('button', { name: '详情' })).not.toBeInTheDocument();
+});
+it('uses the caller link renderer for primary and menu href actions', async () => {
+  const renderLink = vi.fn((href: string, children: ReactNode) => <a data-router-link="" href={`/app${href}`}>{children}</a>);
+  render(
+    <RowActions
+      ownerKey="scope-a:one"
+      rowLabel="Record One"
+      moreLabel="更多"
+      renderLink={renderLink}
+      actions={[
+        { id: 'details', label: '详情', href: '/one' },
+        { id: 'menus', label: '菜单', href: '/menus' },
+      ]}
+    />,
+  );
+  expect(screen.getByRole('link', { name: '详情' })).toHaveAttribute('href', '/app/one');
+  const item = within(await openMenu()).getByRole('menuitem', { name: '菜单' });
+  expect(item).toHaveAttribute('href', '/app/menus');
+  expect(item).toHaveAttribute('data-router-link');
+});
+it('does not retire the menu through the select path for href items and keeps onSelect actions working beside them', async () => {
+  const edit = vi.fn();
+  render(renderActions([viewAction, { id: 'menus', label: '菜单', href: '/menus' }, { id: 'edit', label: '编辑', onSelect: edit }]));
+  const menu = await openMenu();
+  expect(within(menu).getByRole('menuitem', { name: '菜单' })).toHaveAttribute('href', '/menus');
+  fireEvent.click(within(menu).getByRole('menuitem', { name: '编辑' }));
+  await waitFor(() => expect(edit).toHaveBeenCalledOnce());
+});
+it('renders a disabled href action as an inert disabled button without a link', () => {
+  render(renderActions([{ id: 'details', label: '详情', href: '/one', disabled: true }]));
+  expect(screen.queryByRole('link', { name: '详情' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '详情' })).toBeDisabled();
 });

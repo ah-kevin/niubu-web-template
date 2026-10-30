@@ -49,7 +49,7 @@ export type {
 } from './query-types';
 
 export { RowActions } from './RowActions';
-export type { RowAction, RowActionsProps } from './RowActions';
+export type { RowAction, RowActionLink, RowActionsProps } from './RowActions';
 export { CellText } from './CellText';
 export type { CellTextProps } from './CellText';
 export { CollectionCell } from './CollectionCell';
