@@ -54,7 +54,7 @@ export interface TableLabels {
 export type TableAlignment = 'start' | 'center' | 'end';
 
 export type BaseTableProps<T> = TableReadMetadata & {
-  /** Logical alignment; omitted values preserve the existing start-aligned table. */
+  /** Logical alignment; headers and cells are centered unless explicitly overridden. */
   align?: TableAlignment;
   /** Overrides are keyed by the current header/cell column ID, including group headers. */
   columnAlign?: Readonly<Record<string, TableAlignment>>;

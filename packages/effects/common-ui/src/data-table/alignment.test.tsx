@@ -30,8 +30,8 @@ it.each(['read', 'list', 'selectable-list', 'tree-list'] as const)('aligns heade
  expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'center' });
  expect(screen.getByRole('cell', { name: '42' })).toHaveStyle({ textAlign: 'end' });
 });
-it('keeps the original start alignment when no option is supplied', () => {
- render(<Fixture />);expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'start' });
+it('supports explicit start alignment', () => {
+ render(<Fixture align="start" />);expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'start' });
  expect(screen.getByRole('button', { name: '排序 Name' })).toHaveClass('justify-start', 'pe-6', 'text-start');
 });
 it('centers sorted header content using symmetric padding without changing resize controls', () => {
@@ -61,4 +61,12 @@ it('keeps a visible depth inset at the logical end of end-aligned tree cells', (
  const parent=screen.getByRole('button',{name:'收起 Alpha'}).closest('.pattern-tree-cell');
  const child=screen.getByRole('cell',{name:'Beta'}).querySelector('.pattern-tree-cell');
  expect(parent).toHaveStyle({paddingInlineEnd:'0px'});expect(child).toHaveStyle({paddingInlineEnd:'20px',paddingInlineStart:'0px'});expect(child).toHaveClass('justify-end');
+});
+
+it.each(['read', 'list', 'selectable-list', 'tree-list'] as const)('centers headers and cells by default for the %s profile', profile => {
+ render(<Fixture profile={profile} />);
+ expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveStyle({ textAlign: 'center' });
+ expect(screen.getByRole('columnheader', { name: /Score/ })).toHaveStyle({ textAlign: 'center' });
+ expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'center' });
+ expect(screen.getByRole('cell', { name: '42' })).toHaveStyle({ textAlign: 'center' });
 });
