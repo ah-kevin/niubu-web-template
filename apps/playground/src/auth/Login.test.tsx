@@ -56,6 +56,8 @@ describe('independent minimal login', () => {
     const fields = main.querySelectorAll('input');
     expect(fields).toHaveLength(2);
     expect(screen.getByLabelText('账号')).toHaveAttribute('type', 'email');
+    expect(screen.getByLabelText('账号')).toHaveValue('demo@playground.invalid');
+    expect(screen.getByLabelText('密码')).toHaveValue('demo-only');
     expect(screen.getByLabelText('密码')).toHaveAttribute('type', 'password');
     expect(main.querySelector('form')).toBeVisible();
     expect(main.querySelector('form')?.closest('.template-auth')).not.toBeNull();
@@ -74,6 +76,8 @@ describe('independent minimal login', () => {
   it('focuses the first invalid field, submits through the auth owner, and reports failure', async () => {
     const f = await mount();
     f.login.mockRejectedValueOnce(new Error('synthetic rejection'));
+    fireEvent.change(screen.getByLabelText('账号'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: '登录' }));
     expect(screen.getByLabelText('账号')).toHaveFocus();
     expect(screen.getByLabelText('账号')).toHaveAttribute('aria-invalid', 'true');

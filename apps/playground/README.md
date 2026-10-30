@@ -1,6 +1,6 @@
 # Template Playground
 
-独立模板的标准前端示范。首页 `/home` 可匿名访问；`/login` 使用合成演示账号。工作空间菜单、权限码、按钮、外链与嵌入示例使用公共 access/session/request/布局能力，页面 URL 和 loader 始终由代码登记。
+独立模板的标准前端示范。首页 `/home` 可匿名访问；`/login` 使用合成演示账号。本地开发登录页默认填好公开的合成演示账号和密码，可直接登录；生产构建和会话过期重登不预填。工作空间菜单、权限码、按钮、外链与嵌入示例使用公共 access/session/request/布局能力，页面 URL 和 loader 始终由代码登记。
 
 公开合成账户、权限范围与 DTO 统一见 [backend-mock README](../backend-mock/README.md)，不使用真实凭据。
 

@@ -13,6 +13,8 @@
 
 ## 工具区与表格
 
+- 模板表格默认表头与单元格居中；特殊列通过 `columnAlign` 单独覆盖，需要整表左/右对齐时显式传入 `align`。
+
 - 无筛选表的真实工具可与业务页签并排；有筛选表把字段、查询、重置、新增和工具合成一条紧凑带。保持可见或完整 ARIA label，窄屏有序换行，表格可横滚但 body 不横溢，不加横滚常识教程。
 - `DataTable.toolbar.render(node)` 只改变原 live toolbar 的渲染位置。用 React portal 放入当前页面自己的 commit-ref host，不复制 ColumnSettings/table 状态、不 imperative 搬 DOM、不在 render 向父组件注册 setState。host 未就绪可返回 null，owner/页签退休后旧工具也退出。
 - `toolbar.title: null` 去除重复标题；全屏时工具留在表格内部，退出控制必须可达；外置与内部切换导致按钮重新挂载时，只交接本次丢失的按钮焦点，不抢占其他仍连接控件。列显隐、宽度、恢复默认和选择摘要始终连同一个 table 实例。

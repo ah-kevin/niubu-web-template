@@ -28,6 +28,7 @@ it.each(['light', 'dark'])('uses the Vben large-control skin in both authenticat
       expect(matchingRules(rules, input, 'height').some(rule => rule.style.getPropertyValue('height') === 'var(--control-height-lg)')).toBe(true);
       expect(matchingRules(rules, input, 'font-size').some(rule => rule.style.getPropertyValue('font-size') === 'var(--control-font-size-lg)')).toBe(true);
     }
+    fireEvent.change(login, { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: '登录' }));
     expect(login).toHaveAttribute('aria-invalid', 'true');
     expect(login).toHaveFocus();

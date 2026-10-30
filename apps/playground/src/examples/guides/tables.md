@@ -13,6 +13,8 @@
 Use the existing typed table profiles and query controller. Synthetic fixtures make sorting, paging, selection, scoped preferences and cancellation visible without real business data or services. Unsupported VXE contracts remain deferred.
 
 
+默认表头与单元格居中；可通过 `align` 设置整表对齐，通过 `columnAlign` 单独覆盖某列。树表示例同样默认居中，并保留层级缩进。
+
 ## 呈现与行操作
 
 `PresentationExample.tsx` 使用公开 `@niubu/common-ui/data-table` 入口演示 `RowActions`、`CellText`、`CollectionCell` 及 `DataTable align/columnAlign`。整表可切换逻辑start/center/end，说明列显式覆盖为start；独立树表示例也可切换对齐；末端对齐使用末端留白保留可见深度，排序和列宽控件独立工作。

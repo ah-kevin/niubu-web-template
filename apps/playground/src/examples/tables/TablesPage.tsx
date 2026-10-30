@@ -175,7 +175,7 @@ function ExampleGroup({
 type TreeSample = { id: string; name: string; children?: readonly TreeSample[] };
 const treeHelper = createTreeColumnHelper<TreeSample>();
 function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
-  const [align, setAlign] = useState<TableAlignment>('start');
+  const [align, setAlign] = useState<TableAlignment>('center');
   const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
   const columns = useMemo(
     () =>

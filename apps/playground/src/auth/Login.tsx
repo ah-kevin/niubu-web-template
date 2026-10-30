@@ -19,6 +19,9 @@ export function LoginForm({ expired = false }: { expired?: boolean }) {
       <AuthenticationForm
         mode="login"
         loginIdentifier="email"
+        defaultValues={
+          import.meta.env.DEV && !expired ? { email: 'demo@playground.invalid', password: 'demo-only' } : undefined
+        }
         labels={{
           eyebrow: null,
           heading: expired ? t('login') : t('login.welcome'),
