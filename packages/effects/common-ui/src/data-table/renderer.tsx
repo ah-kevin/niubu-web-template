@@ -1,4 +1,5 @@
 import { columnAlignment } from './alignment';
+import { Loading, ReadState } from '../read-state';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
@@ -37,6 +38,18 @@ export function ReadMessage<T>({
       <div className="px-[18px] py-[32px]" role="status">
         {labels.cancelled ?? t('common:table.cancelled')}
         {props.emptyAction}
+      </div>
+    );
+  if (props.readState === 'pending' && props.statePresentation === 'feedback')
+    return <Loading label={labels.pending} />;
+  if (props.readState === 'error' && props.statePresentation === 'feedback')
+    return (
+      <div className="pattern-read-feedback">
+        <ReadState
+          status="error"
+          message={labels.error === t('common:read.error.title') ? undefined : labels.error}
+          actions={props.emptyAction ?? null}
+        />
       </div>
     );
   if (props.readState === 'pending')

@@ -31,6 +31,7 @@ export function ReadState({
   onNavigate,
   fallback = '',
   children,
+  actions,
 }: {
   status: keyof typeof titles;
   message?: string;
@@ -39,6 +40,7 @@ export function ReadState({
   onNavigate?: (href: string) => void;
   fallback?: string;
   children?: ReactNode;
+  actions?: ReactNode;
 }) {
   const { t } = useTranslation();
   const safeReturnTo = useReturnPathResolver();
@@ -59,28 +61,36 @@ export function ReadState({
         {message ?? t(explanations[status])}
       </p>
       {children}
-      <div className="pattern-state-actions mt-1 flex flex-wrap justify-center gap-2">
-        {status === 'error' && onRetry && (
-          <Button type="button" onClick={onRetry}>
-            {t('common:retry')}
-          </Button>
-        )}
-        {status === 'empty' && onReset && (
-          <Button type="button" variant="outline" onClick={onReset}>
-            {t('common:clearFilters')}
-          </Button>
-        )}
-        {status !== 'loading' &&
-          (onNavigate ? (
-            <Button type="button" variant="outline" onClick={() => onNavigate(href)}>
-              {t('common:backToWorkspace')}
-            </Button>
+      {actions !== null && (
+        <div className="pattern-state-actions mt-1 flex flex-wrap justify-center gap-2">
+          {actions === undefined ? (
+            <>
+              {status === 'error' && onRetry && (
+                <Button type="button" onClick={onRetry}>
+                  {t('common:retry')}
+                </Button>
+              )}
+              {status === 'empty' && onReset && (
+                <Button type="button" variant="outline" onClick={onReset}>
+                  {t('common:clearFilters')}
+                </Button>
+              )}
+              {status !== 'loading' &&
+                (onNavigate ? (
+                  <Button type="button" variant="outline" onClick={() => onNavigate(href)}>
+                    {t('common:backToWorkspace')}
+                  </Button>
+                ) : (
+                  <Button variant="outline" asChild>
+                    <a href={href}>{t('common:backToWorkspace')}</a>
+                  </Button>
+                ))}
+            </>
           ) : (
-            <Button variant="outline" asChild>
-              <a href={href}>{t('common:backToWorkspace')}</a>
-            </Button>
-          ))}
-      </div>
+            actions
+          )}
+        </div>
+      )}
     </section>
   );
 }

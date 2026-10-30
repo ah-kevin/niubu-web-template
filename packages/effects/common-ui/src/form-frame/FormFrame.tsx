@@ -4,6 +4,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -50,6 +51,8 @@ export type FormFrameProps<T extends FieldValues> = {
   draftKey: string;
   scopeKey: string;
   onCancel: () => void;
+  /** Offer an explicit draft-free exit. Existing callers preserve their two choices. */
+  allowDiscard?: boolean;
   groups?: readonly FormGroupDefinition<T>[];
   children: ReactNode;
   review?: ReactNode;
@@ -96,6 +99,10 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
   const service = usePreviewServiceMode();
   const { setDirty, writeDraft, removeDraft, runWithoutGuard } = useInteractionState();
   const instance = useId();
+  const cancelOwner = useMemo(() => ({ form, scopeKey, draftKey }), [form, scopeKey, draftKey]);
+  type CancelOwner = typeof cancelOwner;
+  const draftOwner = useRef<CancelOwner | null>(null);
+  const discardedBaseline = useRef<{ owner: CancelOwner; values: T } | null>(null);
   const formElement = useRef<HTMLFormElement>(null);
   const [operations] = useState(createOperationOwner);
   const generation = useRef(0);
@@ -109,7 +116,11 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
   useLayoutEffect(() => {
     latest.current = props;
   }, [props]);
-  const [cancel, setCancel] = useState(false);
+  const [cancel, setCancel] = useState<CancelOwner | null>(null);
+  const [discardNotification, setDiscardNotification] = useState<{ owner: CancelOwner; callback: () => void } | null>(
+    null,
+  );
+  const deliveredDiscard = useRef<typeof discardNotification>(null);
   const [checked, setChecked] = useState(false);
   const [invalidRequest, setInvalidRequest] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -151,21 +162,50 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
     notification.callback?.();
   }, [notification]);
   useEffect(() => {
+    if (!discardNotification || deliveredDiscard.current === discardNotification || !mounted.current) return;
+    const owner = discardNotification.owner,
+      current = latest.current;
+    // Consume even a retired owner’s notification; descriptor values may later return to A.
+    deliveredDiscard.current = discardNotification;
+    setDiscardNotification(null);
+    if (
+      owner !== cancelOwner ||
+      owner.form !== current.form ||
+      owner.scopeKey !== current.scopeKey ||
+      owner.draftKey !== current.draftKey
+    )
+      return;
+    discardNotification.callback();
+  }, [discardNotification, cancelOwner]);
+  useEffect(() => {
     setDirty(instance, isDirty);
-    if (isDirty) writeDraft(scopeKey, draftKey, draftFilter ? draftFilter(getValues()) : getValues());
-    else removeDraft(scopeKey, draftKey);
+    if (isDirty) {
+      draftOwner.current = cancelOwner;
+      writeDraft(scopeKey, draftKey, draftFilter ? draftFilter(getValues()) : getValues());
+    } else if (!latest.current.allowDiscard || draftOwner.current === cancelOwner) removeDraft(scopeKey, draftKey);
     return () => setDirty(instance, false);
-  }, [instance, isDirty, setDirty, writeDraft, removeDraft, scopeKey, draftKey, getValues, draftFilter]);
+  }, [instance, isDirty, setDirty, writeDraft, removeDraft, scopeKey, draftKey, getValues, draftFilter, cancelOwner]);
   useEffect(() => {
     const subscription = watch(() => {
       if (internalReset.current) return;
+      const active = latest.current;
+      if (active.form !== form || active.scopeKey !== scopeKey || active.draftKey !== draftKey) return;
       invalidate();
       // RHF notifies watch before its dirty render; always filter the current snapshot.
       const current = getValues();
+      if (
+        discardedBaseline.current?.owner === cancelOwner &&
+        sameFormValues(current, discardedBaseline.current.values)
+      ) {
+        removeDraft(scopeKey, draftKey);
+        return;
+      }
+      discardedBaseline.current = null;
+      draftOwner.current = cancelOwner;
       writeDraft(scopeKey, draftKey, latest.current.draftFilter ? latest.current.draftFilter(current) : current);
     });
     return () => subscription.unsubscribe();
-  }, [watch, getValues, writeDraft, scopeKey, draftKey, invalidate]);
+  }, [watch, getValues, writeDraft, removeDraft, scopeKey, draftKey, invalidate, cancelOwner, form]);
   useEffect(() => {
     if (invalidRequest === 0 || invalidRequest !== generation.current || focusedRequest.current === invalidRequest)
       return;
@@ -175,9 +215,9 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
   const requestCancel = useCallback(() => {
     latest.current.onCancelRequest?.();
     invalidate();
-    if (latest.current.form.formState.isDirty) setCancel(true);
+    if (latest.current.form.formState.isDirty) setCancel(cancelOwner);
     else latest.current.onCancel();
-  }, [invalidate]);
+  }, [invalidate, cancelOwner]);
   useLayoutEffect(() => {
     onCancelReady?.(requestCancel);
     return () => onCancelReady?.(null);
@@ -187,8 +227,24 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
   function preserveAndLeave() {
     const values = getValues();
     writeDraft(scopeKey, draftKey, draftFilter ? draftFilter(values) : values);
-    setCancel(false);
+    setCancel(null);
     runWithoutGuard(onCancel);
+  }
+  function discardAndLeave() {
+    invalidate();
+    internalReset.current = true;
+    try {
+      form.reset();
+    } finally {
+      internalReset.current = false;
+    }
+    discardedBaseline.current = { owner: cancelOwner, values: copyValue(getValues()) };
+    removeDraft(scopeKey, draftKey);
+    draftOwner.current = null;
+    setDirty(instance, false);
+    setCancel(null);
+    // A reset may change submission readiness/keys; cancellation belongs to this form owner.
+    setDiscardNotification({ owner: cancelOwner, callback: () => runWithoutGuard(onCancel) });
   }
   async function reviewInputs(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -333,10 +389,13 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
         {submitError && !reviewOpen && <div role="alert">{submitError}</div>}
       </form>
       <UnsavedGuard
-        open={cancel}
-        onStay={() => setCancel(false)}
+        open={cancel === cancelOwner}
+        onStay={() => setCancel(null)}
         onLeave={preserveAndLeave}
-        description={onSubmit ? t('common:guard.livePreserveDescription') : undefined}
+        onDiscard={props.allowDiscard ? discardAndLeave : undefined}
+        description={
+          props.allowDiscard ? t('common:form.dirty') : onSubmit ? t('common:guard.livePreserveDescription') : undefined
+        }
       />
       <AlertDialog open={reviewOpen} onOpenChange={changeReview}>
         {reviewOpen && (
@@ -464,5 +523,17 @@ export function FormField({ name, label, type = 'text', description, unit, requi
         </p>
       )}
     </div>
+  );
+}
+
+/** Reset-driven dependent notifications must not resurrect a discarded baseline as a draft. */
+function sameFormValues(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const keys = Object.keys(left);
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every(key => Object.hasOwn(right, key) && sameFormValues(Reflect.get(left, key), Reflect.get(right, key)))
   );
 }

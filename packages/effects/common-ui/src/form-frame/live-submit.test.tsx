@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useForm, type Resolver, type UseFormReturn } from 'react-hook-form';
 import { InteractionProvider } from '@niubu/stores/react';
@@ -332,4 +332,58 @@ it('uses an external title while retaining a named form and dirty cancellation',
  const guard=await screen.findByRole('alertdialog');
  fireEvent.click(within(guard).getByRole('button',{name:'继续编辑'}));
  expect(screen.getByLabelText('Name')).toHaveValue('Keep this input');
+});
+
+describe('optional explicit discard',()=>{
+ it('keeps editing, preserves on leave, and discards only after resetting before the cancel callback',async()=>{
+ const done=vi.fn(()=>{expect(form.getValues('name')).toBe('');expect(form.formState.isDirty).toBe(false);expect(state.readDraft('scope','record')).toBeUndefined();expect(state.dirty).toBe(false);});
+ render(<View allowDiscard onCancel={done} draftFilter={values=>({name:values.name})}/>);
+ await userEvent.type(screen.getByLabelText('Name'),'discard me');
+ await userEvent.type(screen.getByLabelText('Password'),'secret');
+ await userEvent.click(screen.getByRole('button',{name:'取消'}));
+ let guard=await screen.findByRole('alertdialog');
+ await userEvent.click(within(guard).getByRole('button',{name:'继续编辑'}));expect(done).not.toHaveBeenCalled();expect(form.getValues('name')).toBe('discard me');
+ await userEvent.click(screen.getByRole('button',{name:'取消'}));guard=await screen.findByRole('alertdialog');
+ expect(within(guard).getByRole('button',{name:'保留草稿并离开'})).toBeInTheDocument();
+ await userEvent.click(within(guard).getByRole('button',{name:'放弃输入并离开'}));
+ await waitFor(()=>expect(done).toHaveBeenCalledTimes(1));
+ await act(async()=>{});expect(state.readDraft('scope','record')).toBeUndefined();
+ });
+ it('does not offer discard to existing callers',async()=>{
+ render(<View/>);await userEvent.type(screen.getByLabelText('Name'),'retained');await userEvent.click(screen.getByRole('button',{name:'取消'}));
+ expect(within(await screen.findByRole('alertdialog')).queryByRole('button',{name:'放弃输入并离开'})).not.toBeInTheDocument();
+ });
+});
+
+function CoupledFixture(props:Partial<FormFrameProps<V>>) {
+ const current=useForm<V>({defaultValues:{name:'',password:''}});const name=current.watch('name');
+ useLayoutEffect(()=>{form=current;});
+ useEffect(()=>{if(!name)current.setValue('password','',{shouldDirty:true});},[name,current]);
+ return <FormFrame allowDiscard form={current} title="Coupled" scopeKey="scope" draftKey="record" operationKey={name} reviewReady={Boolean(name)} draftFilter={values=>({name:values.name})} onCancel={()=>{}} {...props}><FormField name="name" label="Name"/><FormField name="password" label="Password"/></FormFrame>;
+}
+function CoupledView(props:Partial<FormFrameProps<V>>) {return <InteractionProvider><State/><CoupledFixture {...props}/></InteractionProvider>;}
+it('fix2 discard completes once despite input-derived readiness and key resets, then supports fresh drafts while mounted',async()=>{
+ const done=vi.fn();render(<CoupledView onCancel={done}/>);await userEvent.type(screen.getByLabelText('Name'),'first');await userEvent.click(screen.getByRole('button',{name:'取消'}));await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button',{name:'放弃输入并离开'}));
+ await waitFor(()=>expect(done).toHaveBeenCalledTimes(1));expect(state.readDraft('scope','record')).toBeUndefined();expect(form.formState.isDirty).toBe(false);
+ await userEvent.type(screen.getByLabelText('Name'),'next input');await waitFor(()=>expect(state.readDraft('scope','record')).toMatchObject({name:'next input'}));
+});
+it('fix2 a real owner replacement before discard completion cannot close the new owner or erase its existing draft',async()=>{
+ const done=vi.fn();const view=render(<CoupledView onCancel={done}/>);await userEvent.type(screen.getByLabelText('Name'),'old');await userEvent.click(screen.getByRole('button',{name:'取消'}));const discard=within(await screen.findByRole('alertdialog')).getByRole('button',{name:'放弃输入并离开'});
+ act(()=>{fireEvent.click(discard);state.writeDraft('replacement','new-record',{name:'new owner draft'});view.rerender(<CoupledView scopeKey="replacement" draftKey="new-record" onCancel={done}/>);});
+ await act(async()=>{});expect(done).not.toHaveBeenCalled();expect(state.readDraft('replacement','new-record')).toEqual({name:'new owner draft'});
+});
+it('fix3 permanently retires pending A discard across A to B to A while preserving later drafts and a fresh A cancellation',async()=>{
+ const oldA=vi.fn(),newA=vi.fn();const view=render(<CoupledView onCancel={oldA}/>);
+ await userEvent.type(screen.getByLabelText('Name'),'old A');await userEvent.click(screen.getByRole('button',{name:'取消'}));const discard=within(await screen.findByRole('alertdialog')).getByRole('button',{name:'放弃输入并离开'});
+ act(()=>{fireEvent.click(discard);state.writeDraft('B','B-record',{name:'B draft'});view.rerender(<CoupledView scopeKey="B" draftKey="B-record" onCancel={oldA}/>);});
+ await act(async()=>{});expect(oldA).not.toHaveBeenCalled();expect(state.readDraft('B','B-record')).toEqual({name:'B draft'});
+ act(()=>{state.writeDraft('scope','record',{name:'later A draft'});view.rerender(<CoupledView onCancel={newA}/>);});
+ await act(async()=>{});expect(oldA).not.toHaveBeenCalled();expect(newA).not.toHaveBeenCalled();expect(state.readDraft('scope','record')).toEqual({name:'later A draft'});expect(state.readDraft('B','B-record')).toEqual({name:'B draft'});
+ await userEvent.type(screen.getByLabelText('Name'),'new A input');await waitFor(()=>expect(state.readDraft('scope','record')).toMatchObject({name:'new A input'}));
+ await userEvent.click(screen.getByRole('button',{name:'取消'}));await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button',{name:'放弃输入并离开'}));await waitFor(()=>expect(newA).toHaveBeenCalledTimes(1));expect(oldA).not.toHaveBeenCalled();expect(state.readDraft('scope','record')).toBeUndefined();
+ await userEvent.type(screen.getByLabelText('Name'),'after new A discard');await waitFor(()=>expect(state.readDraft('scope','record')).toMatchObject({name:'after new A discard'}));
+});
+it('fix3 an already completed discard cannot fire again when the same form returns to A',async()=>{
+ const completed=vi.fn(),later=vi.fn();const view=render(<CoupledView onCancel={completed}/>);await userEvent.type(screen.getByLabelText('Name'),'first A');await userEvent.click(screen.getByRole('button',{name:'取消'}));await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button',{name:'放弃输入并离开'}));await waitFor(()=>expect(completed).toHaveBeenCalledTimes(1));
+ view.rerender(<CoupledView scopeKey="B" draftKey="B-record" onCancel={later}/>);view.rerender(<CoupledView onCancel={later}/>);await act(async()=>{});expect(completed).toHaveBeenCalledTimes(1);expect(later).not.toHaveBeenCalled();
 });

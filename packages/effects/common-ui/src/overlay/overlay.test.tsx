@@ -349,3 +349,9 @@ it('returns menu-originated service confirmation to its stable menu trigger', as
   await userEvent.keyboard('{Escape}');
   await waitFor(() => expect(trigger).toHaveFocus());
 });
+it('keeps one modal form through default, wide and fullscreen layout changes',async()=>{
+ const change=vi.fn();const view=render(<Modal open onOpenChange={change} title="Sized"><input aria-label="Retained input" defaultValue="baseline"/></Modal>);
+ const input=screen.getByLabelText('Retained input');await userEvent.type(input,' edited');
+ view.rerender(<Modal open size="wide" onOpenChange={change} title="Sized"><input aria-label="Retained input" defaultValue="baseline"/></Modal>);expect(screen.getByLabelText('Retained input')).toBe(input);expect(input).toHaveValue('baseline edited');
+ view.rerender(<Modal open size="wide" fullscreen onOpenChange={change} title="Sized"><input aria-label="Retained input" defaultValue="baseline"/></Modal>);expect(screen.getByRole('dialog').style.width).toBe('100vw');expect(screen.getByRole('dialog').style.maxWidth).toBe('none');expect(screen.getByLabelText('Retained input')).toBe(input);expect(change).not.toHaveBeenCalled();
+});

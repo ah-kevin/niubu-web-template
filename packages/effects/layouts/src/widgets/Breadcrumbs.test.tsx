@@ -46,3 +46,7 @@ it('applies all five breadcrumb fields without mutating supplied projection or p
   expect(items[0]!.home).toBe(true);
   expect(value).toEqual({ enabled: true, hideOnlyOne: false, showHome: true, showIcon: true, style: 'background' });
 });
+it('renders optional literal labels verbatim and retains translated defaults for other items',async()=>{
+ await renderWidgets(<widgets.Breadcrumbs items={[items[0]!,{id:'literal',labelKey:'common:close',label:'app:home · {{literal}}',current:true}]} value={{...corePreferenceDefaults.breadcrumb,showHome:true}} renderLink={(item,children)=><a href={item.href}>{children}</a>} renderIcon={()=>null}/>);
+ expect(screen.getByText('app:home · {{literal}}')).toHaveAttribute('aria-current','page');expect(screen.getByRole('link',{name:'Save'})).toBeInTheDocument();expect(screen.queryByText('Close')).not.toBeInTheDocument();
+});

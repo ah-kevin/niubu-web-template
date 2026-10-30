@@ -18,7 +18,7 @@ export type OverlayProps = {
   cancelLabel?: string;
 };
 
-export type ModalProps = OverlayProps;
+export type ModalProps = OverlayProps & { size?: 'default' | 'wide' };
 export type DrawerProps = OverlayProps & { size?: 'default' | 'wide' };
 export type OverlayOptions = { title: ReactNode; description?: ReactNode; signal?: AbortSignal };
 export type OverlayApi = {

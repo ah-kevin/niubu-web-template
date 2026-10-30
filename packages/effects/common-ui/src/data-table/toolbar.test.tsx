@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 import { useTranslation } from '@niubu/locales/react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Modal } from '../overlay';
 import { DataTable } from './DataTable';
 import { createListColumnHelper } from './columns';
@@ -139,4 +140,30 @@ it('keeps immediate controlled commits and resets to the external owners default
   expect(screen.queryByRole('columnheader', { name: '名称' })).not.toBeInTheDocument();
   expect(screen.getByRole('columnheader', { name: /ID/ })).toHaveStyle({ width: '220px', insetInlineEnd: '0px' });
   expect(within(settings).getByRole('spinbutton', { name: 'id 列宽' })).toHaveValue(220);
+});
+
+it('renders the single live toolbar outside, retains table state through fullscreen, and releases on retirement', async()=>{
+ const refresh=vi.fn();function Owner({show=true}:{show?:boolean}){const [host,setHost]=useState<HTMLDivElement|null>(null);return <><div role="group" aria-label="外置工具" ref={setHost}/>{show&&<Fixture toolbar={{title:null,onRefresh:refresh,allowMaximize:true,render:node=>host?createPortal(node,host):null}}/>}</>;}
+ const user=userEvent.setup(),view=render(<Owner/>),host=screen.getByRole('group',{name:'外置工具'}),table=screen.getByRole('table'),section=table.closest('section')!;
+ expect(screen.getAllByRole('toolbar',{name:'记录列表'})).toHaveLength(1);expect(within(host).getByRole('toolbar',{name:'记录列表'})).toBeVisible();expect(within(section).queryByRole('toolbar')).not.toBeInTheDocument();
+ await user.click(within(host).getByRole('button',{name:'刷新'}));expect(refresh).toHaveBeenCalledOnce();
+ await user.click(within(host).getByRole('button',{name:'显示设置'}));let settings=screen.getByRole('dialog',{name:'显示设置'});await user.click(within(settings).getByRole('checkbox',{name:'显示 name'}));await user.click(within(settings).getByRole('button',{name:'更多列设置'}));const width=within(settings).getByRole('spinbutton',{name:'id 列宽'});fireEvent.change(width,{target:{value:'280'}});fireEvent.blur(width);await user.keyboard('{Escape}');
+ await user.click(within(host).getByRole('button',{name:'全屏'}));expect(within(host).queryByRole('toolbar')).not.toBeInTheDocument();expect(within(section).getByRole('button',{name:'退出全屏'})).toBeVisible();expect(screen.getByRole('table')).toBe(table);expect(screen.queryByRole('columnheader',{name:'名称'})).not.toBeInTheDocument();expect(screen.getByRole('columnheader',{name:/ID/})).toHaveStyle({width:'280px'});
+ await user.click(within(section).getByRole('button',{name:'退出全屏'}));expect(within(host).getByRole('button',{name:'显示设置'})).toBeVisible();expect(screen.getByRole('table')).toBe(table);await user.click(within(host).getByRole('button',{name:'显示设置'}));settings=screen.getByRole('dialog',{name:'显示设置'});await user.click(within(settings).getByRole('button',{name:'恢复默认列'}));expect(screen.getByRole('columnheader',{name:'名称'})).toBeVisible();await user.keyboard('{Escape}');
+ view.rerender(<Owner show={false}/>);expect(within(host).queryByRole('toolbar')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'刷新'})).not.toBeInTheDocument();
+});
+
+it('preserves the live selection summary and clear action in an external toolbar',async()=>{
+ function Owner(){const {t}=useTranslation();const [host,setHost]=useState<HTMLDivElement|null>(null);return <><div role="group" aria-label="选择工具" ref={setHost}/><DataTable<RecordRow> profile="selectable-list" caption="可选数据" columns={[{id:'name',accessorKey:'name',header:'名称'}]} model={{kind:'client',rows}} readState="ready" sourceCount={1} resultCount={1} getRowId={row=>row.id} labels={createDataTableLabels(t)} rowSelection={{kind:'internal'}} selectionLabels={{selectPage:'选择本页',selectRow:id=>'选择 '+id,selected:count=>'已选择 '+count+' 条',selectAllResults:count=>'选择全部 '+count+' 条',clearSelection:'清空选择',allResultsUnavailable:'不可全选'}} toolbar={{title:null,render:node=>host?createPortal(node,host):null}}/></>;}
+ render(<Owner/>);const host=screen.getByRole('group',{name:'选择工具'});await userEvent.click(screen.getByRole('checkbox',{name:'选择 one'}));expect(within(host).getByText('已选择 1 条')).toBeVisible();await userEvent.click(within(host).getByRole('button',{name:'清空选择'}));expect(screen.getByRole('checkbox',{name:'选择 one'})).not.toBeChecked();expect(within(host).getByText('已选择 0 条')).toBeVisible();
+});
+
+it('keeps keyboard focus on the remounted fullscreen control across an external toolbar transition', async () => {
+ function Owner(){const [host,setHost]=useState<HTMLDivElement|null>(null);return <><button>外部输入</button><div role="group" aria-label="焦点工具" ref={setHost}/><Fixture toolbar={{allowMaximize:true,render:node=>host?createPortal(node,host):null}}/></>;}
+ const user=userEvent.setup();render(<Owner/>);
+ const initial=screen.getByRole('button',{name:'全屏'});initial.focus();await user.keyboard('{Enter}');
+ expect(screen.getByRole('button',{name:'退出全屏'})).toHaveFocus();
+ await user.keyboard('{Enter}');expect(screen.getByRole('button',{name:'全屏'})).toHaveFocus();
+ await user.keyboard(' ');expect(screen.getByRole('button',{name:'退出全屏'})).toHaveFocus();await user.keyboard('{Escape}');expect(screen.getByRole('button',{name:'全屏'})).toHaveFocus();
+ await user.click(screen.getByRole('button',{name:'外部输入'}));expect(screen.getByRole('button',{name:'外部输入'})).toHaveFocus();
 });

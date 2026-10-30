@@ -1,6 +1,6 @@
 import { Maximize, Minimize, RefreshCw, Search } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
-import type { ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
 import type { RowData } from '@tanstack/react-table';
 import { cn } from '@niubu/shadcn-ui/cn';
 import type { BaseTableProps, ListSlices } from './types';
@@ -21,10 +21,29 @@ export function TableToolbar<T extends RowData>({
   onMaximizeChange: (maximized: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const maximizeButton = useRef<HTMLButtonElement | null>(null);
+  const restoreMaximizeFocus = useRef(false);
+  const bindMaximizeButton = useCallback((button: HTMLButtonElement | null) => {
+    if (!button && maximizeButton.current) {
+      const previous = maximizeButton.current;
+      restoreMaximizeFocus.current = previous.ownerDocument.activeElement === previous;
+    }
+    maximizeButton.current = button;
+  }, []);
+  useLayoutEffect(() => {
+    if (!restoreMaximizeFocus.current) return;
+    restoreMaximizeFocus.current = false;
+    const button = maximizeButton.current;
+    if (!button?.isConnected) return;
+    const document = button.ownerDocument;
+    // Only replace focus lost with this remounted control; never take it from another live control.
+    if (document.activeElement === document.body || document.activeElement === document.documentElement)
+      button.focus({ preventScroll: true });
+  }, [maximized]);
   const toolbar = props.toolbar;
   const title = toolbar?.title === undefined ? props.caption : toolbar.title;
   const pending = props.readState === 'pending';
-  return (
+  const node = (
     <div
       role="toolbar"
       aria-label={props.caption}
@@ -59,6 +78,7 @@ export function TableToolbar<T extends RowData>({
         )}
         {toolbar?.allowMaximize && (
           <TableToolButton
+            ref={bindMaximizeButton}
             label={t(maximized ? 'common:exitFullscreen' : 'common:fullscreen')}
             aria-pressed={maximized}
             onClick={() => onMaximizeChange(!maximized)}
@@ -70,4 +90,5 @@ export function TableToolbar<T extends RowData>({
       </div>
     </div>
   );
+  return !maximized && toolbar?.render ? toolbar.render(node) : node;
 }

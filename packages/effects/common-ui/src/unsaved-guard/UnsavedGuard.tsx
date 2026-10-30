@@ -16,11 +16,19 @@ type UnsavedGuardProps = {
   open: boolean;
   onStay: () => void;
   onLeave: () => void;
+  onDiscard?: () => void;
   preserveDraft?: boolean;
   description?: ReactNode;
 };
 
-export function UnsavedGuard({ open, onStay, onLeave, preserveDraft = true, description }: UnsavedGuardProps) {
+export function UnsavedGuard({
+  open,
+  onStay,
+  onLeave,
+  preserveDraft = true,
+  description,
+  onDiscard,
+}: UnsavedGuardProps) {
   const { t } = useTranslation();
   const previousFocus = useRef<HTMLElement | null>(null);
   return (
@@ -47,6 +55,7 @@ export function UnsavedGuard({ open, onStay, onLeave, preserveDraft = true, desc
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onStay}>{t('common:guard.edit')}</AlertDialogCancel>
+          {onDiscard && <AlertDialogAction onClick={onDiscard}>{t('common:guard.discard')}</AlertDialogAction>}
           <AlertDialogAction onClick={onLeave}>
             {preserveDraft ? t('common:guard.preserve') : t('common:guard.discard')}
           </AlertDialogAction>

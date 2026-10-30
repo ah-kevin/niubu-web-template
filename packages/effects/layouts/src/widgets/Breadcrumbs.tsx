@@ -7,6 +7,8 @@ import { ChevronRight } from '@niubu/icons';
 export type BreadcrumbItem = Readonly<{
   id: string;
   labelKey: string;
+  /** Literal caller-owned presentation; never interpreted as a translation key. */
+  label?: string;
   href?: string;
   iconToken?: string;
   current: boolean;
@@ -31,7 +33,8 @@ export function Breadcrumbs({ items, value, renderLink, renderIcon }: Breadcrumb
       data-breadcrumb-style={value.style}
     >
       {visible.map((item, index) => {
-        const text = t(item.labelKey, item.titleParams ? { title: t(item.titleParams.titleKey) } : undefined);
+        const text =
+          item.label ?? t(item.labelKey, item.titleParams ? { title: t(item.titleParams.titleKey) } : undefined);
         return (
           <span
             key={item.id}

@@ -63,6 +63,8 @@ export type BaseTableProps<T> = TableReadMetadata & {
   labels: TableLabels;
   onRowActivate?: (row: T) => void;
   emptyAction?: ReactNode;
+  /** Opt into centered loading/error feedback; all other read meanings stay unchanged. */
+  statePresentation?: 'feedback';
 };
 export type ReadTableProps<T extends RowData> = BaseTableProps<T> & {
   profile: 'read';
@@ -72,6 +74,8 @@ export type ReadTableProps<T extends RowData> = BaseTableProps<T> & {
 export interface ListSlices {
   toolbar?: {
     title?: ReactNode;
+    /** Optional placement of the live toolbar; maximized tables keep it inside for a reachable exit. */
+    render?: (toolbar: ReactNode) => ReactNode;
     actions?: ReactNode;
     search?: { visible: boolean; onVisibleChange: (visible: boolean) => void };
     onRefresh?: () => void;
