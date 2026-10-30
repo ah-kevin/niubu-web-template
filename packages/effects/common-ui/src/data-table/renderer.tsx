@@ -536,6 +536,8 @@ export function TreeView<T extends RowData>({
   props: TreeListTableProps<T>;
 }) {
   const { t } = useTranslation();
+  // Tree rows read as an outline, so they start-align unless the caller overrides it.
+  const alignProps = { align: props.align ?? 'start', columnAlign: props.columnAlign };
   return (
     <ListLayout
       table={table}
@@ -543,26 +545,26 @@ export function TreeView<T extends RowData>({
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(props, header.column.id)}>
+        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(alignProps, header.column.id)}>
           <table.FlexRender header={header} />
         </HeaderView>
       )}
       renderCells={row =>
         row.getVisibleCells().map(cell => (
-          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(props, cell.column.id)}>
+          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(alignProps, cell.column.id)}>
             {cell.column.id === props.treeColumnId ? (
               <div
                 className={cn(
                   'pattern-tree-cell flex min-w-0 items-center',
-                  columnAlignment(props, cell.column.id) === 'center'
+                  columnAlignment(alignProps, cell.column.id) === 'center'
                     ? 'justify-center'
-                    : columnAlignment(props, cell.column.id) === 'end'
+                    : columnAlignment(alignProps, cell.column.id) === 'end'
                       ? 'justify-end'
                       : 'justify-start',
                 )}
                 style={{
-                  paddingInlineStart: columnAlignment(props, cell.column.id) === 'end' ? 0 : row.depth * 20,
-                  paddingInlineEnd: columnAlignment(props, cell.column.id) === 'end' ? row.depth * 20 : 0,
+                  paddingInlineStart: columnAlignment(alignProps, cell.column.id) === 'end' ? 0 : row.depth * 20,
+                  paddingInlineEnd: columnAlignment(alignProps, cell.column.id) === 'end' ? row.depth * 20 : 0,
                 }}
               >
                 <span className="inline-flex w-[18px] shrink-0 items-center">

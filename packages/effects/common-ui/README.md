@@ -9,7 +9,7 @@ Import ./page-header, ./detail-frame, ./read-state, ./filter-bar, ./form-frame, 
 
 ## 表格对齐与单元格呈现
 
-从 `@niubu/common-ui/data-table` 导入 `DataTable`、`RowActions`、`CellText`、`CollectionCell`。所有表格profile支持 `align="start|center|end"`，默认center；`columnAlign={{ description: 'start', amount: 'end' }}` 按当前column ID覆盖，分组表头使用自身ID。对齐不改变列宽、固定列偏移或resizer；树列保留层级缩进：start/center使用起始留白，end使用末端留白，使末端对齐时仍能识别深度。
+从 `@niubu/common-ui/data-table` 导入 `DataTable`、`RowActions`、`CellText`、`CollectionCell`。所有表格profile支持 `align="start|center|end"`，默认center，树列表（`tree-list`）默认start；`columnAlign={{ description: 'start', amount: 'end' }}` 按当前column ID覆盖，分组表头使用自身ID。对齐不改变列宽、固定列偏移或resizer；树列保留层级缩进：start/center使用起始留白，end使用末端留白，使末端对齐时仍能识别深度。
 
 `RowActions` 接收 `actions: { id, label, disabled?, destructive? } & ({ onSelect } | { href })` 的数组、`ownerKey`、`rowLabel` 和可选 `moreLabel`、`renderLink`。`href` 动作渲染为链接而不是按钮（禁用时退化为不可点击的按钮），不走菜单退出后的焦点交接；用 `renderLink={(href, label) => <Link to={href}>{label}</Link>}` 接入应用路由，默认是普通 `<a>`。首动作直接显示，其余进入更多菜单。调用方先过滤可用动作，并在回调内核对当前写资格；ownerKey包含身份、scope、generation及行边界，变化时退休旧菜单和待执行选择。请使用稳定的cell组件身份，避免重渲染替换焦点返回目标。菜单退出后微任务再次核对最新动作和挂载状态，再执行回调；Portal保留行操作标记，不触发行激活。
 

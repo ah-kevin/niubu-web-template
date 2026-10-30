@@ -63,10 +63,20 @@ it('keeps a visible depth inset at the logical end of end-aligned tree cells', (
  expect(parent).toHaveStyle({paddingInlineEnd:'0px'});expect(child).toHaveStyle({paddingInlineEnd:'20px',paddingInlineStart:'0px'});expect(child).toHaveClass('justify-end');
 });
 
-it.each(['read', 'list', 'selectable-list', 'tree-list'] as const)('centers headers and cells by default for the %s profile', profile => {
+it.each(['read', 'list', 'selectable-list'] as const)('centers headers and cells by default for the %s profile', profile => {
  render(<Fixture profile={profile} />);
  expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveStyle({ textAlign: 'center' });
  expect(screen.getByRole('columnheader', { name: /Score/ })).toHaveStyle({ textAlign: 'center' });
  expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'center' });
  expect(screen.getByRole('cell', { name: '42' })).toHaveStyle({ textAlign: 'center' });
+});
+
+it('start-aligns a tree list by default while an explicit align still wins', () => {
+ const { unmount } = render(<Fixture profile="tree-list" />);
+ expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveStyle({ textAlign: 'start' });
+ expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'start' });
+ expect(screen.getByRole('cell', { name: '42' })).toHaveStyle({ textAlign: 'start' });
+ unmount();
+ render(<Fixture profile="tree-list" align="center" />);
+ expect(screen.getByRole('cell', { name: 'Alpha' })).toHaveStyle({ textAlign: 'center' });
 });
