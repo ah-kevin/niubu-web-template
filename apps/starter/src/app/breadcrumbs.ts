@@ -19,12 +19,16 @@ function findPath(
 function pages(nodes: readonly AccessMenuNode[]): readonly Page[] {
   return nodes.flatMap(n => (n.kind === 'group' ? pages(n.children) : n.kind === 'page' ? [n] : []));
 }
-/** Titles and ancestors come from the current authorized menu, not guessed route segments. */
+/**
+ * Titles and ancestors come from the current authorized menu, not guessed route segments.
+ * `currentLabel` is a literal, caller-owned title for a page outside the menu (such as a detail page).
+ */
 export function buildStarterBreadcrumbs(
   menu: readonly AccessMenuNode[],
   meta: RouteMeta | null,
   pathname: string,
   routes: readonly RouteMeta[],
+  currentLabel?: string,
 ): readonly BreadcrumbItem[] {
   if (!meta) return [];
   const home = pages(menu).find(n => n.pageId === 'starter.home');
@@ -47,7 +51,14 @@ export function buildStarterBreadcrumbs(
     ...(node.kind === 'page' && !(direct && index === path!.length - 1) ? { href: node.href } : {}),
     iconToken: node.icon,
   }));
-  if (!direct) result.push({ id: meta.id, labelKey: meta.titleKey, iconToken: meta.iconToken, current: true });
+  if (!direct)
+    result.push({
+      id: meta.id,
+      labelKey: meta.titleKey,
+      ...(currentLabel ? { label: currentLabel } : {}),
+      iconToken: meta.iconToken,
+      current: true,
+    });
   if (home && meta.id !== 'starter.home' && !result.some(r => r.id === home.id))
     result.unshift({
       id: home.id,

@@ -22,6 +22,8 @@ export const icons = createIconRegistry(
   [
     { name: 'home', icon: LayoutGrid },
     { name: 'layout-grid', icon: LayoutGrid },
+    { name: 'grid-2x2', icon: LayoutGrid },
+    { name: 'list', icon: ClipboardList },
     { name: 'boxes', icon: Boxes },
     { name: 'clipboard-list', icon: ClipboardList },
     { name: 'database', icon: Database },

@@ -21,6 +21,7 @@
     "budget:check": "turbo run budget:check",
     "check": "node scripts/check.ts",
     "locale:check": "node internal/scripts/src/locale-check.ts",
+    "template:check": "node internal/scripts/src/template-sync.ts",
     "dev:playground": "pnpm --filter @niubu/playground dev",
     "dev:backend-mock": "pnpm --filter @niubu/backend-mock dev",
     "test:integration": "vitest run --config tests/integration/vitest.config.ts",
