@@ -84,7 +84,7 @@ export function NavigationPage({
   const items = selectedFrame
     ? [
         ...pageItems.map(item => ({ ...item, current: false, href: paths[0] })),
-        { id: 'local', labelKey: 'app:examples.application.frame', current: true },
+        { id: 'local', labelKey: 'app:examples.application.frame', label: text('frame'), current: true },
       ]
     : pageItems;
   return (

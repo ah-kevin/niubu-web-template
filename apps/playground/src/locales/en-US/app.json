@@ -278,6 +278,8 @@
   "examples.feedback.submit": "Submit from content",
   "examples.feedback.saveFailed": "Simulated save failed. Edit and try again.",
   "examples.feedback.scroll": "Scrollable content sample",
+  "examples.feedback.jumpFirst": "Jump to first content row",
+  "examples.feedback.jumpLast": "Jump to last content row",
   "examples.feedback.contentRow": "Synthetic content row {{row}}",
   "examples.feedback.queue": "Confirm and alert queue",
   "examples.feedback.queueButton": "Queue confirmation and alert",
@@ -289,6 +291,11 @@
   "examples.feedback.alertHelp": "Second item in the local queue.",
   "examples.feedback.confirmed": "Confirmed · alert completed",
   "examples.feedback.cancelled": "Cancelled · alert completed",
+  "examples.feedback.tableFeedback": "Table loading and error feedback",
+  "examples.feedback.showTableLoading": "Show table loading",
+  "examples.feedback.showTableError": "Show table error",
+  "examples.feedback.showTableReady": "Show table data",
+  "examples.feedback.tableReadErrorHelp": "Synthetic sample data is unavailable. Please retry.",
   "examples.feedback.reading": "Reading and route pending",
   "examples.feedback.showLoading": "Show read loading",
   "examples.feedback.showError": "Show read error",
@@ -560,5 +567,8 @@
   "examples.application.contextFixed": "Fixed example",
   "examples.application.contextSwitch": "Switch to this organization",
   "examples.application.contextSwitchHint": "Switch organizations to load its available scopes.",
-  "examples.application.contextEmpty": "No available scopes"
+  "examples.application.contextEmpty": "No available scopes",
+  "examples.forms.discard": "Three cancel choices",
+  "examples.forms.discardHelp": "Edit this synthetic record and cancel: continue editing, preserve a filtered draft, or explicitly discard the input.",
+  "examples.forms.reopen": "Reopen example"
 }

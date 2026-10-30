@@ -1,4 +1,5 @@
 import { PresentationExample } from './PresentationExample';
+import { createPortal } from 'react-dom';
 import { DocumentationLink } from '../DocumentationLink';
 import { ExampleDetails, ExamplePage } from '../ExamplePage';
 import { useEffect, useMemo, useRef, useState, type FocusEventHandler, type RefObject, type ReactNode } from 'react';
@@ -175,6 +176,7 @@ type TreeSample = { id: string; name: string; children?: readonly TreeSample[] }
 const treeHelper = createTreeColumnHelper<TreeSample>();
 function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
   const [align, setAlign] = useState<TableAlignment>('start');
+  const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
   const columns = useMemo(
     () =>
       treeHelper.columns([
@@ -209,6 +211,7 @@ function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
           ]}
         />
       </label>
+      <div role="group" aria-label={t('examples.tables.tree')} ref={setToolsHost} />
       <DataTable
         profile="tree-list"
         align={align}
@@ -222,6 +225,11 @@ function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
         treeColumnId="name"
         columns={columns}
         caption={t('examples.tables.tree')}
+        toolbar={{
+          title: null,
+          allowMaximize: true,
+          render: node => (toolsHost ? createPortal(node, toolsHost) : null),
+        }}
         labels={createDataTableLabels(t, { name: t('examples.tables.name') })}
       />
     </ExampleGroup>

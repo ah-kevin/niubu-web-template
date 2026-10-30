@@ -1,6 +1,6 @@
 # 表单示例使用指南 / Form examples
 
-表单页的九个场景只使用已有公共能力；数据均为合成。源码入口：`apps/playground/src/examples/forms/FormsPage.tsx`。仓库完整指南位于 `docs/guide/forms-query-crud.md`。
+表单页的十个场景只使用已有公共能力；数据均为合成。源码入口：`apps/playground/src/examples/forms/FormsPage.tsx`。仓库完整指南位于 `docs/guide/forms-query-crud.md`。
 
 - E43：`useSchemaForm` 拥有唯一表单；`getValues` 读取原值，`setValues` 更新原值，`form.reset` 重置；`validate/submit/cancel` 管理操作租约，`updateFields` 只更新已登记字段并退休当前操作。
 - E44：11种内建字段；公开预览排除合成密码。
@@ -10,6 +10,7 @@
 - E51：查询 DTO、整体条件展开/收起、重置与重新查询。
 - E52/E53：同步 Zod 校验；提交失败展开错误行并聚焦可见错误，不承诺平滑滚动。
 - E54：`getValues` 为原值，`toOutput` 为单向 DTO；`setValues` 不解码 DTO。
+- E55：`FormFrame allowDiscard` 显式启用继续编辑、保留过滤草稿、放弃输入三种取消选择；缺省调用方保留原行为。放弃先 reset、删除草稿与清除 dirty，再调用应用取消/导航。
 
 字段、schema 与 custom registry 初始化一次。示例通过现有 ControlledField 呈现实时语言；切换语言不重建 owner，不调用 updateFields 来取消 pending 保存。
 

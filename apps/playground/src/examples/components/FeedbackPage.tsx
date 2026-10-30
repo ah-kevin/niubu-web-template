@@ -1,3 +1,5 @@
+import { DataTable, createDataTableLabels } from '@niubu/common-ui/data-table';
+import { useTranslation } from '@niubu/locales/react';
 import { DocumentationLink } from '../DocumentationLink';
 import { useFeedbackText } from './copy';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -58,6 +60,14 @@ function RecordEditor({
   saveRecord: NonNullable<FeedbackPageProps['saveRecord']>;
 }) {
   const { t } = useFeedbackText();
+  const scrollContent = useRef<HTMLDetailsElement>(null);
+  const firstContent = useRef<HTMLParagraphElement>(null);
+  const lastContent = useRef<HTMLParagraphElement>(null);
+  function revealContent(target: HTMLParagraphElement | null) {
+    if (scrollContent.current) scrollContent.current.open = true;
+    target?.scrollIntoView({ block: 'start' });
+    target?.focus({ preventScroll: true });
+  }
   const [fullscreen, setFullscreen] = useState(false);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -100,7 +110,7 @@ function RecordEditor({
   }
   return (
     <Shell
-      size={kind === 'Drawer' ? 'wide' : undefined}
+      size="wide"
       open
       onOpenChange={open => {
         if (!open) close();
@@ -176,10 +186,27 @@ function RecordEditor({
           {t('saveFailed')}
         </p>
       )}
-      <details className="mt-4 rounded-lg border border-border p-3 [&_p]:py-2 [&_summary]:cursor-pointer [&_summary]:font-medium">
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => revealContent(firstContent.current)}>
+          {t('jumpFirst')}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => revealContent(lastContent.current)}>
+          {t('jumpLast')}
+        </Button>
+      </div>
+      <details
+        ref={scrollContent}
+        className="mt-4 rounded-lg border border-border p-3 [&_p]:py-2 [&_summary]:cursor-pointer [&_summary]:font-medium"
+      >
         <summary>{t('scroll')}</summary>
         {Array.from({ length: 24 }, (_, index) => (
-          <p key={index}>{t('contentRow', { row: index + 1 })}</p>
+          <p
+            key={index}
+            ref={index === 0 ? firstContent : index === 23 ? lastContent : undefined}
+            tabIndex={index === 0 || index === 23 ? -1 : undefined}
+          >
+            {t('contentRow', { row: index + 1 })}
+          </p>
         ))}
       </details>
     </Shell>
@@ -356,6 +383,7 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
           </div>
         </ExampleSection>
         <SupplementalOverlays />
+        <TableReadFeedbackExample />
         <ExampleSection title={t('reading')}>
           <div className="flex flex-wrap gap-2">
             {(['loading', 'error', 'empty'] as const).map(value => (
@@ -453,5 +481,45 @@ export function FeedbackPage(props: FeedbackPageProps) {
     <OverlayProvider>
       <FeedbackExamples {...props} />
     </OverlayProvider>
+  );
+}
+
+function TableReadFeedbackExample() {
+  const { t } = useFeedbackText();
+  const { t: common } = useTranslation();
+  const [status, setStatus] = useState<'pending' | 'error' | 'ready'>('pending');
+  return (
+    <ExampleSection title={t('tableFeedback')}>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => setStatus('pending')}>
+          {t('showTableLoading')}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => setStatus('error')}>
+          {t('showTableError')}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => setStatus('ready')}>
+          {t('showTableReady')}
+        </Button>
+      </div>
+      <DataTable
+        profile="read"
+        statePresentation="feedback"
+        caption={t('tableFeedback')}
+        columns={[{ id: 'name', accessorKey: 'name', header: t('name') }]}
+        model={{ kind: 'client', rows: status === 'ready' ? [initialRecord] : [] }}
+        getRowId={row => row.id}
+        labels={{ ...createDataTableLabels(common), error: t('tableReadErrorHelp') }}
+        {...(status === 'ready'
+          ? { readState: 'ready' as const, sourceCount: 1, resultCount: 1 }
+          : { readState: status, sourceCount: null, resultCount: null })}
+        emptyAction={
+          status === 'error' ? (
+            <Button type="button" onClick={() => setStatus('pending')}>
+              {common('common:retry')}
+            </Button>
+          ) : undefined
+        }
+      />
+    </ExampleSection>
   );
 }

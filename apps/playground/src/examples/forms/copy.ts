@@ -3,6 +3,10 @@ import { useTranslation } from '@niubu/locales/react';
 /** App resource keys: app:examples.forms.<key>. The leader owns both locale files. */
 export const formsExampleEnglish = {
   title: 'Forms',
+  discard: 'Three cancel choices',
+  discardHelp:
+    'Edit this synthetic record and cancel: continue editing, preserve a filtered draft, or explicitly discard the input.',
+  reopen: 'Reopen example',
   introduction: 'Synthetic examples of existing form capabilities. Each scenario has its own form owner.',
   api: 'Public API',
   builtin: '11 builtin fields',

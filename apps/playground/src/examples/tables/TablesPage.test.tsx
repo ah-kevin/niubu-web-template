@@ -270,3 +270,8 @@ it('lets the tree example choose end alignment while keeping its visible depth i
   fireEvent.click(tree().getByRole('button', { name: '展开 North' }));
   expect(tree().getByRole('cell', { name: 'Branch' }).querySelector('.pattern-tree-cell')).toHaveStyle({ paddingInlineEnd: '20px' });
 });
+
+it('demonstrates the real tree toolbar in an owned external host and keeps fullscreen exit inside',async()=>{
+ render(<TablesPage/>);const tree=screen.getByRole('region',{name:'三层树表'}),host=screen.getByRole('group',{name:'三层树表'});const toolbar=within(host).getByRole('toolbar',{name:'三层树表'});expect(screen.getAllByRole('toolbar',{name:'三层树表'})).toHaveLength(1);const table=within(tree).getByRole('table');expect(table.closest('section')).not.toContainElement(toolbar);
+ await userEvent.click(within(host).getByRole('button',{name:'显示设置'}));expect(screen.getByRole('dialog',{name:'显示设置'})).toBeVisible();await userEvent.keyboard('{Escape}');await userEvent.click(within(host).getByRole('button',{name:'全屏'}));expect(within(host).queryByRole('toolbar')).not.toBeInTheDocument();expect(within(table.closest('section')!).getByRole('button',{name:'退出全屏'})).toBeVisible();expect(within(tree).getByRole('table')).toBe(table);await userEvent.keyboard('{Escape}');expect(within(host).getByRole('button',{name:'全屏'})).toBeVisible();
+});

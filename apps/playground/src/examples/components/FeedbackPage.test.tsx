@@ -1,9 +1,13 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createPreferenceManager, PreferenceProvider } from '@niubu/preferences';
 import { createStoragePort } from '@niubu/hooks/storage';
 import { FeedbackPage, type ExampleRecord, type FeedbackPageProps } from './FeedbackPage';
+
+const originalScroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView');
+beforeAll(() => Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value() {} }));
+afterAll(() => { if (originalScroll) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScroll); else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView'); });
 
 const disposers: (() => void)[] = [];
 afterEach(() => { disposers.splice(0).forEach(dispose => dispose()); });
@@ -49,6 +53,26 @@ describe.each(['Modal', 'Drawer'] as const)('%s example composition', kind => {
     await act(async () => { save.resolve(); });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Saved record')).toHaveTextContent('demo-7 · Lin');
+  });
+
+  it('reveals and focuses both ends of long content while keeping native close handling', async () => {
+    mount();
+    await userEvent.click(screen.getByRole('button', { name: `Open ${kind}` }));
+    const dialog = screen.getByRole('dialog', { name: `${kind}: Ada` });
+    const last = within(dialog).getByText('Synthetic content row 24');
+    const scroll = vi.spyOn(last, 'scrollIntoView');
+    const focus = vi.spyOn(last, 'focus');
+    try {
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Jump to last content row' }));
+      expect((last.closest('details') as HTMLDetailsElement).open).toBe(true);
+      expect(last).toHaveFocus();
+      expect(scroll).toHaveBeenLastCalledWith({ block: 'start' });
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Jump to first content row' }));
+      expect(within(dialog).getByText('Synthetic content row 1')).toHaveFocus();
+      await userEvent.keyboard('{Escape}');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally { scroll.mockRestore(); focus.mockRestore(); }
   });
 
   it('routes native form submit through the same pending gate as footer confirmation', async () => {
@@ -196,4 +220,8 @@ it('opens the public action-preview and returns focus without submitting a servi
   await userEvent.click(screen.getByRole('button', { name: '返回修改' }));
   await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   expect(opener).toHaveFocus();
+});
+
+it('demonstrates real opt-in table loading, a single error/retry, and a controlled ready result',async()=>{
+ mount();const area=screen.getByRole('heading',{name:'Table loading and error feedback'}).closest('section')!;expect(within(area).getByRole('status',{name:'正在读取'})).toHaveAttribute('aria-busy','true');await userEvent.click(screen.getByRole('button',{name:'Show table error'}));expect(within(area).getAllByRole('alert')).toHaveLength(1);expect(within(area).getByRole('heading',{name:'无法读取记录'})).toBeVisible();expect(within(area).getByText('Synthetic sample data is unavailable. Please retry.')).toBeVisible();expect(within(area).queryByRole('link')).not.toBeInTheDocument();await userEvent.click(within(area).getByRole('button',{name:'重新读取'}));expect(within(area).queryByRole('alert')).not.toBeInTheDocument();expect(within(area).getByRole('status',{name:'正在读取'})).toBeVisible();await userEvent.click(screen.getByRole('button',{name:'Show table data'}));expect(within(area).getByRole('cell',{name:'Ada'})).toBeVisible();expect(within(area).queryByRole('status')).not.toBeInTheDocument();
 });

@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { InteractionProvider } from '@niubu/stores/react';
 import { FormsPage } from './FormsPage';
 
 // JSDOM lacks browser layout/pointer primitives required by the real Radix controls.
@@ -306,4 +307,16 @@ describe('FormsPage existing form capabilities', () => {
     expect(JSON.parse(output('Raw example fields').textContent!).range.start).toBe('2026-11-01');
     expect(screen.getByLabelText('Date range 开始日期')).toHaveValue('2026-11-01');
   });
+});
+
+it('demonstrates the opt-in discard path without retaining the abandoned record',async()=>{
+ render(<InteractionProvider><FormsPage/></InteractionProvider>);await scenario('Three cancel choices');
+ await userEvent.type(screen.getByRole('textbox',{name:'Name'}),' unsaved');await userEvent.click(screen.getByRole('button',{name:'取消'}));
+ const guard=await screen.findByRole('alertdialog');expect(within(guard).getByRole('button',{name:'保留草稿并离开'})).toBeInTheDocument();
+ await userEvent.click(within(guard).getByRole('button',{name:'放弃输入并离开'}));await userEvent.click(await screen.findByRole('button',{name:'Reopen example'}));expect(screen.getByRole('textbox',{name:'Name'})).toHaveValue('Ada');
+});
+it('restores the example filtered draft after choosing preserve',async()=>{
+ render(<InteractionProvider><FormsPage/></InteractionProvider>);await scenario('Three cancel choices');
+ await userEvent.type(screen.getByRole('textbox',{name:'Name'}),' preserved');await userEvent.click(screen.getByRole('button',{name:'取消'}));await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button',{name:'保留草稿并离开'}));
+ await userEvent.click(await screen.findByRole('button',{name:'Reopen example'}));expect(screen.getByRole('textbox',{name:'Name'})).toHaveValue('Ada preserved');
 });

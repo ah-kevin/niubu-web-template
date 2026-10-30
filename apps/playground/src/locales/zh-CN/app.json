@@ -278,6 +278,8 @@
   "examples.feedback.submit": "从内容区提交",
   "examples.feedback.saveFailed": "模拟保存失败，请编辑后重试。",
   "examples.feedback.scroll": "可滚动内容示例",
+  "examples.feedback.jumpFirst": "定位内容首行",
+  "examples.feedback.jumpLast": "定位内容末行",
   "examples.feedback.contentRow": "合成内容第 {{row}} 行",
   "examples.feedback.queue": "确认与提示队列",
   "examples.feedback.queueButton": "将确认与提示加入队列",
@@ -289,6 +291,11 @@
   "examples.feedback.alertHelp": "本地队列中的第二项。",
   "examples.feedback.confirmed": "已确认 · 提示已完成",
   "examples.feedback.cancelled": "已取消 · 提示已完成",
+  "examples.feedback.tableFeedback": "表格加载与失败反馈",
+  "examples.feedback.showTableLoading": "显示表格加载",
+  "examples.feedback.showTableError": "显示表格失败",
+  "examples.feedback.showTableReady": "显示表格数据",
+  "examples.feedback.tableReadErrorHelp": "合成示例数据暂时无法读取，请重试。",
   "examples.feedback.reading": "读取与路由等待状态",
   "examples.feedback.showLoading": "显示读取加载状态",
   "examples.feedback.showError": "显示读取错误",
@@ -560,5 +567,8 @@
   "examples.application.contextFixed": "固定示例组织",
   "examples.application.contextSwitch": "切换到该组织",
   "examples.application.contextSwitchHint": "切换组织后，查看该组织的可用范围。",
-  "examples.application.contextEmpty": "暂无可用范围"
+  "examples.application.contextEmpty": "暂无可用范围",
+  "examples.forms.discard": "取消的三种选择",
+  "examples.forms.discardHelp": "编辑这条合成记录后取消：继续编辑、保留过滤后的草稿，或明确放弃输入。",
+  "examples.forms.reopen": "重新打开示例"
 }

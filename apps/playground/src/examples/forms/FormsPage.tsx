@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { type CustomFieldRegistry, type FormFieldConfig } from '@niubu/common-ui/form';
+import { useInteractionState } from '@niubu/stores';
+import { FormFrame } from '@niubu/common-ui/form-frame';
 import { useQueryDataTable } from '@niubu/common-ui/data-table';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
@@ -22,6 +24,7 @@ const cases = [
   ['E52', 'rules', RulesPanel],
   ['E53', 'focus', FocusPanel],
   ['E54', 'format', FormatPanel],
+  ['E55', 'discard', DiscardPanel],
 ] as const;
 
 export type FormsPageProps = {
@@ -616,6 +619,47 @@ function FormatPanel() {
       <pre className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
         <output aria-label={text('dtoFields')}>{dto}</output>
       </pre>
+    </>
+  );
+}
+
+function DiscardPanel() {
+  const text = useFormsText();
+  const [closed, setClosed] = useState(false);
+  const interaction = useInteractionState();
+  const schema = useExampleForm<NameValues>({
+    fields: [{ name: 'name', label: 'name', kind: 'text', schema: z.string().min(1) }],
+    defaultValues: { name: 'Ada' },
+  });
+  return (
+    <>
+      <p className="text-sm text-muted-foreground">{text('discardHelp')}</p>
+      {closed ? (
+        <Button
+          onClick={() => {
+            schema.reset();
+            const draft = interaction.readDraft('forms-discard-example', 'record');
+            if (draft && typeof draft === 'object' && 'name' in draft && typeof draft.name === 'string')
+              schema.setValues({ name: draft.name }, { shouldDirty: true });
+            setClosed(false);
+          }}
+        >
+          {text('reopen')}
+        </Button>
+      ) : (
+        <FormFrame
+          allowDiscard
+          form={schema.form}
+          title={text('discard')}
+          scopeKey="forms-discard-example"
+          draftKey="record"
+          draftFilter={schema.filterDraft}
+          onCancel={() => setClosed(true)}
+          onSubmit={async () => {}}
+        >
+          <ExampleFields form={schema.form} {...schema.presentation} />
+        </FormFrame>
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@
 源码入口：`apps/playground/src/examples/components/FeedbackPage.tsx`。仓库完整指南位于 `docs/guide/forms-query-crud.md`。
 
 - E41/E58：受控 Modal/Drawer、标题和 fullscreen、typed record props/callback、单表单 owner、确认按钮 confirmLoading。
+- Modal 可选 `size="wide"`，在视口允许时约 46rem；未指定保持原尺寸，fullscreen 优先。示例的 Modal 和 Drawer 都显式使用各自 wide 尺寸，切换 fullscreen 保留同一表单。
 - 表单页内提交和 footer 确认共享同一个保存门禁；关闭或卸载取消租约。重新打开会创建新内容实例。
 - `OverlayProvider/useOverlay` 提供 alert/confirm 队列；卸载取消自有待办。
 - E57：ReadState 的 loading/error/empty 与真实动作回调；RoutePending 仅展示路由读取状态。
