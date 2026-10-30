@@ -2,7 +2,7 @@
 
 这是 Agent 的唯一规则入口，`CLAUDE.md` 只引用本文件。
 
-本仓库是 Web 模板仓库：React + shadcn + Tailwind 的 monorepo 基础，包含管理后台样板 `apps/starter`、示范 app `apps/playground` 和开发用假后端 `apps/backend-mock`。规范、`packages/`、`internal/` 以本仓库为准，业务仓库从这里同步。
+本仓库是 Web 模板仓库：React + shadcn + Tailwind 的 monorepo 基础，包含管理后台样板 `apps/starter`、示范 app `apps/playground` 和开发用假后端 `apps/backend-mock`。本仓库是新项目的一次性起点，打磨到 1.0 后冻结；业务仓库起步后自行演进，不再从这里同步，回流规则见[工作方式](docs/guide/workflow.md)。
 
 首次创建产品使用[新产品起步](docs/guide/product-start.md)中的初始化生成器。日常开发按[开发指南](docs/guide/README.md)查阅现有页面、组件和测试，直接编写普通源码并显式接线；不通过重新生成覆盖已有产品。
 

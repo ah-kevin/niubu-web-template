@@ -1,8 +1,8 @@
 # packages 区域规则
 
-继承根规则。目录、依赖与命名见[开发标准](../docs/guide/standards.md)，表单见[表单与 CRUD](../docs/guide/forms-query-crud.md)。两个仓库的本文件逐字一致。
+继承根规则。目录、依赖与命名见[开发标准](../docs/guide/standards.md)，表单见[表单与 CRUD](../docs/guide/forms-query-crud.md)。模板冻结 1.0 前两个仓库的本文件保持一致。
 
 - 保持产品无关：不依赖 app，不写产品名、业务词和存储标识，这些都由 app 传入。
 - 只通过声明的 exports 对外提供能力，不引入循环依赖。
 - 表单字段用固定的内建控件，扩展走 `custom:` 自定义字段。请求、敏感值处理、上传下载用现有实现，不另起一套。
-- 新增或修改公共能力时，在模板仓库的 Playground 补示例，并与示例分开提交，方便同步。
+- 新增或修改公共能力时，在 Playground 补示例，并与示例分开提交，方便回流。

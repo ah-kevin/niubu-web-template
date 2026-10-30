@@ -1,6 +1,6 @@
 # internal 区域规则
 
-继承根规则。命令见[工作方式](../docs/guide/workflow.md)和[工程与部署](../docs/guide/engineering-deploy.md)。两个仓库的本文件逐字一致。
+继承根规则。命令见[工作方式](../docs/guide/workflow.md)和[工程与部署](../docs/guide/engineering-deploy.md)。模板冻结 1.0 前两个仓库的本文件保持一致。
 
 - 只放 Node 工具，以及构建、lint、测试、TypeScript 的共享配置。不放产品运行时代码，也不依赖 app。
 - 测试共享配置在 `test-config`，本地测试默认最多2个worker，CI=true/1保留50%策略；测试包串行，同仓多Agent协调重检查。

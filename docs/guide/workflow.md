@@ -1,6 +1,6 @@
 # 工作方式
 
-两个仓库共用的工作约定。以模板仓库为准，业务仓库逐字同步。
+两个仓库共用的工作约定。模板冻结 1.0 前两边保持逐字一致，之后各自维护。
 
 ## 检查怎么跑
 
@@ -59,10 +59,11 @@ pnpm format:check   # 完整格式检查
 
 ## 模板仓库与业务仓库
 
-- 模板仓库是公共基础的来源。规范、`packages/`、`internal/` 的改动先在模板仓库做，并在 Playground 补上示例。
-- 用户确认后，再把同一份改动同步到业务仓库。两边只要求起步一致，之后各自演进；不发布 npm，也不做自动同步。
-- 业务仓库在仓库根目录运行 `pnpm template:check --template <模板路径>`（或设置 `NIUBU_TEMPLATE_PATH`），逐文件对比 `packages/`、`internal/`、`scripts/`、`apps/playground/` 与模板；有意的差异登记在业务仓库的 `template-divergence.json`（路径与原因），未登记的差异或已失效的登记都会失败。
-- 两边逐字一致的文件：`docs/guide/standards.md`、`docs/guide/workflow.md`、`packages/AGENTS.md`、`internal/AGENTS.md`。改其中任何一份，两边一起改。
+- 模板是新项目的一次性起点，只负责框架、壳子、UI 规范和公共组件；页面主体属于各业务，不要求与模板一致。
+- 模板仍在打磨，冻结为 1.0 之前，业务开发中验证过的好做法经用户确认后回流：先在模板做并补 Playground 示例，再把同一份改动复制到业务仓库。回流是有选择的，不是业务里的每处改动都回流；不发布 npm，也不做自动同步。
+- 冻结 1.0 后模板只修严重缺陷。业务仓库的 `packages/`、`internal/` 归自己所有，按业务需要修改，不再从模板同步，也不要求与模板一致。
+- 打磨期内，在业务仓库根目录运行 `pnpm template:check --template <模板路径>`（或设置 `NIUBU_TEMPLATE_PATH`），逐文件对比 `packages/`、`internal/`、`scripts/`、`apps/playground/` 与模板，确认回流没有遗漏；有意的差异登记在业务仓库的 `template-divergence.json`（路径与原因），未登记的差异或已失效的登记都会失败。
+- 打磨期内两边逐字一致的文件：`docs/guide/standards.md`、`docs/guide/workflow.md`、`packages/AGENTS.md`、`internal/AGENTS.md`。改其中任何一份，两边一起改。
 - backend-mock 两边都有，是独立的开发用假后端：用 `pnpm dev:backend-mock` 单独启动，需要它的 app 通过 `/api` 开发代理接入，生产构建不包含它。接入和替换数据的方法见 `apps/backend-mock/README.md`。
 
 ## 记录放哪

@@ -1,6 +1,6 @@
 # 开发标准
 
-两个仓库共用的基础标准。以模板仓库为准，业务仓库逐字同步。具体写法见同目录的专题指南。
+两个仓库共用的基础标准。模板冻结 1.0 前两边保持逐字一致，之后各自维护。具体写法见同目录的专题指南。
 
 ## 技术栈
 
@@ -60,4 +60,4 @@
 ## 提交
 
 - 提交信息用 Conventional Commits，例如 `feat(forms): add a resource editor`、`fix(request): reject stale results`。type 和 scope 按实际改动选。
-- 一次提交只做一件事。`packages/`、`internal/` 的改动和 app 示例分开提交，方便同步到业务仓库。
+- 一次提交只做一件事。`packages/`、`internal/` 的改动和 app 示例分开提交，方便按需回流。
