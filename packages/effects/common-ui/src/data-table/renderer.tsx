@@ -1046,8 +1046,10 @@ export function TreeView<T extends RowData>({
           <table.FlexRender header={header} />
         </HeaderView>
       )}
-      renderCells={row =>
-        row.getVisibleCells().map(cell => (
+      renderCells={row => {
+        const entry = loads.get(row.id);
+        const currentLoad = entry?.row === row.original ? entry : undefined;
+        return row.getVisibleCells().map(cell => (
           <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(alignProps, cell.column.id)}>
             {cell.column.id === props.treeColumnId ? (
               <div
@@ -1090,11 +1092,11 @@ export function TreeView<T extends RowData>({
                         },
                       )}
                       disabled={search.active}
-                      data-loading={loads.get(row.id)?.status === 'loading' || undefined}
-                      aria-busy={loads.get(row.id)?.status === 'loading' || undefined}
+                      data-loading={currentLoad?.status === 'loading' || undefined}
+                      aria-busy={currentLoad?.status === 'loading' || undefined}
                       onClick={() => row.toggleExpanded()}
                     >
-                      {loads.get(row.id)?.status === 'loading' ? (
+                      {currentLoad?.status === 'loading' ? (
                         <Spinner size="sm" label={props.tree?.lazy?.labels.loading} />
                       ) : (
                         <ChevronDown
@@ -1115,7 +1117,7 @@ export function TreeView<T extends RowData>({
                   ) : (
                     <table.FlexRender cell={cell} />
                   )}
-                  {loads.get(row.id)?.status === 'error' && (
+                  {currentLoad?.status === 'error' && (
                     <span className="ms-2 inline-flex items-center gap-1 text-destructive-text" role="alert">
                       {props.tree?.lazy?.labels.error}
                       <Button type="button" variant="link" size="sm" onClick={() => load(row.original, true)}>
@@ -1123,7 +1125,7 @@ export function TreeView<T extends RowData>({
                       </Button>
                     </span>
                   )}
-                  {loads.get(row.id)?.status === 'ready' && loads.get(row.id)?.children?.length === 0 && (
+                  {currentLoad?.status === 'ready' && currentLoad?.children?.length === 0 && (
                     <span className="ms-2 text-muted-foreground">{props.tree?.lazy?.labels.empty}</span>
                   )}
                 </div>
@@ -1132,8 +1134,8 @@ export function TreeView<T extends RowData>({
               <table.FlexRender cell={cell} />
             )}
           </CellView>
-        ))
-      }
+        ));
+      }}
     />
   );
 }

@@ -17,11 +17,11 @@ const getRowId = (row: Node) => row.id;
 const getSubRows = (row: Node) => row.children;
 const getRowLabel = (row: Node) => row.name;
 const columns: TreeListTableProps<Node>['columns'] = [{ id: 'name', accessorKey: 'name', header: 'Name', cell: ctx => <em>{ctx.row.original.name}</em> }];
-function Fixture({ tree, rows = roots }: { tree?: TreeListTableProps<Node>['tree']; rows?: Node[] }) {
+function Fixture({ tree, rows = roots, count }: { tree?: TreeListTableProps<Node>['tree']; rows?: Node[]; count?: number }) {
   const { t } = useTranslation();
   return <DataTable profile="tree-list" columns={columns} caption="Tree" treeColumnId="name"
     model={{ kind: 'client', rows }} getRowId={getRowId} getSubRows={getSubRows} getRowLabel={getRowLabel}
-    readState="ready" sourceCount={rows === roots ? 4 : rows.length} resultCount={rows === roots ? 4 : rows.length}
+    readState="ready" sourceCount={count ?? (rows === roots ? 4 : rows.length)} resultCount={count ?? (rows === roots ? 4 : rows.length)}
     labels={createDataTableLabels(t)} tree={tree} />;
 }
 const selectionLabels = { selectAll: 'All nodes', selectRow: (row: Node) => `Select ${row.name}` };
@@ -192,4 +192,18 @@ it('does not revive retired internal selection across an internal-controlled-int
   expect(screen.getByRole('checkbox', { name: 'Select One' })).not.toBeChecked();
   expect(screen.getByRole('checkbox', { name: 'Select Two' })).not.toBeChecked();
   expect(onChange).not.toHaveBeenCalled();
+});
+
+
+it('retires a cached empty-child note when the owner replaces that row with added static children', async () => {
+  const rows = [{ id: 'lazy', name: 'Lazy' }];
+  const loader = vi.fn(async () => []);
+  const tree = { lazy: { ownerKey: 'editable', hasChildren: () => true, loadChildren: loader, labels: lazyLabels } };
+  const view = render(<Fixture rows={rows} tree={tree} />);
+  fireEvent.click(screen.getByRole('button', { name: '展开 Lazy' }));
+  expect(await screen.findByText('No children')).toBeVisible();
+  view.rerender(<Fixture rows={[{ id: 'lazy', name: 'Lazy', children: [{ id: 'added', name: 'Added child' }] }]} count={2} tree={tree} />);
+  expect(screen.getByText('Added child')).toBeVisible();
+  expect(screen.queryByText('No children')).not.toBeInTheDocument();
+  expect(loader).toHaveBeenCalledTimes(1);
 });
