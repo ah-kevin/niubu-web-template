@@ -989,5 +989,11 @@
   "examples.components.summaryDescription": "只读概览，操作按钮分别执行各自的动作。",
   "examples.components.summaryContent": "此合成集合共 128 条记录。",
   "examples.components.exportSummary": "导出概览",
-  "examples.components.viewSummary": "查看概览"
+  "examples.components.viewSummary": "查看概览",
+  "examples.feedback.normalConfirm": "打开普通确认",
+  "examples.feedback.warningConfirm": "打开警告确认",
+  "examples.feedback.normalTitle": "确认示例操作",
+  "examples.feedback.warningTitle": "确认警告操作",
+  "examples.feedback.wideSize": "切换大尺寸",
+  "examples.feedback.standardSize": "切换标准尺寸"
 }

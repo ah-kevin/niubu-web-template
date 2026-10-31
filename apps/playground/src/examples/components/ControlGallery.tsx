@@ -140,16 +140,10 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                     key={variant}
                     type="button"
                     variant={variant}
-                    disabled={disabled || loading}
-                    aria-busy={loading}
+                    disabled={disabled}
+                    loading={loading}
                     onClick={() => setAction(t(key))}
                   >
-                    {loading && (
-                      <span
-                        aria-hidden
-                        className="size-3 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
-                      />
-                    )}
                     {t(key)}
                   </Button>
                 ))}

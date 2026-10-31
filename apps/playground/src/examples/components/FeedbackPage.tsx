@@ -75,6 +75,7 @@ function RecordEditor({
     target?.focus({ preventScroll: true });
   }
   const [fullscreen, setFullscreen] = useState(false);
+  const [size, setSize] = useState<'default' | 'wide'>('default');
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const submitting = useRef(false);
@@ -116,7 +117,7 @@ function RecordEditor({
   }
   return (
     <Shell
-      size="wide"
+      size={size}
       open
       onOpenChange={open => {
         if (!open) close();
@@ -160,6 +161,15 @@ function RecordEditor({
           }}
         >
           {t('shared')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          aria-pressed={size === 'wide'}
+          onClick={() => setSize(value => (value === 'wide' ? 'default' : 'wide'))}
+        >
+          {t(size === 'wide' ? 'standardSize' : 'wideSize')}
         </Button>
       </div>
       <form
@@ -634,15 +644,25 @@ function MenuAndPopoverExamples({ only }: { only?: FeedbackControlKind }) {
   const [result, setResult] = useState<boolean | null>(null);
   const confirmation = useRef<AbortController | null>(null);
   useEffect(() => () => confirmation.current?.abort(), []);
-  function confirmDanger() {
+  function confirmTone(tone: 'default' | 'warning' | 'danger') {
     confirmation.current?.abort();
     const owner = new AbortController();
     confirmation.current = owner;
     void overlay
       .confirm({
-        title: <FeedbackMessage source="Confirm danger action" />,
+        title: (
+          <FeedbackMessage
+            source={
+              tone === 'danger'
+                ? 'Confirm danger action'
+                : tone === 'warning'
+                  ? 'Confirm warning action'
+                  : 'Confirm sample action'
+            }
+          />
+        ),
         description: <FeedbackMessage source="This example only changes local state. Initial focus stays on Cancel." />,
-        tone: 'danger',
+        tone,
         signal: owner.signal,
       })
       .then(value => {
@@ -676,9 +696,17 @@ function MenuAndPopoverExamples({ only }: { only?: FeedbackControlKind }) {
           </Tooltip>
         )}
         {(!only || only === 'ConfirmDialog') && (
-          <Button type="button" variant="destructive" onClick={confirmDanger}>
-            {t('dangerConfirm')}
-          </Button>
+          <>
+            <Button type="button" variant="outline" onClick={() => confirmTone('default')}>
+              {t('normalConfirm')}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => confirmTone('warning')}>
+              {t('warningConfirm')}
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => confirmTone('danger')}>
+              {t('dangerConfirm')}
+            </Button>
+          </>
         )}
       </div>
       {result !== null && <output aria-live="polite">{t(result ? 'dangerAccepted' : 'dangerCancelled')}</output>}

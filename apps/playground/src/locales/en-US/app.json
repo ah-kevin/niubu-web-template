@@ -989,5 +989,11 @@
   "examples.components.summaryDescription": "A read-only summary with independent actions.",
   "examples.components.summaryContent": "128 records in this synthetic collection.",
   "examples.components.exportSummary": "Export summary",
-  "examples.components.viewSummary": "View summary"
+  "examples.components.viewSummary": "View summary",
+  "examples.feedback.normalConfirm": "Open standard confirmation",
+  "examples.feedback.warningConfirm": "Open warning confirmation",
+  "examples.feedback.normalTitle": "Confirm sample action",
+  "examples.feedback.warningTitle": "Confirm warning action",
+  "examples.feedback.wideSize": "Use wide size",
+  "examples.feedback.standardSize": "Use standard size"
 }

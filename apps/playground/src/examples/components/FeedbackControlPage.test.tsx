@@ -65,6 +65,35 @@ it('retains the standalone danger confirmation outcome', async () => {
   expect(await screen.findByText('Confirmed')).toBeVisible();
 });
 
+it.each(['Modal', 'Drawer'] as const)('switches %s sizes without replacing the editing draft', async kind => {
+  const saveRecord = vi.fn(async () => {});
+  render(<FeedbackControlPage kind={kind} saveRecord={saveRecord} />);
+  fireEvent.click(screen.getByRole('button', { name: `Open ${kind}` }));
+  const dialog = await screen.findByRole('dialog', { name: `${kind}: Ada` });
+  const input = within(dialog).getByRole('textbox', { name: 'Name' });
+  fireEvent.change(input, { target: { value: 'Size preview draft' } });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Use wide size' }));
+  expect(dialog).toHaveClass(`w-[var(--${kind === 'Modal' ? 'dialog' : 'drawer'}-width-lg)]`);
+  expect(input).toHaveValue('Size preview draft');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Use standard size' }));
+  expect(dialog).not.toHaveClass(`w-[var(--${kind === 'Modal' ? 'dialog' : 'drawer'}-width-lg)]`);
+  expect(input).toHaveValue('Size preview draft');
+  expect(saveRecord).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['default', 'Open standard confirmation', 'Confirm sample action'],
+  ['warning', 'Open warning confirmation', 'Confirm warning action'],
+] as const)('demonstrates the %s confirmation with safe initial focus', async (tone, trigger, title) => {
+  render(<FeedbackControlPage kind="ConfirmDialog" />);
+  fireEvent.click(screen.getByRole('button', { name: trigger }));
+  const dialog = await screen.findByRole('alertdialog', { name: title });
+  expect(dialog).toHaveAttribute('data-tone', tone);
+  expect(within(dialog).getByRole('button', { name: '取消' })).toHaveFocus();
+  fireEvent.click(within(dialog).getByRole('button', { name: '确定' }));
+  expect(await screen.findByText('Confirmed')).toBeVisible();
+});
+
 it('keeps empty-state reset actions on the isolated page', async () => {
   render(<FeedbackControlPage kind="EmptyState" />);
   fireEvent.click(screen.getByRole('button', { name: 'Show empty result' }));
