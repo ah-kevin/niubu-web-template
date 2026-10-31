@@ -140,6 +140,7 @@ it('places danger items last with a separator and retains the menu row state', a
       { id: 'edit', label: '编辑', onSelect: vi.fn() },
     ]),
   );
+  const trigger = screen.getByRole('button', { name: /更多操作/ });
   const menu = await openMenu();
   expect(
     within(menu)
@@ -148,7 +149,7 @@ it('places danger items last with a separator and retains the menu row state', a
   ).toEqual(['编辑', '删除']);
   expect(within(menu).getByRole('separator')).toBeInTheDocument();
   expect(within(menu).getByRole('menuitem', { name: '删除' })).toHaveAttribute('data-variant', 'danger');
-  expect(screen.getByRole('button', { name: /更多操作/ })).toHaveAttribute('data-row-menu-open', 'true');
+  expect(trigger).toHaveAttribute('data-row-menu-open', 'true');
 });
 it('moves even a single primary action into the menu on a narrow viewport', async () => {
   const original = Object.getOwnPropertyDescriptor(window, 'matchMedia');

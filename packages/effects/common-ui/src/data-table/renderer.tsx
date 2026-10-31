@@ -306,7 +306,6 @@ function Pagination<T extends RowData>({
       className="pattern-pagination flex min-h-[36px] flex-wrap items-center gap-y-2 px-3 py-1 text-[12px] leading-[1.5714285714]"
       aria-label={caption}
     >
-      <span className="me-3">{labels.total(table.getRowCount())}</span>
       <Select
         className="pattern-page-size me-auto h-[28px] w-auto min-w-24 px-2 text-[12px]"
         label={labels.pageSize}

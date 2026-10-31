@@ -1,6 +1,6 @@
 import { lazy, StrictMode, Suspense, type ReactNode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from '@niubu/shadcn-ui/dialog';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@niubu/shadcn-ui/sheet';
 import { AlertDialog, AlertDialogContent, AlertDialogOverlay, AlertDialogPortal, AlertDialogTitle, AlertDialogDescription } from '@niubu/shadcn-ui/alert-dialog';
@@ -13,6 +13,9 @@ import { BusinessPortalBoundary } from '@niubu/shadcn-ui/business-portal-boundar
 import { LocalLockBoundary } from './LocalLockBoundary';
 import { createLocalLock } from '@niubu/hooks';
 import { deferred } from './widget-test-utils';
+
+beforeEach(() => vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }));
+afterEach(() => vi.unstubAllGlobals());
 
 const labels = { title: 'Lock', password: 'Password', unlock: 'Unlock', pending: 'Pending', invalid: 'Invalid', unavailable: 'Unavailable' };
 function owner() {

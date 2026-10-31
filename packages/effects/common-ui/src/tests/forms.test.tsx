@@ -26,7 +26,8 @@ describe('RHF + Zod restorable forms', () => {
     render(<InteractionProvider><Fixture /></InteractionProvider>);
     await userEvent.click(screen.getByRole('button', { name: '检查并继续' }));
     await waitFor(() => expect(screen.getByLabelText('名称')).toHaveFocus());
-    expect(screen.getByRole('alert')).toHaveTextContent('基本信息');
+    expect(screen.getByText('请修正以下信息').closest('[role=alert]')).toHaveTextContent('基本信息');
+    expect(screen.getAllByRole('alert')).toHaveLength(3);
     expect(screen.getByLabelText('名称')).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByText('请填写单位')).toBeVisible();
   });
