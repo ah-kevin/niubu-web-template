@@ -9,12 +9,15 @@ export function searchTree<T>(
   const visible = new Set<T>();
   const expanded = new Set<T>();
   const term = query.trim().toLocaleLowerCase();
+  let matchCount = 0;
   function visit(nodes: readonly T[]) {
     let matches = false;
     nodes.forEach((row, index) => {
       const childMatch = visit(children(row, index) ?? []);
       if (childMatch) expanded.add(row);
-      if (childMatch || label(row).toLocaleLowerCase().includes(term)) {
+      const ownMatch = label(row).toLocaleLowerCase().includes(term);
+      if (ownMatch) matchCount++;
+      if (childMatch || ownMatch) {
         visible.add(row);
         matches = true;
       }
@@ -22,7 +25,7 @@ export function searchTree<T>(
     return matches;
   }
   if (term) visit(rows);
-  return { active: Boolean(term), visible, expanded };
+  return { active: Boolean(term), visible, expanded, matchCount };
 }
 
 export function treeSelection<T>(

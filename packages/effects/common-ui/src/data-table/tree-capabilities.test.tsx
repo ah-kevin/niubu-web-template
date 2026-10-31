@@ -207,3 +207,12 @@ it('retires a cached empty-child note when the owner replaces that row with adde
   expect(screen.queryByText('No children')).not.toBeInTheDocument();
   expect(loader).toHaveBeenCalledTimes(1);
 });
+
+it('reports actual matches separately from ancestors and highlights mixed parent rows', () => {
+  const { container } = render(<Fixture tree={{ search: { query: 'One', matchCountLabel: count => `Matches ${count}` }, selection: { state: { kind: 'internal', initial: { one: true } }, labels: selectionLabels } }} />);
+  expect(screen.getByText('Matches 1')).toBeVisible();
+  expect(container.querySelectorAll('tbody tr[data-row-id]')).toHaveLength(2);
+  // Use an unfiltered tree to retain the parent's partial state across its other children.
+  expect(container.querySelector('tr[data-row-id="root"]')).toHaveAttribute('data-state', 'selected');
+  expect(screen.getByRole('checkbox', { name: 'Select Root' })).toHaveAttribute('aria-checked', 'mixed');
+});

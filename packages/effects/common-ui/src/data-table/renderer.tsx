@@ -13,7 +13,8 @@ import { Loading, ReadState, Skeleton } from '../read-state';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
-import { ArrowDown, ArrowUp, ChevronDown } from '@niubu/icons';
+import { Tooltip } from '@niubu/shadcn-ui/tooltip';
+import { ArrowDown, ArrowUp, ChevronDown, CircleHelp } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
 import {
@@ -157,10 +158,12 @@ function HeaderView<T extends RowData>({
   alignment,
   disabled,
   filter,
+  hint,
   leadingWidth,
 }: {
   leadingWidth?: number;
   filter?: ReactNode;
+  hint?: string;
   header: ListNativeHeader<T>;
   disabled?: boolean;
   labels: TableLabels;
@@ -231,6 +234,13 @@ function HeaderView<T extends RowData>({
             children
           ))}
         {filter}
+        {hint && (
+          <Tooltip content={hint}>
+            <Button type="button" variant="ghost" size="icon-xs" aria-label={hint} className="size-5 shrink-0 p-0">
+              <CircleHelp aria-hidden="true" className="size-3" />
+            </Button>
+          </Tooltip>
+        )}
       </div>
       {column.getCanResize() && (
         <Button
@@ -272,7 +282,9 @@ function CellView<T extends RowData>({
   span,
   width,
   leadingWidth,
+  editable,
 }: {
+  editable?: boolean;
   leadingWidth?: number;
   span?: CellSpan;
   width?: number;
@@ -285,6 +297,7 @@ function CellView<T extends RowData>({
       rowSpan={span?.rowSpan}
       colSpan={span?.colSpan}
       data-column-id={column.id}
+      data-editable={editable || undefined}
       data-fixed={column.getIsPinned() || undefined}
       data-fixed-edge={
         column.getIsPinned() === 'start'
@@ -611,6 +624,7 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
                   data-row-id={row.id}
                   data-editing={editing.id === row.id || undefined}
                   data-dragging={reorder.active === row.id || undefined}
+                  data-drop={reorder.target?.id === row.id ? reorder.target.side : undefined}
                   data-merge-hover={
                     (hovered !== null &&
                       spans.some((cells, origin) =>
@@ -634,7 +648,12 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
                     if (reorder.active) {
                       event.preventDefault();
                       event.dataTransfer.dropEffect = 'move';
+                      reorder.over(row.id);
                     }
+                  }}
+                  onDragLeave={event => {
+                    if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget))
+                      reorder.leave(row.id);
                   }}
                   onDrop={event => {
                     if (reorder.active) {
@@ -682,6 +701,21 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
                 )}
               </Fragment>
             ))}
+            {props.editing?.addRow && (
+              <tr data-add-row="true">
+                <td colSpan={totalColumns}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="pattern-add-row"
+                    disabled={!enabled || !!editing.id || props.editing.addRow.disabled}
+                    onClick={props.editing.addRow.onAdd}
+                  >
+                    {props.editing.addRow.label}
+                  </Button>
+                </td>
+              </tr>
+            )}
           </tbody>
           {props.summary && (
             <tfoot aria-label={props.summary.label}>
@@ -746,6 +780,7 @@ export function ListView<T extends RowData>({
           leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0)}
           labels={props.labels}
           disabled={props.readState !== 'ready' || !!props.refresh}
+          hint={props.columnHints?.[header.column.id]}
           filter={
             props.columnFilters?.fields[header.column.id] && (
               <ColumnFilterControl
@@ -775,6 +810,13 @@ export function ListView<T extends RowData>({
               column={cell.column}
               alignment={columnAlignment(props, cell.column.id)}
               span={span}
+              editable={
+                props.readState === 'ready' &&
+                !props.refresh &&
+                !editing.id &&
+                props.editing?.editableColumns?.includes(cell.column.id) &&
+                props.editing.canEdit?.(row.original) !== false
+              }
               leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0)}
               width={cells
                 .slice(index, index + (span?.colSpan ?? 1))
@@ -835,6 +877,7 @@ export function SelectableView<T extends RowData>({
           }
           labels={props.labels}
           disabled={props.readState !== 'ready' || !!props.refresh}
+          hint={props.columnHints?.[header.column.id]}
           filter={
             props.columnFilters?.fields[header.column.id] && (
               <ColumnFilterControl
@@ -864,6 +907,13 @@ export function SelectableView<T extends RowData>({
               column={cell.column}
               alignment={columnAlignment(props, cell.column.id)}
               span={span}
+              editable={
+                props.readState === 'ready' &&
+                !props.refresh &&
+                !editing.id &&
+                props.editing?.editableColumns?.includes(cell.column.id) &&
+                props.editing.canEdit?.(row.original) !== false
+              }
               leadingWidth={
                 (props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader && props.layout ? 40 : 0)
               }
@@ -920,7 +970,19 @@ export function TreeView<T extends RowData>({
       props={props}
       headerGroups={table.getHeaderGroups()}
       rows={visibleRows}
-      isRowSelected={selection ? row => cascade.states.get(row.id)?.checked === true : undefined}
+      isRowSelected={
+        selection
+          ? row => {
+              const state = cascade.states.get(row.id);
+              return !!(state?.checked || state?.mixed);
+            }
+          : undefined
+      }
+      selectionSummary={
+        search.active && props.tree?.search?.matchCountLabel ? (
+          <span role="status">{props.tree.search.matchCountLabel(search.matchCount)}</span>
+        ) : undefined
+      }
       selectionHeader={
         selection && (
           <SelectionCheckbox

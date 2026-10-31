@@ -18,5 +18,5 @@ export interface TreeOptions<T> {
     labels: { loading: string; error: string; retry: string; empty: string };
   };
   /** Searches loaded node labels only. Does not fetch unloaded descendants. */
-  search?: { query: string };
+  search?: { query: string; matchCountLabel?: (count: number) => string };
 }

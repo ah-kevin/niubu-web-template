@@ -41,6 +41,10 @@ export interface TableEditing<T> {
    * A controlled owner that replaces the ID explicitly owns disposal of the discarded draft/new row.
    */
   rowId?: SliceOwner<string | null>;
+  /** Columns that advertise an editable state before a row enters editing. */
+  editableColumns?: readonly string[];
+  /** Append a caller-owned draft and select its editing row ID. */
+  addRow?: { label: string; onAdd: () => void; disabled?: boolean };
   /** Return an independent draft; the original model remains owned by the caller. */
   createDraft: (row: T) => T;
   renderCell: (context: {
@@ -87,6 +91,7 @@ export interface AdvancedTableOptions<T> {
   enableSortingRemoval?: boolean;
   layout?: TableLayoutOptions;
   columnFilters?: TableColumnFilters<T>;
+  columnHints?: Readonly<Record<string, string>>;
   details?: TableDetails<T>;
   editing?: TableEditing<T>;
   cellSpan?: (context: CellSpanContext<T>) => CellSpan | undefined;

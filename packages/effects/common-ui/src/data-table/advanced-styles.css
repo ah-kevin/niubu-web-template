@@ -24,14 +24,18 @@
 .native-data-table .pattern-aux-cell { width: 40px; padding-inline: 2px; text-align: center; }
 .native-data-table .pattern-detail-row { --table-row-background: var(--muted); }
 .native-data-table .pattern-detail-row:hover { --table-row-background: var(--muted); }
-.native-data-table .pattern-detail-row > td { padding: var(--workspace-card-padding); }
+.native-data-table .pattern-detail-row > td { padding: var(--workspace-card-padding); padding-inline-start: 56px; }
 .native-data-table .pattern-detail-row table { border: 0; }
 .native-data-table tfoot td { background: var(--table-header); font-weight: 600; border-top: 1px solid var(--border); }
 .native-data-table tr[data-editing] { --table-row-background: var(--nav-active); }
 .native-data-table tr[data-editing] > td:first-child { border-inline-start: 2px solid var(--primary); }
-.native-data-table tr[data-dragging] { --table-row-background: var(--nav-active); outline: 2px solid var(--primary); outline-offset: -2px; }
-.native-data-table tr:has(~ tr[data-dragging]):hover,
-.native-data-table tr[data-dragging] ~ tr:hover { box-shadow: inset 0 2px var(--primary); }
+.native-data-table td[data-editable]:hover { outline: 1px dashed var(--primary); outline-offset: -3px; }
+.native-data-table tr[data-add-row] > td { border-bottom: 0; padding: 0; }
+.native-data-table .pattern-add-row { width: 100%; border: 1px dashed var(--border); border-radius: 0; color: var(--muted-foreground); }
+.native-data-table tr[data-dragging] { --table-row-background: var(--card); position: relative; z-index: 1; box-shadow: var(--popup-shadow); }
+.native-data-table tr[data-drop='before'] > td { box-shadow: inset 0 2px var(--primary); }
+.native-data-table tr[data-drop='after'] > td { box-shadow: inset 0 -2px var(--primary); }
+.pattern-page-selection { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--workspace-heading-gap); border-radius: var(--control-radius); background: var(--nav-active); padding: 6px 12px; }
 .native-data-table .pattern-reorder-handle { cursor: grab; }
 .native-data-table .pattern-reorder-handle:active { cursor: grabbing; }
 .native-data-table .pattern-reorder-handle:disabled { cursor: not-allowed; }

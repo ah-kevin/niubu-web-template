@@ -125,5 +125,6 @@
   "table.pagination": "分页",
   "table.goTo": "前往",
   "table.jumpToPage": "跳转页码",
-  "table.pageUnit": "页"
+  "table.pageUnit": "页",
+  "table.selectedPage": "已选中当前页 {{count}} 条。"
 }

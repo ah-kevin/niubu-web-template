@@ -125,5 +125,6 @@
   "table.pagination": "Pagination",
   "table.goTo": "Go to",
   "table.jumpToPage": "Go to page",
-  "table.pageUnit": "page"
+  "table.pageUnit": "page",
+  "table.selectedPage": "All {{count}} rows on this page are selected."
 }

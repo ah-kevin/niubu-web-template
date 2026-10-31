@@ -139,6 +139,7 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
   const key = JSON.stringify(ids);
   const [preview, setPreview] = useState<readonly string[] | null>(null);
   const [active, setActive] = useState<string | null>(null);
+  const [target, setTarget] = useState<{ id: string; side: 'before' | 'after' } | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const operation = useRef<AbortController | null>(null);
@@ -154,6 +155,7 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
     setBoundary({ key, enabled, ownerKey, callback });
     setPreview(null);
     setActive(null);
+    setTarget(null);
     setPending(false);
     setError(false);
   }
@@ -165,11 +167,13 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
     if (!operation.current) {
       setPreview(null);
       setActive(null);
+      setTarget(null);
     }
   };
   const commit = async (next: readonly string[]) => {
     if (!config || !enabled || pending) return;
     setActive(null);
+    setTarget(null);
     setError(false);
     if (next.every((id, i) => id === ids[i])) {
       setPreview(null);
@@ -199,6 +203,11 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
   return {
     rows: orderedRows,
     active,
+    target,
+    over: (id: string) => {
+      if (active && id !== active) setTarget({ id, side: ids.indexOf(active) < ids.indexOf(id) ? 'after' : 'before' });
+    },
+    leave: (id: string) => setTarget(previous => (previous?.id === id ? null : previous)),
     pending,
     message: error
       ? config?.labels.failed
@@ -229,6 +238,7 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
             event.dataTransfer.effectAllowed = 'move';
             setActive(row.id);
             setPreview(ids);
+            setTarget(null);
             setError(false);
           }}
           onDragEnd={cancel}
@@ -244,13 +254,17 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
               else {
                 setActive(row.id);
                 setPreview(ids);
+                setTarget(null);
                 setError(false);
               }
             }
             if (active === row.id && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
               event.preventDefault();
               const target = order[order.indexOf(row.id) + (event.key === 'ArrowUp' ? -1 : 1)];
-              if (target) setPreview(moveRowId(order, row.id, target));
+              if (target) {
+                setPreview(moveRowId(order, row.id, target));
+                setTarget({ id: row.id, side: event.key === 'ArrowUp' ? 'before' : 'after' });
+              }
             }
           }}
         >

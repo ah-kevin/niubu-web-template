@@ -6,6 +6,7 @@ import { Button } from '@niubu/shadcn-ui/button';
 import { rowActivation } from './row-activation';
 import type { RowData } from '@tanstack/react-table';
 import { useMemo, useId, type ReactElement } from 'react';
+import { useTranslation } from '@niubu/locales/react';
 import { listFeatures, readFeatures, selectableListFeatures } from './profiles';
 import { validateColumnIds, validateReadModel, validateRowIds } from './identity';
 import { useDataTable } from './useDataTable';
@@ -153,6 +154,7 @@ function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
 }
 function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
   const selectionName = useId();
+  const { t } = useTranslation();
   const filters = useColumnFilters(props.model.rows, props.columnFilters);
   if (props.model.kind === 'server' && props.columnFilters?.mode === 'local')
     throw Error('Local column filters require the complete client model');
@@ -209,6 +211,15 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
     ...(props.rowSelection.kind === 'controlled' ? { onRowSelectionChange: props.rowSelection.onChange } : {}),
   });
   const selected = table.state.rowSelection;
+  const pageRows = table.getRowModel().rows.filter(row => row.getCanSelect());
+  const crossPagePrompt =
+    props.selectionMode !== 'single' &&
+    props.readState === 'ready' &&
+    !props.refresh &&
+    pageRows.length > 0 &&
+    pageRows.every(row => selected[row.id]) &&
+    (viewProps.resultCount ?? 0) > table.getRowModel().rows.length &&
+    (props.model.kind === 'server' || !table.getIsAllRowsSelected());
   return (
     <SelectableView
       table={table}
@@ -230,47 +241,65 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
           table.getRowModel().rows.length === props.model.rows.length,
       }}
       selectionSummary={
-        <div
-          data-active={Object.keys(selected).length > 0 || undefined}
-          className="pattern-selection-bar flex min-w-0 flex-wrap items-center gap-[var(--workspace-heading-gap)] p-0 text-[length:var(--workspace-caption-font-size)]"
-        >
-          <span className="font-medium text-foreground">
-            {props.selectionLabels.selected(Object.keys(selected).length)}
-          </span>
-          <div className="flex flex-wrap items-center gap-1">
-            {props.selectionMode !== 'single' && (
+        <>
+          <div
+            data-active={Object.keys(selected).length > 0 || undefined}
+            className="pattern-selection-bar flex min-w-0 flex-wrap items-center gap-[var(--workspace-heading-gap)] p-0 text-[length:var(--workspace-caption-font-size)]"
+          >
+            <span className="font-medium text-foreground">
+              {props.selectionLabels.selected(Object.keys(selected).length)}
+            </span>
+            <div className="flex flex-wrap items-center gap-1">
+              {props.selectionMode !== 'single' && !crossPagePrompt && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  disabled={
+                    props.readState !== 'ready' ||
+                    !viewProps.resultCount ||
+                    !!props.refresh ||
+                    (props.model.kind === 'server' && !props.onSelectAllResults)
+                  }
+                  onClick={() => {
+                    if (props.model.kind === 'server') props.onSelectAllResults?.();
+                    else table.toggleAllRowsSelected(true);
+                  }}
+                >
+                  {props.selectionLabels.selectAllResults(viewProps.resultCount ?? 0)}
+                </Button>
+              )}
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 type="button"
-                disabled={
-                  props.readState !== 'ready' ||
-                  !viewProps.resultCount ||
-                  !!props.refresh ||
-                  (props.model.kind === 'server' && !props.onSelectAllResults)
+                disabled={Object.keys(selected).length === 0}
+                onClick={() => table.setRowSelection({})}
+              >
+                {props.selectionLabels.clearSelection}
+              </Button>
+            </div>
+            {props.selectionMode !== 'single' && props.model.kind === 'server' && !props.onSelectAllResults && (
+              <span className="basis-full text-muted-foreground">{props.selectionLabels.allResultsUnavailable}</span>
+            )}
+          </div>
+          {crossPagePrompt && (
+            <div className="pattern-page-selection" role="status">
+              <span>{t('common:table.selectedPage', { count: pageRows.length })}</span>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                disabled={props.model.kind === 'server' && !props.onSelectAllResults}
+                onClick={() =>
+                  props.model.kind === 'server' ? props.onSelectAllResults?.() : table.toggleAllRowsSelected(true)
                 }
-                onClick={() => {
-                  if (props.model.kind === 'server') props.onSelectAllResults?.();
-                  else table.toggleAllRowsSelected(true);
-                }}
               >
                 {props.selectionLabels.selectAllResults(viewProps.resultCount ?? 0)}
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              disabled={Object.keys(selected).length === 0}
-              onClick={() => table.setRowSelection({})}
-            >
-              {props.selectionLabels.clearSelection}
-            </Button>
-          </div>
-          {props.selectionMode !== 'single' && props.model.kind === 'server' && !props.onSelectAllResults && (
-            <span className="basis-full text-muted-foreground">{props.selectionLabels.allResultsUnavailable}</span>
+            </div>
           )}
-        </div>
+        </>
       }
       selectionHeader={
         props.selectionMode === 'single' ? (
