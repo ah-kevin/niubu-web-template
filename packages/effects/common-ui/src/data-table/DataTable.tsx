@@ -34,41 +34,45 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
   const rows = table.getRowModel().rows;
   return (
     <section className={nativeTableClassName} aria-label={props.caption}>
-      <ReadMessage props={props} hasRows={rows.length > 0} />
-      {props.readState === 'ready' && rows.length > 0 && (
-        <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
-          <table className="w-full">
-            <caption>{props.caption}</caption>
-            <thead>
-              {table.getHeaderGroups().map(group => (
-                <tr key={group.id}>
-                  {group.headers.map(header => (
-                    <th
-                      style={{ textAlign: columnAlignment(props, header.column.id) }}
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      scope={header.colSpan > 1 ? 'colgroup' : 'col'}
-                    >
-                      {!header.isPlaceholder && <table.FlexRender header={header} />}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {rows.map(row => (
-                <tr key={row.id} data-row-id={row.id} {...rowActivation(row.original, props.onRowActivate)}>
-                  {row.getAllCells().map(cell => (
-                    <td key={cell.id} style={{ textAlign: columnAlignment(props, cell.column.id) }}>
-                      <table.FlexRender cell={cell} />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
+        <table className="w-full">
+          <caption>{props.caption}</caption>
+          <thead>
+            {table.getHeaderGroups().map(group => (
+              <tr key={group.id}>
+                {group.headers.map(header => (
+                  <th
+                    style={{ textAlign: columnAlignment(props, header.column.id) }}
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    scope={header.colSpan > 1 ? 'colgroup' : 'col'}
+                  >
+                    {!header.isPlaceholder && <table.FlexRender header={header} />}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {(props.readState !== 'ready' || rows.length === 0) && (
+              <tr>
+                <td colSpan={table.getAllLeafColumns().length} className="pattern-table-state">
+                  <ReadMessage props={props} hasRows={false} />
+                </td>
+              </tr>
+            )}
+            {rows.map(row => (
+              <tr key={row.id} data-row-id={row.id} {...rowActivation(row.original, props.onRowActivate)}>
+                {row.getAllCells().map(cell => (
+                  <td key={cell.id} style={{ textAlign: columnAlignment(props, cell.column.id) }}>
+                    <table.FlexRender cell={cell} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
@@ -130,7 +134,10 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
       table={table}
       props={props}
       selectionSummary={
-        <div className="pattern-selection-bar flex min-w-0 flex-wrap items-center gap-[var(--workspace-heading-gap)] p-0 text-[length:var(--workspace-caption-font-size)]">
+        <div
+          data-active={Object.keys(selected).length > 0 || undefined}
+          className="pattern-selection-bar flex min-w-0 flex-wrap items-center gap-[var(--workspace-heading-gap)] p-0 text-[length:var(--workspace-caption-font-size)]"
+        >
           <span className="font-medium text-foreground">
             {props.selectionLabels.selected(Object.keys(selected).length)}
           </span>
@@ -169,6 +176,7 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
       selectionHeader={
         <SelectionCheckbox
           label={props.selectionLabels.selectPage}
+          disabled={props.readState !== 'ready'}
           selected={table.getIsAllPageRowsSelected()}
           indeterminate={table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()}
           onChange={selected => table.toggleAllPageRowsSelected(selected)}

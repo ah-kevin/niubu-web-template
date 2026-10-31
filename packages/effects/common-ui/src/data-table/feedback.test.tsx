@@ -15,6 +15,19 @@ it('leaves default loading/error and opted-in source empty, filtered empty, unkn
  const view=render(<Fixture feedback={false}/>);expect(screen.getByRole('alert')).toHaveTextContent('无法读取记录');expect(screen.queryByRole('heading')).not.toBeInTheDocument();view.rerender(<Fixture feedback={false} status="pending"/>);expect(screen.getByRole('status')).toHaveTextContent('正在读取');expect(screen.getByRole('status')).not.toHaveAttribute('aria-label');
  view.rerender(<Fixture status="ready" source={0}/>);expect(screen.getByRole('status')).toHaveTextContent('暂无来源记录');view.rerender(<Fixture status="ready" source={5}/>);expect(screen.getByRole('status')).toHaveTextContent('没有匹配记录');view.rerender(<Fixture status="ready"/>);expect(screen.getByRole('status')).not.toHaveTextContent('正在读取');view.rerender(<Fixture status="cancelled"/>);expect(screen.getByRole('status')).toHaveTextContent('已取消加载');expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
-it('exports a live four-dot loading surface with decorative points and no request timer',()=>{
- const view=render(<Loading label="正在读取组织"/>);const state=screen.getByRole('status',{name:'正在读取组织'});expect(state).toHaveAttribute('aria-busy','true');expect(state).toHaveAttribute('aria-live','polite');expect(state.querySelector('[aria-hidden="true"]')!.children).toHaveLength(4);view.unmount();expect(screen.queryByRole('status')).not.toBeInTheDocument();
+it('exports a live loading surface with a decorative spinner and no request timer',()=>{
+ const view=render(<Loading label="正在读取组织"/>);const state=screen.getByRole('status',{name:'正在读取组织'});expect(state).toHaveAttribute('aria-busy','true');expect(state).toHaveAttribute('aria-live','polite');expect(state.querySelector('[aria-hidden="true"]')).toHaveAttribute('data-size', 'md');view.unmount();expect(screen.queryByRole('status')).not.toBeInTheDocument();
+});
+
+it('keeps semantic headers and one spanning state cell during pending, failure and empty reads', () => {
+  const view = render(<Fixture status="pending" />);
+  const header = screen.getByRole('columnheader', { name: '名称' });
+  expect(header).toBeVisible();
+  expect(screen.getByRole('cell')).toHaveAttribute('colspan', '1');
+  view.rerender(<Fixture status="error" />);
+  expect(screen.getByRole('columnheader', { name: '名称' })).toBe(header);
+  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  view.rerender(<Fixture status="ready" source={0} />);
+  expect(screen.getByRole('columnheader', { name: '名称' })).toBe(header);
+  expect(screen.getByRole('status')).toHaveTextContent('暂无来源记录');
 });

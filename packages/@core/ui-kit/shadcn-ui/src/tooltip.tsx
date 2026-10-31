@@ -9,14 +9,22 @@ export function Tooltip({ children, content }: { children: React.ReactNode; cont
     <TooltipPrimitive.Provider delayDuration={0}>
       <TooltipPrimitive.Root>
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
-        {portal.ready && <TooltipPrimitive.Portal container={portal.container}>
-        <BusinessPortalAdmission>
-          <BusinessPortalContent><TooltipPrimitive.Content ref={boundaryRef} className="preference-tooltip z-[90] max-w-[280px] rounded-md border border-border bg-accent px-3 py-1.5 text-xs text-balance text-popover-foreground animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fade-in-0 data-[state=closed]:zoom-out-95 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2" sideOffset={5}>
-            {content}
-            <TooltipPrimitive.Arrow className="fill-accent stroke-border" />
-          </TooltipPrimitive.Content></BusinessPortalContent>
-        </BusinessPortalAdmission>
-      </TooltipPrimitive.Portal>}
+        {portal.ready && (
+          <TooltipPrimitive.Portal container={portal.container}>
+            <BusinessPortalAdmission>
+              <BusinessPortalContent>
+                <TooltipPrimitive.Content
+                  ref={boundaryRef}
+                  className="preference-tooltip z-[var(--z-tooltip)] max-w-[var(--tooltip-max-width)] rounded-md bg-tooltip px-2 py-1 text-xs leading-[18px] text-balance text-tooltip-foreground animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fade-in-0 data-[state=closed]:zoom-out-95 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                  sideOffset={5}
+                >
+                  {content}
+                  <TooltipPrimitive.Arrow width={8} height={4} className="w-[var(--tooltip-arrow-size)] fill-tooltip" />
+                </TooltipPrimitive.Content>
+              </BusinessPortalContent>
+            </BusinessPortalAdmission>
+          </TooltipPrimitive.Portal>
+        )}
       </TooltipPrimitive.Root>
     </TooltipPrimitive.Provider>
   );

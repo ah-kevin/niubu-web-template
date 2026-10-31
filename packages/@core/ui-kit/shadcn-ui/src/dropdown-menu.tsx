@@ -1,19 +1,117 @@
 import * as React from 'react';
-import { BusinessPortalAdmission, BusinessPortalContent, useBusinessPortalContainer } from './business-portal-boundary';
+import { Check, ChevronRight } from '@niubu/icons';
 import { DropdownMenu as DropdownPrimitive } from 'radix-ui';
+import { BusinessPortalAdmission, BusinessPortalContent, useBusinessPortalContainer } from './business-portal-boundary';
 import { useOverlayBoundaryRef } from './overlay-ownership';
 import { cn } from './cn';
+import { menuContentClass, menuItemClass, menuLabelClass, menuSeparatorClass } from './menu-styles';
+
 export const DropdownMenu = DropdownPrimitive.Root;
 export const DropdownMenuTrigger = DropdownPrimitive.Trigger;
-export function DropdownMenuContent({ ref, className, ...props }: React.ComponentProps<typeof DropdownPrimitive.Content>) {
-  const boundaryRef = useOverlayBoundaryRef(ref);
-  return <BusinessPortalAdmission><BusinessPortalContent><DropdownPrimitive.Content {...props} ref={boundaryRef} className={cn('z-[80] min-w-32 max-w-[calc(100vw-2rem)] overflow-hidden rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2', className)} /></BusinessPortalContent></BusinessPortalAdmission>;
-}
-export function DropdownMenuItem({ className, ...props }: React.ComponentProps<typeof DropdownPrimitive.Item>) {
-  return <DropdownPrimitive.Item {...props} className={cn('relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground', className)} />;
-}
+export const DropdownMenuGroup = DropdownPrimitive.Group;
+export const DropdownMenuRadioGroup = DropdownPrimitive.RadioGroup;
+export const DropdownMenuSub = DropdownPrimitive.Sub;
+
 export function DropdownMenuPortal({ container, ...props }: React.ComponentProps<typeof DropdownPrimitive.Portal>) {
   const portal = useBusinessPortalContainer(container);
   if (!portal.ready) return null;
   return <DropdownPrimitive.Portal {...props} container={portal.container} />;
+}
+
+export function DropdownMenuContent({
+  ref,
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.Content>) {
+  const boundaryRef = useOverlayBoundaryRef(ref);
+  return (
+    <BusinessPortalAdmission>
+      <BusinessPortalContent>
+        <DropdownPrimitive.Content {...props} ref={boundaryRef} className={cn(menuContentClass, className)} />
+      </BusinessPortalContent>
+    </BusinessPortalAdmission>
+  );
+}
+
+export function DropdownMenuItem({
+  className,
+  variant = 'default',
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.Item> & { variant?: 'default' | 'danger' }) {
+  return <DropdownPrimitive.Item data-variant={variant} {...props} className={cn(menuItemClass, className)} />;
+}
+
+export function DropdownMenuCheckboxItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.CheckboxItem>) {
+  return (
+    <DropdownPrimitive.CheckboxItem {...props} className={cn(menuItemClass, 'pl-8', className)}>
+      <span className="absolute left-2 inline-flex items-center">
+        <DropdownPrimitive.ItemIndicator>
+          <Check aria-hidden="true" />
+        </DropdownPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownPrimitive.CheckboxItem>
+  );
+}
+
+export function DropdownMenuRadioItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.RadioItem>) {
+  return (
+    <DropdownPrimitive.RadioItem {...props} className={cn(menuItemClass, 'pl-8', className)}>
+      <span className="absolute left-2 inline-flex items-center">
+        <DropdownPrimitive.ItemIndicator>
+          <span aria-hidden="true" className="size-2 rounded-full bg-current" />
+        </DropdownPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownPrimitive.RadioItem>
+  );
+}
+
+export function DropdownMenuSubTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.SubTrigger>) {
+  return (
+    <DropdownPrimitive.SubTrigger {...props} className={cn(menuItemClass, 'data-[state=open]:bg-muted', className)}>
+      {children}
+      <ChevronRight aria-hidden="true" className="ml-auto text-muted-foreground" />
+    </DropdownPrimitive.SubTrigger>
+  );
+}
+
+export function DropdownMenuSubContent({
+  ref,
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.SubContent>) {
+  const boundaryRef = useOverlayBoundaryRef(ref);
+  return (
+    <DropdownMenuPortal>
+      <BusinessPortalAdmission>
+        <BusinessPortalContent>
+          <DropdownPrimitive.SubContent {...props} ref={boundaryRef} className={cn(menuContentClass, className)} />
+        </BusinessPortalContent>
+      </BusinessPortalAdmission>
+    </DropdownMenuPortal>
+  );
+}
+
+export function DropdownMenuLabel({ className, ...props }: React.ComponentProps<typeof DropdownPrimitive.Label>) {
+  return <DropdownPrimitive.Label {...props} className={cn(menuLabelClass, className)} />;
+}
+
+export function DropdownMenuSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.Separator>) {
+  return <DropdownPrimitive.Separator {...props} className={cn(menuSeparatorClass, className)} />;
 }

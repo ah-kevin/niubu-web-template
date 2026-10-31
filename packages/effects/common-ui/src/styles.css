@@ -124,7 +124,7 @@
     grid-column: span var(--schema-col-span, 1);
   }
   .pattern-schema-fields[data-label-layout='inline'] .schema-field {
-    grid-template-columns: var(--schema-label-width, 120px) minmax(0, 1fr);
+    grid-template-columns: var(--label-w, 6em) minmax(0, 1fr);
     align-items: start;
     min-height: var(--workspace-control-height);
   }
@@ -132,6 +132,8 @@
     grid-column: 1;
     grid-row: 1;
     align-self: center;
+    justify-content: flex-end;
+    text-align: right;
   }
   .pattern-schema-fields[data-label-layout='inline'] .schema-field > :not(.schema-field-heading) {
     grid-column: 2;

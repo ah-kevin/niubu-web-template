@@ -2,6 +2,7 @@ import { useTranslation } from '@niubu/locales/react';
 import { CircleAlert, Database, SearchX } from '@niubu/icons';
 import type { ReactNode } from 'react';
 import { useReturnPathResolver } from '../return-path';
+import { Spinner } from './Loading';
 import { Button } from '@niubu/shadcn-ui/button';
 
 const titles = {
@@ -32,6 +33,8 @@ export function ReadState({
   fallback = '',
   children,
   actions,
+  compact = false,
+  title,
 }: {
   status: keyof typeof titles;
   message?: string;
@@ -41,6 +44,8 @@ export function ReadState({
   fallback?: string;
   children?: ReactNode;
   actions?: ReactNode;
+  compact?: boolean;
+  title?: string;
 }) {
   const { t } = useTranslation();
   const safeReturnTo = useReturnPathResolver();
@@ -49,20 +54,21 @@ export function ReadState({
   const href = safeReturnTo(fallback, '');
   return (
     <section
-      className="pattern-read-state flex min-w-0 flex-col items-center gap-3 px-6 py-12 text-center [overflow-wrap:anywhere]"
+      className="pattern-read-state flex min-w-0 flex-col items-center gap-2 px-4 py-10 data-[compact]:py-6 text-center [overflow-wrap:anywhere]"
+      data-compact={compact || undefined}
       role={status === 'error' ? 'alert' : 'status'}
       aria-busy={status === 'loading'}
     >
-      <span className="pattern-state-symbol inline-flex size-12 items-center justify-center rounded-full border border-border bg-card text-primary-text">
-        <Icon size={26} aria-hidden="true" />
+      <span className="pattern-state-symbol inline-flex size-[var(--empty-art-size)] items-center justify-center text-control-strong">
+        {status === 'loading' ? <Spinner size="lg" /> : <Icon className="size-full" aria-hidden="true" />}
       </span>
-      <h2 className="text-base font-semibold">{t(titles[status])}</h2>
-      <p className="max-w-[440px] text-[length:var(--workspace-body-font-size)] leading-relaxed text-muted-foreground">
+      <h2 className="text-[length:var(--control-font-size)] font-medium">{title ?? t(titles[status])}</h2>
+      <p className="max-w-[var(--empty-description-max-width)] text-xs leading-[18px] text-muted-foreground">
         {message ?? t(explanations[status])}
       </p>
       {children}
       {actions !== null && (
-        <div className="pattern-state-actions mt-1 flex flex-wrap justify-center gap-2">
+        <div className="pattern-state-actions mt-3 flex flex-wrap justify-center gap-2">
           {actions === undefined ? (
             <>
               {status === 'error' && onRetry && (

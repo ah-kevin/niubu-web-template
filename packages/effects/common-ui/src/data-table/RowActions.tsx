@@ -1,4 +1,12 @@
-import { useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import {
+  Fragment,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import { Button } from '@niubu/shadcn-ui/button';
 import {
@@ -6,6 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuPortal,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@niubu/shadcn-ui/dropdown-menu';
 
@@ -47,6 +56,15 @@ export function RowActions({ actions, ownerKey, rowLabel, moreLabel, renderLink 
     />
   );
 }
+const narrowQuery = '(max-width: 959px)';
+function subscribeNarrow(listener: () => void) {
+  const media = window.matchMedia?.(narrowQuery);
+  media?.addEventListener('change', listener);
+  return () => media?.removeEventListener('change', listener);
+}
+const isNarrow = () => window.matchMedia?.(narrowQuery).matches ?? false;
+const serverNarrow = () => false;
+
 function OwnedActions({
   actions,
   moreLabel,
@@ -58,29 +76,38 @@ function OwnedActions({
   moreAccessibleLabel: string;
   renderLink: RowActionLink;
 }) {
-  const [primary, ...secondary] = actions;
-  const className = primary.destructive ? 'text-destructive' : undefined;
+  const narrow = useSyncExternalStore(subscribeNarrow, isNarrow, serverNarrow);
+  const primary = actions.find(action => !action.destructive);
+  const secondary = actions.filter(action => action !== primary);
   return (
-    <div data-row-action="" className="inline-flex max-w-full items-center justify-center gap-1 whitespace-nowrap">
-      {primary.href !== undefined && !primary.disabled ? (
-        <Button asChild variant="link" size="sm" className={className}>
-          {renderLink(primary.href, primary.label)}
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          disabled={primary.disabled}
-          className={className}
-          onClick={primary.onSelect}
-        >
-          {primary.label}
-        </Button>
+    <div
+      data-row-action=""
+      data-row-actions=""
+      className="inline-flex max-w-full items-center justify-center gap-2 whitespace-nowrap"
+    >
+      {!narrow && primary && (
+        <>
+          {primary.href !== undefined && !primary.disabled ? (
+            <Button asChild variant="link" size="sm">
+              {renderLink(primary.href, primary.label)}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              disabled={primary.disabled}
+
+              onClick={primary.onSelect}
+            >
+              {primary.label}
+            </Button>
+          )}
+        </>
       )}
-      {secondary.length > 0 && (
+      {(narrow || secondary.length > 0) && (
         <MoreActions
-          actions={secondary}
+          actions={narrow ? actions : secondary}
           label={moreLabel}
           accessibleLabel={moreAccessibleLabel}
           renderLink={renderLink}
@@ -118,8 +145,20 @@ function MoreActions({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button ref={trigger} type="button" variant="ghost" size="sm" aria-label={accessibleLabel}>
-          {label}
+        <Button
+          ref={trigger}
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          data-row-menu-open={open || undefined}
+          aria-label={accessibleLabel}
+          title={label}
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-[var(--control-icon-size)]" fill="currentColor">
+            <circle cx="5" cy="12" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="19" cy="12" r="2" />
+          </svg>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
@@ -142,30 +181,38 @@ function MoreActions({
             });
           }}
         >
-          {actions.map(action => {
-            const className = action.destructive ? 'text-destructive data-[highlighted]:text-destructive' : undefined;
-            // Navigation needs no focus handoff: the link itself leaves the page or swaps the route.
-            if (action.href !== undefined && !action.disabled)
+          {[...actions.filter(action => !action.destructive), ...actions.filter(action => action.destructive)].map(
+            (action, index, ordered) => {
+              const separator =
+                action.destructive && index > 0 && !ordered[index - 1].destructive ? <DropdownMenuSeparator /> : null;
+              // Navigation needs no focus handoff: the link itself leaves the page or swaps the route.
+              if (action.href !== undefined && !action.disabled)
+                return (
+                  <Fragment key={action.id}>
+                    {separator}
+                    <DropdownMenuItem data-row-action="" asChild variant={action.destructive ? 'danger' : 'default'}>
+                      {renderLink(action.href, action.label)}
+                    </DropdownMenuItem>
+                  </Fragment>
+                );
               return (
-                <DropdownMenuItem key={action.id} data-row-action="" asChild className={className}>
-                  {renderLink(action.href, action.label)}
-                </DropdownMenuItem>
+                <Fragment key={action.id}>
+                  {separator}
+                  <DropdownMenuItem
+                    data-row-action=""
+                    disabled={action.disabled}
+                    variant={action.destructive ? 'danger' : 'default'}
+                    onSelect={() => {
+                      pending.current = action.id;
+                      setOpen(false);
+                    }}
+                  >
+                    {action.label}
+                  </DropdownMenuItem>
+                </Fragment>
               );
-            return (
-              <DropdownMenuItem
-                key={action.id}
-                data-row-action=""
-                disabled={action.disabled}
-                className={className}
-                onSelect={() => {
-                  pending.current = action.id;
-                  setOpen(false);
-                }}
-              >
-                {action.label}
-              </DropdownMenuItem>
-            );
-          })}
+            },
+          )}
         </DropdownMenuContent>
       </DropdownMenuPortal>
     </DropdownMenu>

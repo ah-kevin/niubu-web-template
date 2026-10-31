@@ -37,7 +37,7 @@
 
 | 组合入口                                            | 使用约束                                                                                                      |
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `Loading`（`@niubu/common-ui/read-state`）          | 局部四点状态区，有 busy/live 语义并支持 reduced motion；不负责发请求、延迟成功或伪造骨架。                    |
+| `Loading`（`@niubu/common-ui/read-state`）          | 局部加载圈状态区，有 busy/live 语义并支持 reduced motion；不负责发请求、延迟成功或伪造骨架。                  |
 | `DataTable statePresentation="feedback"`            | 可选地把 pending/error 变为居中反馈，默认旧呈现不变。单 query 只有一块失败与唯一重试；重试 pending 撤旧错误。 |
 | `ReadState actions`                                 | undefined 保原动作；显式 node/null 替代默认动作。嵌入表内不强塞返回工作空间，自定义说明不要逐字重复标题。     |
 | `FormFrame allowDiscard` / `UnsavedGuard onDiscard` | 默认取消合同不变；按需提供继续编辑、保留过滤后草稿、明确放弃。关闭后恢复入口和恢复后输入焦点都要验证。        |

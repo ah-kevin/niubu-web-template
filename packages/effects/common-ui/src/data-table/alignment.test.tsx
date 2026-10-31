@@ -52,7 +52,7 @@ it('keeps sticky column offsets and keyboard resizing authoritative under center
 });
 it('centers a tree cell while retaining depth padding and disclosure behavior', () => {
  render(<Fixture profile="tree-list" align="center" />);fireEvent.click(screen.getByRole('button', { name: '展开 Alpha' }));
- const child = screen.getByRole('cell', { name: 'Beta' });const content = child.querySelector('.pattern-tree-cell');expect(content).toHaveClass('justify-center');expect(content).toHaveStyle({ paddingInlineStart: '20px' });
+ const child = screen.getByRole('cell', { name: 'Beta' });const content = child.querySelector('.pattern-tree-cell');expect(content).toHaveClass('justify-center');expect(content).toHaveStyle({ paddingInlineStart: 'calc(1 * var(--tree-indent))' });
  expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
 });
 
@@ -60,7 +60,7 @@ it('keeps a visible depth inset at the logical end of end-aligned tree cells', (
  render(<Fixture profile="tree-list" align="end" />);fireEvent.click(screen.getByRole('button',{name:'展开 Alpha'}));
  const parent=screen.getByRole('button',{name:'收起 Alpha'}).closest('.pattern-tree-cell');
  const child=screen.getByRole('cell',{name:'Beta'}).querySelector('.pattern-tree-cell');
- expect(parent).toHaveStyle({paddingInlineEnd:'0px'});expect(child).toHaveStyle({paddingInlineEnd:'20px',paddingInlineStart:'0px'});expect(child).toHaveClass('justify-end');
+ expect(parent).toHaveStyle({paddingInlineEnd:'calc(0 * var(--tree-indent))'});expect(child).toHaveStyle({paddingInlineEnd:'calc(1 * var(--tree-indent))',paddingInlineStart:'0px'});expect(child).toHaveClass('justify-end');
 });
 
 it.each(['read', 'list', 'selectable-list'] as const)('centers headers and cells by default for the %s profile', profile => {

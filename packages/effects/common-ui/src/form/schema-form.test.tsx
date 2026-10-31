@@ -614,7 +614,7 @@ describe('responsive layout ownership', () => {
     const grid = cell.parentElement!;
     expect(grid).toHaveClass('pattern-schema-grid');
     expect(grid.style.getPropertyValue('--schema-columns')).toBe('2');
-    expect(grid.style.getPropertyValue('--schema-label-width')).toBe('120px');
+    expect(grid.style.getPropertyValue('--label-w')).toBe('120px');
     expect(grid.style.gridTemplateColumns).toBe('');
     expect(cell).toHaveClass('pattern-schema-cell');
     expect(cell.style.getPropertyValue('--schema-col-span')).toBe('2');

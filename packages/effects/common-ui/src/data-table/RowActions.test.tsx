@@ -73,9 +73,9 @@ it('prevents a portalled menu item from also activating its table row', async ()
   function Fixture() { const { t } = useTranslation();return <DataTable profile="list" caption="可激活行" model={{ kind: 'client', rows: [{ id: 'one' }] }} getRowId={r => r.id} columns={columns} labels={createDataTableLabels(t)} readState="ready" sourceCount={1} resultCount={1} onRowActivate={activate} />; }
   render(<Fixture />);fireEvent.click(within(await openMenu()).getByRole('menuitem', { name: '编辑' }));await waitFor(() => expect(edit).toHaveBeenCalledOnce());expect(activate).not.toHaveBeenCalled();
 });
-it('does not invent a menu for one action and rejects ambiguous action IDs', () => {
+it('keeps a sole danger action in its menu and rejects ambiguous action IDs', async () => {
   const remove = vi.fn();const result = render(renderActions([{ id: 'remove', label: '删除', onSelect: remove, disabled: true, destructive: true }]));
-  expect(screen.queryByRole('button', { name: /更多操作/ })).not.toBeInTheDocument();fireEvent.click(screen.getByRole('button', { name: '删除' }));expect(remove).not.toHaveBeenCalled();result.unmount();
+  expect(screen.getByRole('button', { name: /更多操作/ })).toBeVisible();await openMenu();fireEvent.click(screen.getByRole('menuitem', { name: '删除' }));expect(remove).not.toHaveBeenCalled();result.unmount();
   expect(() => render(renderActions([viewAction, { ...viewAction }]))).toThrow(/unique/);
 });
 
@@ -130,4 +130,38 @@ it('renders a disabled href action as an inert disabled button without a link', 
   render(renderActions([{ id: 'details', label: '详情', href: '/one', disabled: true }]));
   expect(screen.queryByRole('link', { name: '详情' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '详情' })).toBeDisabled();
+});
+
+it('places danger items last with a separator and retains the menu row state', async () => {
+  render(
+    renderActions([
+      viewAction,
+      { id: 'remove', label: '删除', destructive: true, onSelect: vi.fn() },
+      { id: 'edit', label: '编辑', onSelect: vi.fn() },
+    ]),
+  );
+  const menu = await openMenu();
+  expect(
+    within(menu)
+      .getAllByRole('menuitem')
+      .map(item => item.textContent),
+  ).toEqual(['编辑', '删除']);
+  expect(within(menu).getByRole('separator')).toBeInTheDocument();
+  expect(within(menu).getByRole('menuitem', { name: '删除' })).toHaveAttribute('data-variant', 'danger');
+  expect(screen.getByRole('button', { name: /更多操作/ })).toHaveAttribute('data-row-menu-open', 'true');
+});
+it('moves even a single primary action into the menu on a narrow viewport', async () => {
+  const original = Object.getOwnPropertyDescriptor(window, 'matchMedia');
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
+  });
+  try {
+    render(renderActions([viewAction]));
+    expect(screen.queryByRole('button', { name: '查看' })).not.toBeInTheDocument();
+    expect(within(await openMenu()).getByRole('menuitem', { name: '查看' })).toBeVisible();
+  } finally {
+    if (original) Object.defineProperty(window, 'matchMedia', original);
+    else Reflect.deleteProperty(window, 'matchMedia');
+  }
 });

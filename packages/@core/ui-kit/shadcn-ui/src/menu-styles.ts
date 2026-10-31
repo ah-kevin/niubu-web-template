@@ -1,0 +1,7 @@
+/** Shared presentation only; Radix owns selection, navigation and dismissal. */
+export const menuContentClass =
+  'z-[var(--z-dropdown)] min-w-[var(--menu-min-width)] max-w-[calc(100vw-2rem)] max-h-[var(--radix-dropdown-menu-content-available-height,80dvh)] overflow-y-auto rounded-lg border border-border bg-popover p-1 text-[length:var(--control-font-size)] text-popover-foreground shadow-[var(--popup-shadow)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0';
+export const menuItemClass =
+  'relative flex min-h-[var(--control-height)] cursor-default select-none items-center gap-2 rounded-sm px-2 py-1 outline-none transition-colors data-[highlighted]:bg-muted active:bg-border focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-focus-ring focus-visible:-outline-offset-[length:var(--focus-ring-offset)] data-[disabled]:pointer-events-none data-[disabled]:text-disabled-foreground data-[variant=danger]:text-destructive-text data-[variant=danger]:data-[highlighted]:bg-[var(--control-error-background)] data-[variant=danger]:active:bg-[var(--control-error-background)] data-[variant=danger]:data-[disabled]:text-disabled-foreground [&_svg]:size-[var(--control-icon-size)] [&_svg]:shrink-0';
+export const menuLabelClass = 'flex min-h-[var(--control-height-sm)] items-center px-2 text-xs text-muted-foreground';
+export const menuSeparatorClass = '-mx-1 my-1 h-px bg-border';

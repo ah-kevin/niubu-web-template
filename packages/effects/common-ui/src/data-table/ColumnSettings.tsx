@@ -77,7 +77,7 @@ export function ColumnSettings<T extends RowData>({
         sideOffset={6}
         collisionPadding={12}
         className={cn(
-          'pattern-column-settings flex max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-24px)] flex-col gap-0 overflow-hidden p-0 text-[12px] leading-[1.5714285714]',
+          'pattern-column-settings flex max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-24px)] flex-col gap-0 overflow-hidden p-0 text-[length:var(--control-font-size)] leading-[1.5714285714]',
           advanced ? 'w-[360px]' : 'w-[240px]',
         )}
       >
@@ -94,7 +94,7 @@ export function ColumnSettings<T extends RowData>({
                 key={column.id}
                 className="pattern-column-setting-row flex min-w-0 items-center gap-[6px] px-3 py-[.2em]"
               >
-                <Label className="pattern-column-setting-toggle min-w-0 flex-1 gap-[6px] text-[12px] leading-[1.5714285714] font-normal">
+                <Label className="pattern-column-setting-toggle min-w-0 flex-1 gap-[6px] text-[length:var(--control-font-size)] leading-[1.5714285714] font-normal">
                   <Checkbox
                     className="h-[15px] w-[1.22em] rounded-[2px] [&_svg]:size-[12px]"
                     checked={visible}
@@ -110,7 +110,7 @@ export function ColumnSettings<T extends RowData>({
                   type="button"
                   variant="ghost"
                   size="icon-xs"
-                  className="size-[18px] rounded-[2px] p-0 text-[12px] shadow-none aria-pressed:text-primary [&_svg]:size-[12px]"
+                  className="size-[18px] rounded-[2px] p-0 text-[length:var(--control-font-size)] shadow-none aria-pressed:text-primary [&_svg]:size-[12px]"
                   title={`${labels.pinColumn(name)} ${labels.pinStart}`}
                   aria-label={`${labels.pinColumn(name)} ${labels.pinStart}`}
                   aria-pressed={pin === 'start'}
@@ -122,7 +122,7 @@ export function ColumnSettings<T extends RowData>({
                   type="button"
                   variant="ghost"
                   size="icon-xs"
-                  className="size-[18px] rounded-[2px] p-0 text-[12px] shadow-none aria-pressed:text-primary [&_svg]:size-[12px]"
+                  className="size-[18px] rounded-[2px] p-0 text-[length:var(--control-font-size)] shadow-none aria-pressed:text-primary [&_svg]:size-[12px]"
                   title={`${labels.pinColumn(name)} ${labels.pinEnd}`}
                   aria-label={`${labels.pinColumn(name)} ${labels.pinEnd}`}
                   aria-pressed={pin === 'end'}
@@ -136,7 +136,7 @@ export function ColumnSettings<T extends RowData>({
           <Button
             type="button"
             variant="ghost"
-            className="h-auto w-full justify-between rounded-none px-3 py-[.4em] text-[12px]"
+            className="h-auto w-full justify-between rounded-none px-3 py-[.4em] text-[length:var(--control-font-size)]"
             aria-expanded={advanced}
             aria-controls={advancedId}
             onClick={() => setAdvanced(value => !value)}
@@ -151,7 +151,7 @@ export function ColumnSettings<T extends RowData>({
                 return (
                   <fieldset key={column.id} className="grid min-w-0 gap-2 border-b border-border py-2 last:border-0">
                     <legend className="pt-2 font-semibold">{name}</legend>
-                    <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2 text-[12px] font-normal">
+                    <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2 text-[length:var(--control-font-size)] font-normal">
                       {labels.columnWidth(name)}
                       <ColumnWidthInput
                         key={`${column.id}:${column.getSize()}`}
@@ -160,7 +160,7 @@ export function ColumnSettings<T extends RowData>({
                         onCommit={value => table.setColumnSizing(old => ({ ...old, [column.id]: value }))}
                       />
                     </Label>
-                    <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2 text-[12px] font-normal">
+                    <Label className="pattern-column-setting-control grid grid-cols-[minmax(0,1fr)_minmax(0,10rem)] items-center gap-2 text-[length:var(--control-font-size)] font-normal">
                       {labels.pinColumn(name)}
                       <Select
                         className="w-full min-w-0"
@@ -187,7 +187,7 @@ export function ColumnSettings<T extends RowData>({
             type="button"
             variant="outline"
             size="sm"
-            className="h-[2em] px-[6px] text-[12px] shadow-none"
+            className="h-[2em] px-[6px] text-[length:var(--control-font-size)] shadow-none"
             onClick={() => {
               if (onResetColumns) onResetColumns();
               else {
@@ -200,7 +200,12 @@ export function ColumnSettings<T extends RowData>({
             {labels.resetColumns}
           </Button>
           <PopoverClose asChild>
-            <Button type="button" variant="outline" size="sm" className="h-[2em] px-[6px] text-[12px] shadow-none">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-[2em] px-[6px] text-[length:var(--control-font-size)] shadow-none"
+            >
               {t('common:close')}
             </Button>
           </PopoverClose>

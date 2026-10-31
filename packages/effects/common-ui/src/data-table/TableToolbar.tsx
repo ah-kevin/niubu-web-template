@@ -47,13 +47,16 @@ export function TableToolbar<T extends RowData>({
     <div
       role="toolbar"
       aria-label={props.caption}
-      className="pattern-table-toolbar mx-[8px] flex min-h-[46.4px] flex-wrap items-center justify-between gap-[6px] p-0 text-[12px]"
+      className="pattern-table-toolbar mx-[8px] flex min-h-[46.4px] flex-wrap items-center justify-between gap-[6px] p-0 text-[length:var(--control-font-size)]"
     >
       <div className="pattern-table-summary flex min-w-0 flex-auto flex-wrap items-center gap-x-3 gap-y-[6px] [&>p]:m-0">
         {title != null && <h2 className="min-w-0 text-[16px] leading-6 font-semibold">{title}</h2>}
         {selectionSummary}
       </div>
       <div className="pattern-table-tools ms-auto flex min-w-0 flex-wrap items-center justify-end gap-[6px]">
+        {props.readState === 'ready' && (
+          <span className="text-muted-foreground">{props.labels.total(props.resultCount)}</span>
+        )}
         {toolbar?.actions}
         {toolbar?.search && (
           <TableToolButton
@@ -76,6 +79,7 @@ export function TableToolbar<T extends RowData>({
             <RefreshCw aria-hidden="true" className={cn(pending && 'animate-spin')} />
           </TableToolButton>
         )}
+        <ColumnSettings table={table} labels={props.labels} onResetColumns={props.onResetColumns} />
         {toolbar?.allowMaximize && (
           <TableToolButton
             ref={bindMaximizeButton}
@@ -86,7 +90,6 @@ export function TableToolbar<T extends RowData>({
             {maximized ? <Minimize aria-hidden="true" /> : <Maximize aria-hidden="true" />}
           </TableToolButton>
         )}
-        <ColumnSettings table={table} labels={props.labels} onResetColumns={props.onResetColumns} />
       </div>
     </div>
   );

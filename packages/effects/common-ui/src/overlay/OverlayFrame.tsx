@@ -1,4 +1,4 @@
-import { Suspense, useRef, type CSSProperties } from 'react';
+import { Suspense, useCallback, useRef, useState, type CSSProperties } from 'react';
 import { Button } from '@niubu/shadcn-ui/button';
 import { X } from '@niubu/icons';
 import {
@@ -44,6 +44,18 @@ export function OverlayFrame({
   size = 'default',
 }: OverlayProps & { size?: 'default' | 'wide'; variant: 'modal' | 'drawer' }) {
   const labels = useOverlayLabels();
+  const [scrolling, setScrolling] = useState(false);
+  const scrollObserver = useRef<ResizeObserver | null>(null);
+  const bindScroll = useCallback((node: HTMLDivElement | null) => {
+    scrollObserver.current?.disconnect();
+    scrollObserver.current = null;
+    if (!node) return;
+    const update = () => setScrolling(node.scrollHeight > node.clientHeight);
+    update();
+    scrollObserver.current = new ResizeObserver(update);
+    scrollObserver.current.observe(node);
+    if (node.firstElementChild) scrollObserver.current.observe(node.firstElementChild);
+  }, []);
   const previousFocus = useRef<HTMLElement | null>(null);
   const Root = variant === 'modal' ? Dialog : Sheet;
   const Content = variant === 'modal' ? DialogContent : SheetContent;
@@ -89,10 +101,11 @@ export function OverlayFrame({
           <Content
             className={
               variant === 'modal'
-                ? `pattern-overlay pattern-overlay-modal flex max-h-[calc(90dvh-1rem)] flex-col gap-0 overflow-clip p-0 ${size === 'wide' ? 'w-[min(46rem,calc(100vw-2rem))] sm:max-w-[46rem]' : ''}`
-                : `pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-clip ${size === 'wide' ? 'w-[min(56rem,100vw)] sm:max-w-4xl' : 'sm:max-w-lg'} [@media(max-width:700px)]:w-full [@media(max-width:700px)]:max-w-full`
+                ? `pattern-overlay pattern-overlay-modal flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-clip p-0 ${size === 'wide' ? 'w-[var(--dialog-width-lg)]' : ''}`
+                : `pattern-overlay pattern-overlay-drawer flex max-h-dvh flex-col gap-0 overflow-clip ${size === 'wide' ? 'w-[var(--drawer-width-lg)]' : ''} [@media(max-width:700px)]:w-full [@media(max-width:700px)]:max-w-full`
             }
             showCloseButton={false}
+            data-scroll={scrolling || undefined}
             data-fullscreen={fullscreen || undefined}
             style={fullscreen ? fullscreenStyle : undefined}
             {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
@@ -120,13 +133,16 @@ export function OverlayFrame({
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute top-2 right-2 size-8"
+              className="absolute top-2 right-2 size-[var(--control-height)]"
               aria-label={labels.close}
               onClick={() => requestClose('button')}
             >
               <X aria-hidden="true" size={16} />
             </Button>
-            <div className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain p-3">
+            <div
+              ref={bindScroll}
+              className="pattern-overlay-content min-h-0 flex-1 overflow-auto overscroll-contain px-[var(--popup-padding)] py-4"
+            >
               <div className="min-h-40">{children}</div>
             </div>
             {actions !== null && actions !== false && <Footer className="shrink-0">{actions}</Footer>}

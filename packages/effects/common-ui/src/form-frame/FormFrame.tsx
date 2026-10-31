@@ -21,7 +21,7 @@ import {
 import { useInteractionState } from '@niubu/stores';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
-import { Label } from '@niubu/shadcn-ui/label';
+import { FieldShell } from '../form/FieldShell';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -400,7 +400,7 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
       <AlertDialog open={reviewOpen} onOpenChange={changeReview}>
         {reviewOpen && (
           <AlertDialogContent
-            className="pattern-action-dialog min-w-0 max-h-[calc(100dvh-32px)] overflow-y-auto"
+            className="pattern-action-dialog min-w-0 max-h-[calc(100dvh-32px)]"
             onCloseAutoFocus={event => {
               event.preventDefault();
               const focus = returnFocus.current;
@@ -417,7 +417,7 @@ export function FormFrame<T extends FieldValues>(props: FormFrameProps<T>) {
                 {t(onSubmit ? 'common:form.liveReviewDescription' : 'common:form.reviewDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="pattern-review-content min-w-0 rounded-[var(--radius)] border border-border bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] [--muted-foreground:var(--secondary-muted-foreground)] [overflow-wrap:anywhere]">
+            <div className="pattern-review-content min-h-0 min-w-0 flex-1 overflow-y-auto rounded-[var(--radius)] border border-border bg-secondary p-[14px] text-[length:var(--workspace-caption-font-size)] leading-[1.8] [--muted-foreground:var(--secondary-muted-foreground)] [overflow-wrap:anywhere]">
               {review ?? <p>{t(onSubmit ? 'common:form.liveReviewPassed' : 'common:form.reviewPassed')}</p>}
             </div>
             {submitError && <div role="alert">{submitError}</div>}
@@ -482,47 +482,18 @@ export function FormField({ name, label, type = 'text', description, unit, requi
   const { register, getFieldState, formState } = useFormContext();
   const id = useId();
   const error = getFieldState(name, formState).error;
-  const help = description ? `${id}-help` : '';
-  const errorId = error ? `${id}-error` : '';
   return (
-    <div className="pattern-form-field min-w-0">
-      <Label className="mb-[8px] flex-wrap [&>span[aria-hidden]]:text-destructive" htmlFor={id}>
-        {label}
-        {required && <span aria-hidden="true"> *</span>}
-        {unit && (
-          <span className="pattern-unit ml-auto text-[length:var(--workspace-caption-font-size)] font-normal text-muted-foreground">
-            {unit}
-          </span>
-        )}
-      </Label>
-      <Input
-        id={id}
-        aria-label={label}
-        type={type}
-        {...register(name)}
-        aria-required={required}
-        aria-invalid={Boolean(error)}
-        aria-describedby={[help, errorId].filter(Boolean).join(' ') || undefined}
-      />
-      {description && (
-        <p
-          id={help}
-          className="pattern-field-help mt-[7px] text-[length:var(--workspace-caption-font-size)] leading-[1.7] text-muted-foreground"
-        >
-          {description}
-        </p>
-      )}
-      {error && (
-        <p
-          id={errorId}
-          className="field-error mt-[7px] text-[length:var(--workspace-caption-font-size)] text-destructive"
-        >
-          {resolveMessage
-            ? resolveMessage(String(error.message ?? t('validation:checkField')))
-            : String(error.message ?? t('validation:checkField'))}
-        </p>
-      )}
-    </div>
+    <FieldShell
+      id={id}
+      label={label}
+      description={description}
+      unit={unit}
+      required={required}
+      error={error ? String(error.message ?? t('validation:checkField')) : undefined}
+      resolveMessage={resolveMessage}
+    >
+      {accessibility => <Input {...register(name)} {...accessibility} aria-label={label} type={type} />}
+    </FieldShell>
   );
 }
 

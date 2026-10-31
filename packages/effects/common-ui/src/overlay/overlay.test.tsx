@@ -355,3 +355,17 @@ it('keeps one modal form through default, wide and fullscreen layout changes',as
  view.rerender(<Modal open size="wide" onOpenChange={change} title="Sized"><input aria-label="Retained input" defaultValue="baseline"/></Modal>);expect(screen.getByLabelText('Retained input')).toBe(input);expect(input).toHaveValue('baseline edited');
  view.rerender(<Modal open size="wide" fullscreen onOpenChange={change} title="Sized"><input aria-label="Retained input" defaultValue="baseline"/></Modal>);expect(screen.getByRole('dialog').style.width).toBe('100vw');expect(screen.getByRole('dialog').style.maxWidth).toBe('none');expect(screen.getByLabelText('Retained input')).toBe(input);expect(change).not.toHaveBeenCalled();
 });
+
+it('danger confirmations retain safe initial focus and resolve cancellation once', async () => {
+  const instance = service();
+  let result!: Promise<boolean>;
+  act(() => {
+    result = instance.api.confirm({ title: 'Remove item', description: 'Cannot undo', tone: 'danger' });
+  });
+  const dialog = screen.getByRole('alertdialog', { name: 'Remove item' });
+  expect(dialog).toHaveAttribute('data-tone', 'danger');
+  expect(screen.getByRole('button', { name: '取消' })).toHaveFocus();
+  await userEvent.keyboard('{Escape}');
+  await expect(result).resolves.toBe(false);
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+});

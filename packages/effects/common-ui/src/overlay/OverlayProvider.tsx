@@ -7,6 +7,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@niubu/shadcn-ui/alert-dialog';
+import { CircleAlert } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { PendingOverlay } from '@niubu/shadcn-ui/pending-overlay';
 import { OverlayContext, useOverlayLabels } from './OverlayContext';
@@ -99,6 +100,7 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
           >
             <AlertDialogContent
               ref={surface}
+              tone={active.options.tone}
               onOpenAutoFocus={event => {
                 event.preventDefault();
                 initialFocus.current?.focus({ preventScroll: true });
@@ -113,7 +115,19 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
               }}
             >
               <AlertDialogHeader key={`header-${active.id}`}>
-                <AlertDialogTitle>{active.options.title}</AlertDialogTitle>
+                <AlertDialogTitle className="flex items-center gap-3">
+                  {active.options.tone && active.options.tone !== 'default' && (
+                    <CircleAlert
+                      aria-hidden="true"
+                      className={
+                        active.options.tone === 'danger'
+                          ? 'size-6 shrink-0 text-destructive-text'
+                          : 'size-6 shrink-0 text-warning'
+                      }
+                    />
+                  )}
+                  {active.options.title}
+                </AlertDialogTitle>
                 <AlertDialogDescription className={active.options.description == null ? 'sr-only' : undefined}>
                   {active.options.description}
                 </AlertDialogDescription>
@@ -126,6 +140,7 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
                 )}
                 <Button
                   ref={active.kind === 'alert' ? initialFocus : undefined}
+                  variant={active.options.tone === 'danger' ? 'destructive' : 'default'}
                   type="button"
                   onClick={() => finish(active, true)}
                 >

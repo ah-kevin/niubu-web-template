@@ -59,7 +59,7 @@ export function SchemaFields<V extends FieldValues, C extends CustomFieldParams>
   const groups = model.groups ?? [];
   const style = {
     '--schema-columns': columns,
-    '--schema-label-width':
+    '--label-w':
       typeof model.layout?.labelWidth === 'number' ? `${model.layout.labelWidth}px` : model.layout?.labelWidth,
   } as CSSProperties;
   const ungrouped = rows.filter(({ field }) => !field.group || !groups.some(group => group.id === field.group));

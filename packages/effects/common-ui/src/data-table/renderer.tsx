@@ -1,5 +1,5 @@
 import { columnAlignment } from './alignment';
-import { Loading, ReadState } from '../read-state';
+import { Loading, ReadState, Skeleton } from '../read-state';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
@@ -41,7 +41,16 @@ export function ReadMessage<T>({
       </div>
     );
   if (props.readState === 'pending' && props.statePresentation === 'feedback')
-    return <Loading label={labels.pending} />;
+    return (
+      <>
+        <Loading label={labels.pending} />
+        <div className="grid gap-3 p-4" aria-hidden="true">
+          {[0, 1, 2].map(row => (
+            <Skeleton key={row} className="h-[var(--row-height)] w-full" />
+          ))}
+        </div>
+      </>
+    );
   if (props.readState === 'error' && props.statePresentation === 'feedback')
     return (
       <div className="pattern-read-feedback">
@@ -56,6 +65,11 @@ export function ReadMessage<T>({
     return (
       <div className="px-[18px] py-[32px]" role="status" aria-busy="true">
         {labels.pending}
+        <div className="mt-3 grid gap-3" aria-hidden="true">
+          {[0, 1, 2].map(row => (
+            <Skeleton key={row} className="h-[var(--row-height)] w-full" />
+          ))}
+        </div>
       </div>
     );
   if (props.readState === 'error')
@@ -75,26 +89,32 @@ export function ReadMessage<T>({
           ? labels.sourceUnknown
           : labels.filteredEmpty;
   return (
-    <div className="px-[18px] py-[32px]" role="status">
-      {message}
-      {props.emptyAction}
-    </div>
+    <ReadState
+      status={props.sourceCount === 0 ? 'source-empty' : 'empty'}
+      title={message}
+      message=""
+      compact
+      actions={props.emptyAction ?? null}
+    />
   );
 }
 export const SelectionCheckbox = memo(function SelectionCheckbox({
   selected,
   indeterminate = false,
+  disabled,
   label,
   onChange,
 }: {
   selected: boolean;
   indeterminate?: boolean;
+  disabled?: boolean;
   label: string;
   onChange: (selected: boolean) => void;
 }) {
   return (
     <Checkbox
       aria-label={label}
+      disabled={disabled}
       checked={indeterminate ? 'indeterminate' : selected}
       onCheckedChange={checked => onChange(checked === true)}
     />
@@ -125,8 +145,10 @@ function HeaderView<T extends RowData>({
   labels,
   children,
   alignment,
+  disabled,
 }: {
   header: ListNativeHeader<T>;
+  disabled?: boolean;
   labels: TableLabels;
   children: ReactNode;
   alignment: TableAlignment;
@@ -137,6 +159,14 @@ function HeaderView<T extends RowData>({
   const width = header.getSize();
   return (
     <th
+      data-fixed={column.getIsPinned() || undefined}
+      data-fixed-edge={
+        column.getIsPinned() === 'start'
+          ? column.getAfter('start') === 0 || undefined
+          : column.getIsPinned() === 'end'
+            ? column.getStart('end') === 0 || undefined
+            : undefined
+      }
       scope={header.colSpan > 1 ? 'colgroup' : 'col'}
       colSpan={header.colSpan}
       style={{ ...pinnedStyle(column), width, minWidth: width, maxWidth: width, textAlign: alignment }}
@@ -148,7 +178,7 @@ function HeaderView<T extends RowData>({
         (column.getCanSort() ? (
           <Button
             className={cn(
-              'h-auto w-full min-w-0 gap-1 p-0 text-[12px] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
+              'h-auto w-full min-w-0 gap-1 p-0 text-[length:var(--control-font-size)] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
               alignment === 'start'
                 ? 'justify-start pe-6 text-start'
                 : alignment === 'center'
@@ -157,17 +187,18 @@ function HeaderView<T extends RowData>({
             )}
             variant="ghost"
             type="button"
+            disabled={disabled}
             aria-label={labels.sortColumn(name)}
             title={name}
             onClick={column.getToggleSortingHandler()}
           >
             <span className="min-w-0 truncate">{children}</span>
             {sorted === 'asc' ? (
-              <ArrowUp aria-hidden="true" />
+              <ArrowUp aria-hidden="true" className="text-primary-text" />
             ) : sorted === 'desc' ? (
-              <ArrowDown aria-hidden="true" />
+              <ArrowDown aria-hidden="true" className="text-primary-text" />
             ) : (
-              <span aria-hidden="true" className="inline-flex text-muted-foreground [&_svg]:size-[12px]">
+              <span aria-hidden="true" className="inline-flex text-disabled-foreground opacity-45 [&_svg]:size-[12px]">
                 <ArrowUp />
                 <ArrowDown />
               </span>
@@ -181,6 +212,7 @@ function HeaderView<T extends RowData>({
           variant="ghost"
           type="button"
           className="pattern-column-resizer rounded-none p-0"
+          disabled={disabled}
           aria-label={labels.resizeColumn(name)}
           onMouseDown={header.getResizeHandler()}
           onTouchStart={header.getResizeHandler()}
@@ -218,7 +250,17 @@ function CellView<T extends RowData>({
   alignment: TableAlignment;
 }) {
   return (
-    <td style={{ ...pinnedStyle(column), textAlign: alignment }}>
+    <td
+      data-fixed={column.getIsPinned() || undefined}
+      data-fixed-edge={
+        column.getIsPinned() === 'start'
+          ? column.getAfter('start') === 0 || undefined
+          : column.getIsPinned() === 'end'
+            ? column.getStart('end') === 0 || undefined
+            : undefined
+      }
+      style={{ ...pinnedStyle(column), textAlign: alignment }}
+    >
       <div className="pattern-cell-content">{children}</div>
     </td>
   );
@@ -409,46 +451,65 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
         maximized={maximized}
         onMaximizeChange={setMaximized}
       />
-      <ReadMessage props={props} hasRows={rows.length > 0} />
-      {props.readState === 'ready' && rows.length > 0 && (
-        <div
-          className={cn(
-            'native-table-scroll max-w-full overflow-x-auto overscroll-x-contain',
-            maximized && 'min-h-0 flex-1 overflow-y-auto',
-          )}
+      <div
+        className={cn(
+          'native-table-scroll max-w-full overflow-x-auto overscroll-x-contain',
+          maximized && 'min-h-0 flex-1 overflow-y-auto',
+        )}
+      >
+        <table
+          style={{
+            width: selectionHeader
+              ? `calc(${table.getTotalSize()}px + var(--control-height) + 1rem)`
+              : table.getTotalSize(),
+            tableLayout: 'fixed',
+          }}
         >
-          <table style={{ width: table.getTotalSize() + (selectionHeader ? 44 : 0), tableLayout: 'fixed' }}>
-            <caption className="sr-only">{props.caption}</caption>
-            <thead>
-              {headerGroups.map(group => (
-                <tr key={group.id}>
-                  {selectionHeader && (
-                    <th scope="col" className="pattern-selection-cell" style={{ width: 44 }}>
-                      {selectionHeader}
-                    </th>
-                  )}
-                  {group.headers.map(header => (
-                    <Fragment key={header.id}>{renderHeader(header)}</Fragment>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {rows.map(row => (
-                <tr
-                  key={row.id}
-                  data-row-id={row.id}
-                  aria-selected={isRowSelected?.(row)}
-                  {...rowActivation(row.original, props.onRowActivate)}
+          <caption className="sr-only">{props.caption}</caption>
+          <thead>
+            {headerGroups.map(group => (
+              <tr key={group.id}>
+                {selectionHeader && (
+                  <th
+                    scope="col"
+                    className="pattern-selection-cell"
+                    style={{ width: 'calc(var(--control-height) + 1rem)' }}
+                  >
+                    {selectionHeader}
+                  </th>
+                )}
+                {group.headers.map(header => (
+                  <Fragment key={header.id}>{renderHeader(header)}</Fragment>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {(props.readState !== 'ready' || rows.length === 0) && (
+              <tr>
+                <td
+                  colSpan={table.getVisibleLeafColumns().length + (selectionHeader ? 1 : 0)}
+                  className="pattern-table-state"
                 >
-                  {selectionCell && <td className="pattern-selection-cell">{selectionCell(row)}</td>}
-                  {renderCells(row)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  <ReadMessage props={props} hasRows={false} />
+                </td>
+              </tr>
+            )}
+            {rows.map(row => (
+              <tr
+                key={row.id}
+                data-row-id={row.id}
+                aria-selected={isRowSelected?.(row)}
+                data-state={isRowSelected?.(row) ? 'selected' : undefined}
+                {...rowActivation(row.original, props.onRowActivate)}
+              >
+                {selectionCell && <td className="pattern-selection-cell">{selectionCell(row)}</td>}
+                {renderCells(row)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {props.readState === 'ready' && footer}
     </section>
   );
@@ -471,7 +532,12 @@ export function ListView<T extends RowData>({
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(props, header.column.id)}>
+        <HeaderView<T>
+          header={header}
+          labels={props.labels}
+          disabled={props.readState !== 'ready'}
+          alignment={columnAlignment(props, header.column.id)}
+        >
           <table.FlexRender header={header} />
         </HeaderView>
       )}
@@ -513,7 +579,12 @@ export function SelectableView<T extends RowData>({
       selectionSummary={selectionSummary}
       isRowSelected={selectionCell ? row => table.state.rowSelection[row.id] === true : undefined}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(props, header.column.id)}>
+        <HeaderView<T>
+          header={header}
+          labels={props.labels}
+          disabled={props.readState !== 'ready'}
+          alignment={columnAlignment(props, header.column.id)}
+        >
           <table.FlexRender header={header} />
         </HeaderView>
       )}
@@ -545,7 +616,12 @@ export function TreeView<T extends RowData>({
       headerGroups={table.getHeaderGroups()}
       rows={table.getRowModel().rows}
       renderHeader={header => (
-        <HeaderView<T> header={header} labels={props.labels} alignment={columnAlignment(alignProps, header.column.id)}>
+        <HeaderView<T>
+          header={header}
+          labels={props.labels}
+          disabled={props.readState !== 'ready'}
+          alignment={columnAlignment(alignProps, header.column.id)}
+        >
           <table.FlexRender header={header} />
         </HeaderView>
       )}
@@ -563,17 +639,24 @@ export function TreeView<T extends RowData>({
                       : 'justify-start',
                 )}
                 style={{
-                  paddingInlineStart: columnAlignment(alignProps, cell.column.id) === 'end' ? 0 : row.depth * 20,
-                  paddingInlineEnd: columnAlignment(alignProps, cell.column.id) === 'end' ? row.depth * 20 : 0,
+                  paddingInlineStart:
+                    columnAlignment(alignProps, cell.column.id) === 'end'
+                      ? 0
+                      : `calc(${row.depth} * var(--tree-indent))`,
+                  paddingInlineEnd:
+                    columnAlignment(alignProps, cell.column.id) === 'end'
+                      ? `calc(${row.depth} * var(--tree-indent))`
+                      : 0,
                 }}
               >
-                <span className="inline-flex w-[18px] shrink-0 items-center">
+                <span className="inline-flex w-[var(--control-height-sm)] shrink-0 items-center">
                   {row.getCanExpand() && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon-xs"
-                      className="pattern-tree-toggle size-[12px] rounded-none border-0 bg-transparent p-0 text-foreground shadow-none! hover:bg-transparent [&_svg]:size-[12px]"
+                      className="pattern-tree-toggle size-[var(--control-height-sm)] rounded-sm border-0 bg-transparent p-0 text-muted-foreground shadow-none! hover:bg-muted hover:text-foreground [&_svg]:size-[var(--control-icon-size)]"
+                      data-state={row.getIsExpanded() ? 'open' : 'closed'}
                       aria-expanded={row.getIsExpanded()}
                       aria-label={t(row.getIsExpanded() ? 'common:table.collapseRow' : 'common:table.expandRow', {
                         name: props.getRowLabel(row.original),

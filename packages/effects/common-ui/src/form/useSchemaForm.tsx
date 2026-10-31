@@ -87,7 +87,7 @@ export function useSchemaForm<
   const form = useForm<V>({
     defaultValues: initial.defaults,
     resolver,
-    mode: 'onSubmit',
+    mode: 'onBlur',
     shouldFocusError: false,
     shouldUnregister: false,
   });

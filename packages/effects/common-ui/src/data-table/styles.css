@@ -54,3 +54,79 @@
   cursor: not-allowed;
   opacity: 1;
 }
+
+/* Header, state rows and pinned cells share the same theme/density tokens. */
+.native-data-table {
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius-lg);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+.native-data-table table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+.native-data-table th,
+.native-data-table td {
+  position: relative;
+  box-sizing: border-box;
+  height: var(--row-height);
+  border-bottom: 1px solid var(--border);
+  padding: 6px var(--control-padding-inline);
+  vertical-align: middle;
+}
+.native-data-table th {
+  --table-row-background: var(--table-header);
+  background: var(--table-header);
+  color: var(--foreground);
+  font-weight: 500;
+}
+.native-data-table td {
+  background: var(--table-row-background, var(--card));
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.native-data-table tbody tr:hover,
+.native-data-table tbody tr:has([data-row-menu-open]) {
+  --table-row-background: var(--table-row-hover);
+}
+.native-data-table tbody tr[aria-selected='true'] {
+  --table-row-background: var(--table-row-selected);
+}
+.native-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.native-data-table .pattern-selection-cell {
+  text-align: center;
+}
+.native-data-table tr[tabindex] {
+  cursor: pointer;
+}
+.native-data-table tr:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.native-data-table .pattern-table-state {
+  height: auto;
+  padding: 0;
+  background: var(--card);
+}
+.native-data-table [data-fixed-edge] {
+  box-shadow: 3px 0 6px -3px color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+.native-data-table [data-fixed='end'][data-fixed-edge] {
+  box-shadow: -3px 0 6px -3px color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+.pattern-selection-bar[data-active] {
+  border-inline-start: 2px solid var(--primary);
+  background: var(--nav-active);
+  padding: 6px 12px;
+  border-radius: var(--control-radius);
+}
+.native-data-table .pattern-column-resizer:hover::after {
+  width: 2px;
+  background: var(--primary);
+}
