@@ -28,12 +28,53 @@ Popover 默认带箭头，`PopoverContent showArrow={false}` 可隐藏，`Popove
 
 所有动画在 prefers-reduced-motion 下停止；这些组件不发起请求、不引入人工延迟。
 
-## 表格的已实现范围
+## DataTable 表格能力
 
-DataTable 的 read/list/selectable-list/tree-list 保留现有 model、排序、分页、列显隐/宽度/固定、选择、工具栏和作用域合同。空、错、加载时保留表头，状态行跨可见列；selected 行和打开菜单的行读取状态呈现。行操作桌面最多直接显示一个普通动作，窄于 960px 全部放入更多；危险项在菜单最后并与普通项分隔。
+`read`、`list`、`selectable-list`、`tree-list` 沿用原来的数据和状态所有者。普通列表与可选列表支持以下可选配置，省略时保持原调用行为：
 
-树的“展开全部 / 收起全部”通过已有受控 expanded 传 true / {} 组合，无新模型。固定列保留逻辑方向 start/end。
+- `layout`：`stickyHeader`、`maxHeight`、`striped`、`bordered` 与 `wrap`；固定列继续使用 `columnPinning`。
+- `columnFilters`：`local` 模式由 `matches` 在完整客户端数据中匹配；`manual` 模式由调用方接收受控筛选值并查询。已应用筛选可清除。
+- `details`：按稳定行 ID 保存展开状态，`render(row)` 提供详情内容；只展示一层详情。
+- `editing`：`createDraft` 返回独立草稿，`renderCell` 组合现有控件，`validate` 返回按列的错误，`onSave` 接收 AbortSignal。调用方提交新 rows，组件不直接修改原模型。取消、owner 变化及行离开当前视图会终止旧操作。
+- `cellSpan`：根据当前可见页面行列返回 `rowSpan/colSpan`；`mergeConsecutiveRows` 可生成相邻分组合并。不要将过滤前的固定行下标用于合并。
+- `summary`：`renderCell` 根据当前展示页生成 `tfoot`，在标签中明确统计口径。
+- `reorder`：使用原生拖拽或键盘移动，`onReorder` 接收建议的完整行 ID 顺序和 AbortSignal；只在客户端完整且无排序/筛选干扰的序列中启用。数据仍由调用方确认保存。
+- `refresh="pending" | "error"`：调用方显式保留上一次成功的 ready 模型，刷新时变淡并覆盖加载圈，失败时显示可重试提示。普通 `readState` 非 ready 仍要求无 rows、计数未知。
+- `selectionMode="single"`：可选列表改用单选，表头不显示全选；默认仍为多选。
 
-非 ready 的 rows 必须为空、计数未知，因此当前刷新不显示半透明旧行。通用详情展开、行内编辑、body rowspan、汇总行、行拖拽、树懒加载与级联、列筛选及固定表头配置仍未提供；不要把底层能力或静态示例当作 DataTable 已支持的 API。
+空、错、加载时保留表头。首次加载的骨架行数跟随 pageSize；筛选无结果与来源为空分别呈现。行操作桌面最多直接显示一个普通动作，窄于 960px 全部放入更多；危险项在菜单最后并与普通项分隔。
 
-示例见 Feedback、Forms 的“失焦校验”、Tables 的三层树与现有表格组合。
+## 树表
+
+`tree-list` 的 `tree` 配置支持：
+
+- `selection.state`：受控或内部行选择；父子级联，祖先显示半选。`isDisabled` 指定的节点及其子树不参与级联。
+- `lazy`：`ownerKey` 界定身份/作用域；`hasChildren` 声明未加载分支；`loadChildren(row, { signal })` 返回子节点。展开去重，失败可重试，owner 更换和卸载会取消旧请求，迟到结果不会写入新 owner。
+- `search.query`：在已加载节点标签中搜索，保留匹配节点的祖先并临时展开；清空后恢复原展开。高亮按文本渲染，不接受 HTML，也不自动查询未知子节点。
+
+原静态完整树、单行展开、展开全部/收起全部和受控 `expanded` 继续可用；名称列默认起始对齐。
+
+## Playground 入口
+
+左侧“组件示例”保留基础控件、表单、反馈入口，增加“表格组件与场景”分组和完整列表页：
+
+| 设计文件 / 场景 | 页面 |
+| --- | --- |
+| 16 个基础控件（含 Textarea 计数、NumberInput 单位、可点击 Card） | `/examples/components` |
+| FormField、横向标签、失焦校验、提交聚焦 | `/examples/forms` |
+| Modal、ConfirmDialog、Drawer、Popover、Tooltip、两类菜单、EmptyState、Loading | `/examples/feedback` |
+| TableChoose | `/examples/tables/choose` |
+| Table | `/examples/tables/read` |
+| TableRowActions | `/examples/tables/actions` |
+| TableSelection 多选 / 单选 | `/examples/tables/selection`、`/examples/tables/single` |
+| TableLayout | `/examples/tables/layout` |
+| TableHeader | `/examples/tables/header` |
+| TableExpand | `/examples/tables/expand` |
+| TableEdit | `/examples/tables/edit` |
+| TableMerge | `/examples/tables/merge` |
+| TableDrag | `/examples/tables/drag` |
+| TableStates | `/examples/tables/states` |
+| TreeTable 级联、懒加载和搜索 | `/examples/tables/tree` |
+| PageListLightStandard / LightCompact / DarkStandard / DarkCompact | `/examples/complete-list`，页内切换四种组合 |
+
+列表页使用合成数据，新增、编辑、删除、批量操作只作用于本页状态。主题、密度、hover/focus/disabled 等状态使用实际控件操作，不复制设计预览的强制状态类。Sidebar、PageTabs、Header、AppShell 沿用项目壳层，Cover/index 不作为组件实现。

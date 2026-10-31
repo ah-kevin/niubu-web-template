@@ -902,5 +902,20 @@
   "examples.completeList.note.moving": "Vaccinated",
   "examples.completeList.note.alert": "Reduced appetite; attention required",
   "examples.completeList.note.departed": "—",
-  "examples.completeList.invalidNote": "Notes must be no longer than 500 characters."
+  "examples.completeList.invalidNote": "Notes must be no longer than 500 characters.",
+  "designSystem.choose": "Choose a table",
+  "designSystem.read": "Basic table",
+  "designSystem.selection": "Multiple selection",
+  "designSystem.single": "Single selection",
+  "designSystem.layout": "Sticky headers and layout",
+  "designSystem.header": "Sort and column filters",
+  "designSystem.expand": "Expandable details",
+  "designSystem.edit": "Inline editing",
+  "designSystem.merge": "Merged cells and summary",
+  "designSystem.drag": "Drag and keyboard reorder",
+  "designSystem.states": "Loading and failures",
+  "designSystem.tree": "Cascading and lazy trees",
+  "designSystem.group": "Table components and scenarios",
+  "designSystem.description": "Interactive public component examples. Theme and density follow display preferences.",
+  "designSystem.actions": "Row actions"
 }

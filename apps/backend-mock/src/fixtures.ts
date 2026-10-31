@@ -75,6 +75,28 @@ export const examplesMenu = {
     { kind: 'page', id: 'example-tables', pageId: 'playground.examples.tables' },
     { kind: 'page', id: 'example-components', pageId: 'playground.examples.components' },
     { kind: 'page', id: 'example-feedback', pageId: 'playground.examples.feedback' },
+    {
+      kind: 'group',
+      id: 'design-table-scenarios',
+      title: 'app:designSystem.group',
+      icon: 'database',
+      children: [
+        { kind: 'page', id: 'design-choose', pageId: 'playground.design.choose' },
+        { kind: 'page', id: 'design-read', pageId: 'playground.design.read' },
+        { kind: 'page', id: 'design-actions', pageId: 'playground.design.actions' },
+        { kind: 'page', id: 'design-selection', pageId: 'playground.design.selection' },
+        { kind: 'page', id: 'design-single', pageId: 'playground.design.single' },
+        { kind: 'page', id: 'design-layout', pageId: 'playground.design.layout' },
+        { kind: 'page', id: 'design-header', pageId: 'playground.design.header' },
+        { kind: 'page', id: 'design-expand', pageId: 'playground.design.expand' },
+        { kind: 'page', id: 'design-edit', pageId: 'playground.design.edit' },
+        { kind: 'page', id: 'design-merge', pageId: 'playground.design.merge' },
+        { kind: 'page', id: 'design-drag', pageId: 'playground.design.drag' },
+        { kind: 'page', id: 'design-states', pageId: 'playground.design.states' },
+        { kind: 'page', id: 'design-tree', pageId: 'playground.design.tree' },
+      ],
+    },
+    { kind: 'page', id: 'example-complete-list', pageId: 'playground.examples.complete-list' },
   ],
 } as const satisfies BackendMenuItem;
 const northNetworkMenu = [

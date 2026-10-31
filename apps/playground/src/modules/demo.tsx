@@ -1,5 +1,6 @@
 import { systemModule } from './system';
 import { examplesModule } from './examples';
+import { designSystemModule } from './design-system';
 import type { ComponentType } from 'react';
 import { createModuleRegistry } from '@niubu/access';
 import type { DomainModule, RouteMeta } from '@niubu/types';
@@ -73,7 +74,7 @@ const demo: DomainModule<RouteMeta, ComponentType> = {
     '/embedded/:menuId': async () => ({ Component: (await import('../auth/Embedded')).EmbeddedPage }),
   },
 };
-export const registry = createModuleRegistry([demo, systemModule, examplesModule]);
+export const registry = createModuleRegistry([demo, systemModule, examplesModule, designSystemModule]);
 /** Backend selects stable public ids; code exclusively owns paths, order and loaders. */
 export function selectPublicMenu(pageIds: readonly string[]) {
   const selected = new Set(pageIds);

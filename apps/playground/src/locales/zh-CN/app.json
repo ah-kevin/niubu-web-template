@@ -902,5 +902,20 @@
   "examples.completeList.note.moving": "已完成免疫",
   "examples.completeList.note.alert": "食欲下降，需关注",
   "examples.completeList.note.departed": "—",
-  "examples.completeList.invalidNote": "备注不能超过 500 个字符。"
+  "examples.completeList.invalidNote": "备注不能超过 500 个字符。",
+  "designSystem.choose": "表格场景选型",
+  "designSystem.read": "基础表格",
+  "designSystem.selection": "多选与批量操作",
+  "designSystem.single": "单选表格",
+  "designSystem.layout": "固定表头与布局",
+  "designSystem.header": "表头排序与筛选",
+  "designSystem.expand": "展开行详情",
+  "designSystem.edit": "行内编辑",
+  "designSystem.merge": "合并与汇总",
+  "designSystem.drag": "拖拽与键盘排序",
+  "designSystem.states": "加载刷新与失败",
+  "designSystem.tree": "树表级联与懒加载",
+  "designSystem.group": "表格组件与场景",
+  "designSystem.description": "基于公共组件的真实交互示例；浅深色与信息密度沿用显示偏好。",
+  "designSystem.actions": "行操作"
 }
