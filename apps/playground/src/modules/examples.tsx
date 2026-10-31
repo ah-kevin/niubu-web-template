@@ -3,6 +3,17 @@ import type { DomainModule, RouteMeta } from '@niubu/types';
 
 const routes = [
   {
+    id: 'playground.examples.complete-list',
+    path: '/examples/complete-list',
+    titleKey: 'app:examples.completeList.title',
+    iconToken: 'database',
+    order: 36,
+    navigation: true,
+    scope: 'workspace',
+    capability: null,
+    requiredCodes: ['demo:read'],
+  },
+  {
     id: 'playground.examples.forms',
     path: '/examples/forms',
     titleKey: 'app:examples.forms',
@@ -191,6 +202,9 @@ export const examplesModule: DomainModule<RouteMeta, ComponentType> = {
   permissions: [],
   namespaces: ['app'],
   loaders: {
+    '/examples/complete-list': async () => ({
+      Component: (await import('../examples/tables/CompleteListPage')).CompleteListPage,
+    }),
     '/examples/forms': async () => ({ Component: (await import('../examples/forms/FormsPage')).FormsPage }),
     '/examples/tables': async () => ({ Component: (await import('../examples/tables/TablesPage')).TablesPage }),
     '/examples/components': async () => ({
