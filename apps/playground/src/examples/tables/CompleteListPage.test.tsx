@@ -33,7 +33,7 @@ it('preserves selection across pages and applies explicit all-results selection'
   expect(screen.getByText('已选择 2 条')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: '第 1 页' }));
   expect(screen.getByRole('checkbox', { name: '选择 animal-0' })).toBeChecked();
-  fireEvent.click(screen.getByRole('button', { name: /全选.*128/ }));
+  fireEvent.click(screen.getByRole('button', { name: '选择全部 128 条结果' }));
   expect(screen.getByText('已选择 128 条')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: '清空选择' }));
   expect(screen.getByText('已选择 0 条')).toBeVisible();

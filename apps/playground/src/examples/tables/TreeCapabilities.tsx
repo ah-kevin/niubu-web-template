@@ -9,7 +9,7 @@ import {
 import { useTranslation } from '@niubu/locales/react';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
-import { ExampleSection } from '../ExamplePage';
+import { ExamplePage, ExampleSection } from '../ExamplePage';
 import { treeCopy } from './tree-copy';
 
 type Node = { id: string; name: string; count: number; disabled?: boolean; lazy?: boolean; children?: Node[] };
@@ -75,10 +75,20 @@ export function TreeCapabilities() {
         <Button variant="outline" onClick={() => setQuery('')}>
           {t('examples.treeCapabilities.clear')}
         </Button>
-        <Button variant="outline" disabled={!!query.trim()} onClick={() => setExpanded(true)}>
+        <Button
+          variant="outline"
+          disabled={!!query.trim()}
+          aria-label={`${t('examples.treeCapabilities.expand')} · ${t('examples.treeCapabilities.title')}`}
+          onClick={() => setExpanded(true)}
+        >
           {t('examples.treeCapabilities.expand')}
         </Button>
-        <Button variant="outline" disabled={!!query.trim()} onClick={() => setExpanded({})}>
+        <Button
+          variant="outline"
+          disabled={!!query.trim()}
+          aria-label={`${t('examples.treeCapabilities.collapse')} · ${t('examples.treeCapabilities.title')}`}
+          onClick={() => setExpanded({})}
+        >
           {t('examples.treeCapabilities.collapse')}
         </Button>
         <Button
@@ -163,5 +173,14 @@ export function TreeCapabilities() {
         }}
       />
     </ExampleSection>
+  );
+}
+
+export function TreeCapabilitiesPage() {
+  const { t } = useTranslation('app', treeCopy);
+  return (
+    <ExamplePage title={t('examples.treeCapabilities.title')}>
+      <TreeCapabilities />
+    </ExamplePage>
   );
 }
