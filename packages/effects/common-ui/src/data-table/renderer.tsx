@@ -1,3 +1,4 @@
+import { Pagination as SharedPagination } from '../pagination';
 import type { AdvancedTableOptions, CellSpan, ColumnFilterValue, MultiColumnFilterValues } from './advanced-types';
 import { ColumnFilterControl } from './ColumnFilterControl';
 import { resolveCellSpans } from './advanced-helpers';
@@ -12,8 +13,7 @@ import { Loading, ReadState, Skeleton } from '../read-state';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
-import { Select } from '@niubu/shadcn-ui/select';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@niubu/icons';
+import { ArrowDown, ArrowUp, ChevronDown } from '@niubu/icons';
 import { useTranslation } from '@niubu/locales/react';
 import { rowActivation } from './row-activation';
 import {
@@ -314,109 +314,18 @@ function Pagination<T extends RowData>({
   caption: string;
   initialPageSize: number;
 }) {
-  const { t } = useTranslation();
-  const pagination = table.state.pagination;
-  const pageCount = Math.max(1, table.getPageCount());
-  const current = pagination.pageIndex + 1;
-  const windowSize = pageCount > 7 ? 5 : 7;
-  const start =
-    pageCount > 7 ? (current >= pageCount - 2 ? Math.max(pageCount - windowSize + 1, 1) : Math.max(current - 2, 1)) : 1;
-  const pages = Array.from({ length: Math.min(windowSize, pageCount) }, (_, index) => start + index);
-  const firstLabel = labels.firstPage ?? t('common:table.first');
-  const lastLabel = labels.lastPage ?? t('common:table.last');
-  const previousJumpLabel = labels.previousPages ?? t('common:table.previousPages');
-  const nextJumpLabel = labels.nextPages ?? t('common:table.nextPages');
-  const control = (label: string, content: ReactNode, disabled: boolean, onClick: () => void) => (
-    <Button
-      variant="ghost"
-      type="button"
-      className="pattern-page-button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {content}
-    </Button>
-  );
+  const { pageIndex, pageSize } = table.state.pagination;
   return (
-    <nav
-      className="pattern-pagination flex min-h-[36px] flex-wrap items-center gap-y-2 px-3 py-1 text-[12px] leading-[1.5714285714]"
-      aria-label={caption}
-    >
-      <Select
-        className="pattern-page-size me-auto h-[28px] w-auto min-w-24 px-2 text-[12px]"
-        label={labels.pageSize}
-        value={String(pagination.pageSize)}
-        onValueChange={value => table.setPageSize(Number(value))}
-        options={[...new Set([10, 20, 30, 50, 100, 200, initialPageSize, pagination.pageSize])]
-          .sort((a, b) => a - b)
-          .map(size => ({
-            value: String(size),
-            label: labels.pageSizeOption?.(size) ?? t('common:table.pageSizeOption', { size }),
-          }))}
-      />
-      <span className="sr-only" aria-live="polite">
-        {labels.page(current, pageCount)}
-      </span>
-      <div className="flex min-w-0 flex-wrap items-center gap-y-2">
-        {control(
-          firstLabel,
-          <span aria-hidden="true" className="inline-flex items-center">
-            <span className="h-[12px] border-s border-current" />
-            <ChevronLeft className="size-[12px]" />
-          </span>,
-          !table.getCanPreviousPage(),
-          () => table.setPageIndex(0),
-        )}
-        {control(
-          previousJumpLabel,
-          <ChevronsLeft aria-hidden="true" className="size-[12px]" />,
-          !table.getCanPreviousPage(),
-          () => table.setPageIndex(Math.max(0, pagination.pageIndex - windowSize)),
-        )}
-        {control(
-          labels.previousPage,
-          <ChevronLeft aria-hidden="true" className="size-[12px]" />,
-          !table.getCanPreviousPage(),
-          () => table.previousPage(),
-        )}
-        {pages.map(page => (
-          <Button
-            key={page}
-            variant="ghost"
-            type="button"
-            className="pattern-page-button"
-            aria-label={labels.pageNumber?.(page) ?? t('common:table.pageNumber', { page })}
-            aria-current={page === current ? 'page' : undefined}
-            onClick={() => table.setPageIndex(page - 1)}
-          >
-            {page}
-          </Button>
-        ))}
-        {control(
-          labels.nextPage,
-          <ChevronRight aria-hidden="true" className="size-[12px]" />,
-          !table.getCanNextPage(),
-          () => table.nextPage(),
-        )}
-        {control(
-          nextJumpLabel,
-          <ChevronsRight aria-hidden="true" className="size-[12px]" />,
-          !table.getCanNextPage(),
-          () => table.setPageIndex(Math.min(pageCount - 1, pagination.pageIndex + windowSize)),
-        )}
-        {control(
-          lastLabel,
-          <span aria-hidden="true" className="inline-flex items-center">
-            <ChevronRight className="size-[12px]" />
-            <span className="h-[12px] border-s border-current" />
-          </span>,
-          !table.getCanNextPage(),
-          () => table.setPageIndex(pageCount - 1),
-        )}
-      </div>
-    </nav>
+    <SharedPagination
+      pageIndex={pageIndex}
+      pageSize={pageSize}
+      pageCount={table.getPageCount()}
+      onPageChange={value => table.setPageIndex(value)}
+      onPageSizeChange={value => table.setPageSize(value)}
+      pageSizeOptions={[10, 20, 30, 50, 100, 200, initialPageSize]}
+      label={caption}
+      labels={labels}
+    />
   );
 }
 /** H/R preserve the concrete native row/header types at the render-slot boundary. */

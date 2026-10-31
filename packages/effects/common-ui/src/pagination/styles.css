@@ -1,0 +1,40 @@
+.pattern-pagination .pattern-page-button {
+  width: var(--control-height);
+  min-width: var(--control-height);
+  height: var(--control-height);
+  margin: 0 4px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--control-font-size);
+  font-weight: 400;
+  line-height: var(--control-line-height);
+  box-shadow: none;
+}
+.pattern-pagination .pattern-page-button:not(:disabled):hover {
+  background: var(--muted);
+}
+.pattern-pagination .pattern-page-button[aria-current='page'],
+.pattern-pagination .pattern-page-button[aria-current='page']:not(:disabled):hover {
+  color: var(--primary-text);
+  border-color: var(--primary);
+  background: transparent;
+  font-weight: 500;
+}
+.pattern-pagination .pattern-page-button:not(:disabled):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+.pattern-pagination .pattern-page-button:not(:disabled):active {
+  background: var(--border);
+}
+.pattern-pagination .pattern-page-button[aria-current='page']:not(:disabled):active {
+  background: var(--nav-active);
+}
+.pattern-pagination .pattern-page-button:disabled {
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+  opacity: 1;
+}

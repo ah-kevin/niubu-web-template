@@ -121,5 +121,9 @@
   "table.collapseRow": "Collapse {{name}}",
   "table.moreActions": "More",
   "table.moreRowActions": "More actions for {{name}}",
-  "table.itemCount": "{{count}} items"
+  "table.itemCount": "{{count}} items",
+  "table.pagination": "Pagination",
+  "table.goTo": "Go to",
+  "table.jumpToPage": "Go to page",
+  "table.pageUnit": "page"
 }

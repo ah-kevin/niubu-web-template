@@ -23,7 +23,8 @@
     "./auth": "./src/auth/index.ts",
     "./auth/styles.css": "./src/auth/styles.css",
     "./form": "./src/form/index.ts",
-    "./overlay": "./src/overlay/index.ts"
+    "./overlay": "./src/overlay/index.ts",
+    "./pagination": "./src/pagination/index.ts"
   },
   "dependencies": {
     "@niubu/shadcn-ui": "workspace:*",
