@@ -12,11 +12,11 @@ export function ScrollBar({
       orientation={orientation}
       className={cn(
         'flex touch-none select-none p-px transition-colors',
-        orientation === 'vertical' ? 'h-full w-2.5' : 'h-2.5 flex-col',
+        orientation === 'vertical' ? 'h-full w-[var(--scrollbar-width)]' : 'h-[var(--scrollbar-width)] flex-col',
         className,
       )}
     >
-      <ScrollPrimitive.Thumb className="relative flex-1 rounded-full bg-border" />
+      <ScrollPrimitive.Thumb className="relative flex-1 rounded-full bg-control-strong hover:bg-muted-foreground" />
     </ScrollPrimitive.Scrollbar>
   );
 }
