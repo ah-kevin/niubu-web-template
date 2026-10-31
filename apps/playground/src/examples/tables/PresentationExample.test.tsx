@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { PresentationExample } from './PresentationExample';
 import { selectOption } from '../../tests/select-option';
+
+beforeAll(() => vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }));
+afterAll(() => vi.unstubAllGlobals());
 
 it('shows selectable table alignment with a start-aligned description override and complete collection details', async () => {
  render(<PresentationExample scope="north" />);

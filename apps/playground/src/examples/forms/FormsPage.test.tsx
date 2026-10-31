@@ -329,6 +329,6 @@ it('demonstrates blur errors and first-error focus in the same form owner', asyn
   await userEvent.tab();
   await waitFor(() => expect(name).toHaveAttribute('aria-invalid', 'true'));
   expect(screen.getByRole('alert').querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Submit values' }));
   await waitFor(() => expect(name).toHaveFocus());
 });

@@ -5,6 +5,9 @@ import { createPreferenceManager, PreferenceProvider } from '@niubu/preferences'
 import { createStoragePort } from '@niubu/hooks/storage';
 import { FeedbackPage, type ExampleRecord, type FeedbackPageProps } from './FeedbackPage';
 
+beforeAll(() => vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }));
+afterAll(() => vi.unstubAllGlobals());
+
 const originalScroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView');
 beforeAll(() => Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value() {} }));
 afterAll(() => { if (originalScroll) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScroll); else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView'); });

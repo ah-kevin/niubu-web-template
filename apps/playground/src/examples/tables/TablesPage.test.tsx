@@ -2,9 +2,12 @@ import { selectOption } from '../../tests/select-option';
 import { StrictMode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { QueryPage, QueryRequest } from '@niubu/common-ui/data-table';
 import { TablesPage, type SyntheticRow, type SyntheticTableLoader } from './TablesPage';
+
+beforeAll(() => vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }));
+afterAll(() => vi.unstubAllGlobals());
 
 const region = (name: string) => within(screen.getByRole('region', { name }));
 const client = () => region('客户端可选列表');
@@ -16,7 +19,7 @@ async function openSettings(advanced = false) {
   if (advanced) fireEvent.click(settings().getByRole('button', { name: '更多列设置' }));
 }
 
-const ids = (area: ReturnType<typeof within>) => area.queryAllByRole('row').filter(row => row.hasAttribute('data-row-id')).map((row: HTMLElement) => row.getAttribute('data-row-id'));
+const ids = (area: ReturnType<typeof within>) => area.queryAllByRole('row').filter((row: HTMLElement) => row.hasAttribute('data-row-id')).map((row: HTMLElement) => row.getAttribute('data-row-id'));
 function deferredServer() {
   const calls: { request: QueryRequest<{ term: string }>; scope: string; resolve: (page: QueryPage<SyntheticRow>) => void; reject: (error: Error) => void }[] = [];
   const load: SyntheticTableLoader = (request, scope) => new Promise((resolve, reject) => calls.push({ request, scope, resolve, reject }));
@@ -268,7 +271,7 @@ it('lets the tree example choose end alignment while keeping its visible depth i
   const tree = () => region('三层树表');
   await selectOption(screen.getByRole('combobox', { name: '树表对齐' }), '末端');
   fireEvent.click(tree().getByRole('button', { name: '展开 North' }));
-  expect(tree().getByRole('cell', { name: 'Branch' }).querySelector('.pattern-tree-cell')).toHaveStyle({ paddingInlineEnd: '20px' });
+  expect(tree().getByRole('cell', { name: 'Branch' }).querySelector('.pattern-tree-cell')).toHaveStyle({ paddingInlineEnd: 'calc(1 * var(--tree-indent))' });
 });
 
 it('demonstrates the real tree toolbar in an owned external host and keeps fullscreen exit inside',async()=>{
