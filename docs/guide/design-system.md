@@ -33,14 +33,15 @@ Popover 默认带箭头，`PopoverContent showArrow={false}` 可隐藏，`Popove
 `read`、`list`、`selectable-list`、`tree-list` 沿用原来的数据和状态所有者。普通列表与可选列表支持以下可选配置，省略时保持原调用行为：
 
 - `layout`：`stickyHeader`、`maxHeight`、`striped`、`bordered` 与 `wrap`；固定列继续使用 `columnPinning`。
-- `columnFilters`：`local` 模式由 `matches` 在完整客户端数据中匹配；`manual` 模式由调用方接收受控筛选值并查询。已应用筛选可清除。
+- `columnFilters`：`local` 模式由 `matches` 在完整客户端数据中匹配；`manual` 模式由调用方接收受控筛选值并查询。`selection: 'multiple'` 使用类型化数组，同列条件为 OR、不同列为 AND。筛选由图标气泡编辑，应用后显示条件标签；保留默认单值接口。
 - `details`：按稳定行 ID 保存展开状态，`render(row)` 提供详情内容；只展示一层详情。
 - `editing`：`createDraft` 返回独立草稿，`renderCell` 组合现有控件，`validate` 返回按列的错误，`onSave` 接收 AbortSignal。调用方提交新 rows，组件不直接修改原模型。取消、owner 变化及行离开当前视图会终止旧操作。
 - `cellSpan`：根据当前可见页面行列返回 `rowSpan/colSpan`；`mergeConsecutiveRows` 可生成相邻分组合并。不要将过滤前的固定行下标用于合并。
 - `summary`：`renderCell` 根据当前展示页生成 `tfoot`，在标签中明确统计口径。
-- `reorder`：使用原生拖拽或键盘移动，`onReorder` 接收建议的完整行 ID 顺序和 AbortSignal；只在客户端完整且无排序/筛选干扰的序列中启用。数据仍由调用方确认保存。
+- `reorder`：通过必需的 `ownerKey` 界定数据所有者，回调使用稳定引用；使用原生拖拽或键盘移动，`onReorder` 接收建议的完整行 ID 顺序和 AbortSignal；只在客户端完整且无排序/筛选干扰的序列中启用。数据仍由调用方确认保存。
 - `refresh="pending" | "error"`：调用方显式保留上一次成功的 ready 模型，刷新时变淡并覆盖加载圈，失败时显示可重试提示。普通 `readState` 非 ready 仍要求无 rows、计数未知。
-- `selectionMode="single"`：可选列表改用单选，表头不显示全选；默认仍为多选。
+- `selectionMode="single"`：可选列表改用单选，表头不显示全选，支持点击非交互单元格选中整行；默认仍为多选。`canSelectRow` 指定逐行选择资格，全选会跳过禁选行。
+- `enableSortingRemoval`：显式启用未排→升序→降序→未排循环；未传时保留原有排序行为。
 
 空、错、加载时保留表头。首次加载的骨架行数跟随 pageSize；筛选无结果与来源为空分别呈现。行操作桌面最多直接显示一个普通动作，窄于 960px 全部放入更多；危险项在菜单最后并与普通项分隔。
 
@@ -56,13 +57,17 @@ Popover 默认带箭头，`PopoverContent showArrow={false}` 可隐藏，`Popove
 
 ## Playground 入口
 
-左侧“组件示例”保留基础控件、表单、反馈入口，增加“表格组件与场景”分组和完整列表页：
+左侧“组件示例”分为基础组件、浮层与反馈、表格、完整列表页和综合示例。每个基础组件与浮层反馈组件都有独立页面，页内只挂载选中组件；旧全集页保留在综合示例中。菜单使用不同的功能图标：
 
 | 设计文件 / 场景 | 页面 |
 | --- | --- |
-| 16 个基础控件（含 Textarea 计数、NumberInput 单位、可点击 Card） | `/examples/components` |
+| Button / Input / Textarea / NumberInput / Select | `/examples/components/button`、`input`、`textarea`、`number-input`、`select` |
+| Checkbox / Radio / Switch / Slider / Tabs | `/examples/components/checkbox`、`radio`、`switch`、`slider`、`tabs` |
+| Badge / Card / Divider / Pagination / ScrollArea / Label | `/examples/components/badge`、`card`、`divider`、`pagination`、`scroll-area`、`label` |
+| FormField 独立表单项 | `/examples/components/form-field` |
 | FormField、横向标签、失焦校验、提交聚焦 | `/examples/forms` |
-| Modal、ConfirmDialog、Drawer、Popover、Tooltip、两类菜单、EmptyState、Loading | `/examples/feedback` |
+| Modal / ConfirmDialog / Drawer / Popover / Tooltip | `/examples/feedback/modal`、`confirm-dialog`、`drawer`、`popover`、`tooltip` |
+| DropdownMenu / ContextMenu / EmptyState / Loading | `/examples/feedback/dropdown-menu`、`context-menu`、`empty-state`、`loading` |
 | TableChoose | `/examples/tables/choose` |
 | Table | `/examples/tables/read` |
 | TableRowActions | `/examples/tables/actions` |

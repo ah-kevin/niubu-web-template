@@ -15,3 +15,49 @@ export const designScenarios = [
 ] as const;
 export type DesignScenario = (typeof designScenarios)[number];
 export const designScenarioPath = (scenario: DesignScenario) => `/examples/tables/${scenario}`;
+
+export const baseControlEntries = [
+  ['Button', 'button', 'design-button'],
+  ['Input', 'input', 'design-input'],
+  ['Textarea', 'textarea', 'design-textarea'],
+  ['NumberInput', 'number-input', 'design-number'],
+  ['Select', 'select', 'design-select'],
+  ['Checkbox', 'checkbox', 'design-checkbox'],
+  ['Radio', 'radio', 'design-radio'],
+  ['Switch', 'switch', 'design-switch'],
+  ['Slider', 'slider', 'design-slider'],
+  ['Tabs', 'tabs', 'layout-grid'],
+  ['Badge', 'badge', 'bell'],
+  ['Card', 'card', 'boxes'],
+  ['Divider', 'divider', 'design-divider'],
+  ['Pagination', 'pagination', 'design-pagination'],
+  ['ScrollArea', 'scroll-area', 'design-scroll'],
+  ['Label', 'label', 'design-label'],
+  ['FormField', 'form-field', 'design-form'],
+] as const;
+export const feedbackControlEntries = [
+  ['Modal', 'modal', 'monitor'],
+  ['ConfirmDialog', 'confirm-dialog', 'design-confirm'],
+  ['Drawer', 'drawer', 'design-drawer'],
+  ['Popover', 'popover', 'design-label'],
+  ['Tooltip', 'tooltip', 'design-tooltip'],
+  ['DropdownMenu', 'dropdown-menu', 'menu'],
+  ['ContextMenu', 'context-menu', 'settings'],
+  ['EmptyState', 'empty-state', 'design-empty'],
+  ['Loading', 'loading', 'design-loading'],
+] as const;
+export const tableScenarioIcons: Record<DesignScenario, string> = {
+  choose: 'design-form',
+  read: 'database',
+  actions: 'menu',
+  selection: 'design-checkbox',
+  single: 'design-radio',
+  layout: 'layout-grid',
+  header: 'sliders-horizontal',
+  expand: 'design-select',
+  edit: 'design-input',
+  merge: 'boxes',
+  drag: 'design-drag',
+  states: 'design-loading',
+  tree: 'building-2',
+};
