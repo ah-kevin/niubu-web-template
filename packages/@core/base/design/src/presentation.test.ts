@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import * as design from './index.ts';
+import { antPalette } from './ant-palette.ts';
 
 it('treats value-equivalent default profile copies as the default across all presets and regions', () => {
   const copied = { light: { ...design.defaultThemeProfile.light }, dark: { ...design.defaultThemeProfile.dark } };
@@ -13,7 +14,7 @@ it('matches the Vben Ant input palette and neutral roles without contrast remapp
   const tokens = { ...design.resolvePresentationTheme(design.defaultThemeAppearance, 'light'), ...design.densityTokens.standard };
   expect(tokens).toMatchObject({
     '--control-height': '32px', '--control-font-size': '14px', '--control-line-height': '22px',
-    '--control-border': '#e4e4e7', '--control-background': '#ffffff',
+    '--control-border': '#cdd0d6', '--control-background': '#ffffff',
     '--control-foreground': 'rgba(50,54,57,0.88)', '--control-placeholder': 'rgba(50,54,57,0.25)',
     '--control-disabled-background': 'rgba(50,54,57,0.04)', '--control-hover-border': '#278df2',
     '--control-primary': '#006be6', '--primary-hover': '#278df2', '--primary-active': '#0053bf',
@@ -58,8 +59,8 @@ it('keeps every preset seed and source surfaces while exposing the Ant control p
     const tokens = design.resolvePresentationTheme({ ...design.defaultThemeAppearance, preset: preset.id }, mode);
     expect(Object.isFrozen(tokens)).toBe(true);
     expect(tokens['--primary']).toBe(preset.id === 'custom' ? '#006be6' : preset[mode]);
-    expect(tokens['--primary-text']).toBe(tokens['--primary']);
-    expect(tokens['--control-border']).toBe(tokens['--border']);
+    expect(tokens['--primary-text']).toBe(mode === 'dark' ? antPalette(tokens['--primary']!)[3] : tokens['--primary']);
+    expect(tokens['--control-border']).toBe(['default', 'custom'].includes(preset.id) ? (mode === 'dark' ? '#4a4a50' : '#cdd0d6') : tokens['--border']);
     expect(tokens['--primary-foreground']).toBe('#ffffff');
   }
 });
@@ -80,7 +81,7 @@ it('matches the independently captured Vben dark Ant tokens', () => {
   const tokens = design.resolvePresentationTheme(design.defaultThemeAppearance, 'dark');
   expect(tokens).toMatchObject({
     '--control-primary': '#035ec7', '--primary-hover': '#2581dc', '--primary-active': '#074d9d',
-    '--control-background': '#1c1e23', '--control-border': '#36363a',
+    '--control-background': '#1c1e23', '--control-border': '#4a4a50',
     '--control-foreground': 'rgba(242,242,242,0.85)', '--control-placeholder': 'rgba(242,242,242,0.25)',
     '--control-disabled-background': 'rgba(242,242,242,0.08)', '--control-selected-background': '#0e2e53',
     '--control-focus-shadow': '0 0 0 2px rgba(0,62,131,0.5)', '--destructive': '#dc3355',
@@ -117,7 +118,7 @@ it('projects the selected dark region without recoloring the light content', () 
   expect(tokens['--sidebar-control-foreground']).toBe('rgba(242,242,242,0.85)');
   expect(tokens['--sidebar-control-primary']).toBe('#035ec7');
   expect(tokens['--header-control-background']).toBe('#ffffff');
-  expect(tokens['--sidebar-popup-shadow']).toContain('rgba(255,255,255,0.016)');
+  expect(tokens['--sidebar-popup-shadow']).toContain('rgba(0,0,0,0.32)');
   const neutral = design.resolvePresentationTheme({ ...design.defaultThemeAppearance, preset: 'zinc', semiDarkSidebar: true }, 'light');
   expect(neutral['--primary']).toBe('#18181b');
   expect(neutral['--sidebar-primary-text']).toBe('#fafafa');

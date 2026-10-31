@@ -1,4 +1,5 @@
 import { vbenControlTheme } from './vben-control-theme.ts';
+import { designSystemDimensions } from './design-system-tokens.ts';
 import { defaultThemeProfile, semanticTokenKeys } from './tokens.ts';
 import { resolveTheme, validateBrandOverride } from './resolve-theme.ts';
 import { isThemePresetId, themePresets } from './theme-presets.ts';
@@ -70,15 +71,13 @@ export function resolvePresentationTheme(
   ] as const) {
     const regionMode = mode === 'light' && enabled ? 'dark' : mode;
     const localOverrides = overridesFor(regionMode);
-    const local =
-      regionMode === mode
-        ? tokens
-        : vbenControlTheme(
-            preset.id,
-            regionMode,
-            localOverrides['--primary'] ?? (preset.id === 'custom' ? appearance.colorPrimary : preset[regionMode]),
-            localOverrides,
-          );
+    const local = vbenControlTheme(
+      preset.id,
+      regionMode,
+      localOverrides['--primary'] ?? (preset.id === 'custom' ? appearance.colorPrimary : preset[regionMode]),
+      localOverrides,
+      'region',
+    );
     regions[`--${region}`] = local[`--${region}`]!;
     regions[`--${region}-foreground`] = local[`--${region}-foreground`]!;
     regions[`--${region}-primary-text`] = local['--primary-text'];
@@ -118,6 +117,7 @@ export function resolvePresentationTheme(
   }
   return Object.freeze({
     ...tokens,
+    ...designSystemDimensions,
     ...regions,
     '--radius': `${appearance.radius}rem`,
     '--control-radius': `${appearance.radius * 16}px`,

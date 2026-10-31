@@ -22,6 +22,26 @@ test('static CSS retains aliases, theme selectors and independent density cascad
   assert.ok(css.indexOf(":root[data-density='compact']") > css.indexOf(":root[data-theme='dark']"));
 });
 
+test('new content roles retain dynamic aliases without replacing Tailwind shadow defaults', () => {
+  const template = readFileSync(new URL('../src/tokens.template.css', import.meta.url), 'utf8');
+  const css = renderTokens(template);
+  for (const name of ['primary-text-pressed', 'focus-ring', 'nav-active-foreground', 'success', 'tooltip', 'table-row-selected']) {
+    assert.ok(template.includes(`--color-${name}: var(--${name});`));
+  }
+  assert.ok(template.includes('--text-heading-1--line-height: var(--heading-1-line-height);'));
+  assert.ok(template.includes('--container-dialog-md: var(--dialog-width-md);'));
+  assert.doesNotMatch(template, /--shadow-(sm|md):/);
+  const dark = css.split(":root[data-theme='dark']")[1]!.split('}')[0]!;
+  assert.ok(dark.includes('--primary-text: #52aeff;'));
+  assert.ok(dark.includes('--primary-text-pressed: #a3daff;'));
+  assert.ok(dark.includes('--sidebar-primary-text: #006be6;'));
+  assert.ok(!dark.includes('--heading-1-font-size:'));
+  assert.ok(css.includes('--table-row-selected: var(--nav-active);'));
+  const compact = css.split(":root[data-density='compact']")[1]!;
+  assert.ok(compact.includes('--heading-1-font-size: 20px;'));
+  assert.ok(compact.includes('--popup-padding: 16px;'));
+});
+
 test('checking rejects stale CSS without writes; explicit generation updates only static CSS', () => {
   const fixture = mkdtempSync(join(tmpdir(), 'niubu-tokens-'));
   try {

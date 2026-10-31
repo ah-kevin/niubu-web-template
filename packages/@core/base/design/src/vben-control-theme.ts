@@ -1,4 +1,5 @@
 import { alphaColor, antOutlineColor, antPalette } from './ant-palette.ts';
+import { designSystemColors } from './design-system-tokens.ts';
 import { themePresetSurfaces } from './theme-presets.ts';
 import type { ResolvedTheme, ThemePresetId, ThemeTokenMap } from './types.ts';
 
@@ -8,6 +9,7 @@ export function vbenControlTheme(
   mode: ResolvedTheme,
   primary: string,
   overrides: Partial<ThemeTokenMap> = {},
+  scope: 'content' | 'region' = 'content',
 ): ThemeTokenMap & Record<string, string> {
   const surface = { ...themePresetSurfaces[id][mode], ...overrides };
   const dark = mode === 'dark',
@@ -34,9 +36,10 @@ export function vbenControlTheme(
   const fillTertiary = alphaColor(textBase, dark ? 0.08 : 0.04),
     fillAlter = alphaColor(textBase, dark ? 0.04 : 0.02);
   const shadow = dark
-    ? '0 6px 16px 0 rgba(255,255,255,0.016), 0 3px 6px -4px rgba(255,255,255,0.024), 0 9px 28px 8px rgba(255,255,255,0.010000000000000002)'
+    ? '0 6px 16px 0 rgba(0,0,0,0.32), 0 3px 6px -4px rgba(0,0,0,0.48), 0 9px 28px 8px rgba(0,0,0,0.2)'
     : '0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)';
   const defaultSurface = id === 'default' || id === 'custom';
+  const textPalette = antPalette(primary);
   const popover =
     dark && defaultSurface ? '#242424' : dark && ['light-green', 'deep-green'].includes(id) ? '#171717' : card;
   const cardForeground = overrides['--foreground'] ?? (defaultSurface ? (dark ? '#f8fafc' : '#020817') : textBase);
@@ -57,13 +60,18 @@ export function vbenControlTheme(
     '--card': card,
     '--primary': primary,
     '--primary-foreground': '#ffffff',
-    '--primary-text': primary,
+    '--primary-text': dark && scope === 'content' ? textPalette[3]! : primary,
     '--secondary': surface['--secondary']!,
     '--muted': surface['--muted']!,
     '--muted-foreground': surface['--muted-foreground']!,
     '--secondary-muted-foreground': surface['--muted-foreground']!,
     '--placeholder': placeholder,
-    '--control-border': surface['--border']!,
+    '--control-border':
+      scope === 'content' && defaultSurface && !overrides['--border']
+        ? dark
+          ? '#4a4a50'
+          : '#cdd0d6'
+        : surface['--border']!,
     '--accent': surface['--accent']!,
     '--border': surface['--border']!,
     '--ring': controlPrimary,
@@ -118,6 +126,16 @@ export function vbenControlTheme(
     '--popup-shadow': shadow,
     '--overlay-background': dark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.45)',
     '--table-header-foreground': dark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.7)',
+    ...designSystemColors[mode],
+    '--primary-text-pressed': textPalette[dark ? 1 : 6]!,
+    '--nav-active-foreground': textPalette[dark ? 1 : 6]!,
+    '--focus-ring': dark ? textPalette[3]! : (overrides['--ring'] ?? controlPrimary),
+    '--tooltip': 'var(--foreground)',
+    '--tooltip-foreground': 'var(--card)',
+    '--table-row-selected': 'var(--nav-active)',
+    '--skeleton': 'var(--border)',
+    '--skeleton-highlight': 'var(--muted)',
+    '--switch-thumb': '#ffffff',
     ...overrides,
   };
 }

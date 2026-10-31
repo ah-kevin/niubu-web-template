@@ -8,7 +8,7 @@ describe('pure theme tokens', () => {
     expect(light['--primary']).toBe('#006be6');
     expect(dark['--primary']).toBe('#006be6');
     expect(light['--shadow']).toBe('0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)');
-    expect(dark['--shadow']).toBe('0 6px 16px 0 rgba(255,255,255,0.016), 0 3px 6px -4px rgba(255,255,255,0.024), 0 9px 28px 8px rgba(255,255,255,0.010000000000000002)');
+    expect(dark['--shadow']).toBe('0 6px 16px 0 rgba(0,0,0,0.32), 0 3px 6px -4px rgba(0,0,0,0.48), 0 9px 28px 8px rgba(0,0,0,0.2)');
     expect(light).not.toHaveProperty('--space-page');
     expect(dark).not.toHaveProperty('--row-height');
     expect(densityTokens).toMatchObject({

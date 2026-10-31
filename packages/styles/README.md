@@ -13,3 +13,10 @@ source change. `build` and `typecheck` only verify consistency and CSS export
 resolution; they never write source or dist. The design dependency is tooling,
 not a browser runtime import. `test` checks generation, stale-output rejection
 and the theme/density selector contract with Node only.
+
+Content color roles, typography, selected control sizes and popup width aliases
+are exposed through `@theme inline`. Existing `shadow-sm` / `shadow-md` utilities
+are intentionally unchanged: use `--popup-shadow-sm` / `--popup-shadow` explicitly
+when adopting the design shadows. Fixed dimensions and z-index roles are available
+as CSS variables; controls opt in separately. No component selectors are added by
+the token generator.
