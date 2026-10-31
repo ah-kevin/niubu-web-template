@@ -15,7 +15,7 @@ export type NumberInputProps = InputProps &
 export function NumberInput({ valueMode = 'number', value, onValueChange, controls = false, decreaseLabel,
   increaseLabel, className, ref, disabled, readOnly, min, max, step, ...props }: NumberInputProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
-  React.useImperativeHandle(ref, () => inputRef.current!, []);
+  React.useImperativeHandle(ref, () => inputRef.current!);
   const emit = (raw: string, numeric: number) => {
     if (valueMode === 'string') (onValueChange as (value: string) => void)(raw);
     else (onValueChange as (value: number | null) => void)(raw.trim() === '' || !Number.isFinite(numeric) ? null : numeric);

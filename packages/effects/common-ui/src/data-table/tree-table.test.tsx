@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { useState } from 'react';
 import { useTranslation } from '@niubu/locales/react';
 import type { ExpandedState } from '@tanstack/react-table';
@@ -8,6 +8,12 @@ import { DataTable } from './DataTable';
 import { createDataTableLabels } from './labels';
 import { createListColumnHelper } from './columns';
 import type { SliceOwner, TableReadMetadata, TreeListTableProps } from './types';
+
+// Radix defers unmount autofocus one turn; drain it before this JSDOM realm closes.
+afterEach(async () => {
+  cleanup();
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+});
 
 type Node = { id: string; name: string; rank: number; children?: Node[] };
 const leaf: Node = { id: 'leaf', name: '叶子', rank: 1 };

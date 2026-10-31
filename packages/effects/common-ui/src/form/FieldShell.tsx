@@ -50,16 +50,18 @@ export function FieldShell({
           {description}
         </p>
       )}
-      {message && (
-        <p
-          id={errorId}
-          role="alert"
-          className="schema-field-error m-0 flex items-start gap-1 text-xs leading-[18px] text-destructive-text"
-        >
-          <CircleAlert aria-hidden="true" className="size-[var(--control-icon-size)] shrink-0" />
-          <span>{message}</span>
-        </p>
-      )}
+      <div className="schema-field-message min-h-[var(--caption-line-height)]">
+        {message && (
+          <p
+            id={errorId}
+            role="alert"
+            className="schema-field-error m-0 flex items-start gap-1 text-xs leading-[18px] text-destructive-text"
+          >
+            <CircleAlert aria-hidden="true" className="size-[var(--control-icon-size)] shrink-0" />
+            <span>{message}</span>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

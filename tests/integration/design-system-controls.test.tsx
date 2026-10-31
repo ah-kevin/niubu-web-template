@@ -44,3 +44,15 @@ it('retains the Select input ref and actual empty option in named forms',async()
  const ref=createRef<HTMLButtonElement>();function Fixture(){const [v,set]=useState('');return <form><Select ref={ref} name="choice" label="Choice" value={v} onValueChange={set} options={[{value:'',label:'None'},{value:'a',label:'A'}]}/></form>;}
  render(<Fixture/>);expect(ref.current).toBe(screen.getByRole('combobox'));expect(document.querySelector('input[name="choice"]')).toHaveValue('');
 });
+
+it('keeps the forwarded input ref current when toggling stepper controls', () => {
+ const ref=createRef<HTMLInputElement>();
+ const view=render(<NumberInput ref={ref} aria-label="Quantity" value={1} onValueChange={()=>{}}/>);
+ const first=ref.current;
+ view.rerender(<NumberInput ref={ref} aria-label="Quantity" value={1} onValueChange={()=>{}} controls decreaseLabel="Less" increaseLabel="More"/>);
+ expect(first?.isConnected).toBe(false);
+ expect(ref.current).toBe(screen.getByRole('spinbutton'));
+ ref.current?.focus(); expect(document.activeElement).toBe(ref.current);
+ view.rerender(<NumberInput ref={ref} aria-label="Quantity" value={1} onValueChange={()=>{}}/>);
+ expect(ref.current).toBe(screen.getByRole('spinbutton'));
+});
