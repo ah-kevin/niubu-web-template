@@ -10,6 +10,7 @@
 .native-data-table[data-wrap] .pattern-cell-content,
 .native-data-table .pattern-cell-content:has([data-wrap]),
 .native-data-table .pattern-cell-content [data-wrap],
+.native-data-table .pattern-cell-content [data-wrap] *,
 .native-data-table[data-wrap] .pattern-cell-content * {
   white-space: normal;
   overflow: visible;
@@ -44,6 +45,6 @@
 .native-data-table .pattern-table-radio:checked { border: 5px solid var(--primary); }
 .native-data-table .pattern-table-radio:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: 2px; }
 .native-data-table .pattern-table-radio:disabled { opacity: .5; cursor: not-allowed; }
-.native-data-table td[data-wrap] { white-space: normal; overflow-wrap: anywhere; }
+.native-data-table td[data-wrap], .native-data-table td[data-wrap] * { white-space: normal; overflow-wrap: anywhere; }
 
 .native-data-table .pattern-refresh-overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: color-mix(in srgb, var(--card) 25%, transparent); }

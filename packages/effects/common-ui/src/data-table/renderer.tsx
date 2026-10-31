@@ -884,7 +884,9 @@ export function SelectableView<T extends RowData>({
       renderHeader={header => (
         <HeaderView<T>
           header={header}
-          leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader ? 40 : 0)}
+          leadingWidth={
+            (props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader && props.layout ? 40 : 0)
+          }
           labels={props.labels}
           disabled={props.readState !== 'ready' || !!props.refresh}
           filter={
@@ -914,7 +916,9 @@ export function SelectableView<T extends RowData>({
               column={cell.column}
               alignment={columnAlignment(props, cell.column.id)}
               span={span}
-              leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader ? 40 : 0)}
+              leadingWidth={
+                (props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader && props.layout ? 40 : 0)
+              }
               width={cells
                 .slice(index, index + (span?.colSpan ?? 1))
                 .reduce((sum, item) => sum + item.column.getSize(), 0)}

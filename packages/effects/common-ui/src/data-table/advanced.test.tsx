@@ -153,3 +153,16 @@ it('opens an initially controlled edit and aborts pending work on an owner chang
   expect(save.mock.calls[0][1].signal.aborted).toBe(true);
   expect(screen.getByRole('textbox', { name: 'Edit value' })).not.toBeDisabled();
 });
+
+it('uses native drag events to propose ID order and disables reorder for externally filtered results', async () => {
+  const save = vi.fn<TableReorder<Item>['onReorder']>(async () => {});
+  const view = render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} reorder={reorder(save)} />);
+  const transfer = { setData: vi.fn(), effectAllowed: '', dropEffect: '' };
+  fireEvent.dragStart(screen.getByRole('button', { name: 'Move a' }), { dataTransfer: transfer });
+  const target = view.container.querySelector('tr[data-row-id="c"]')!;
+  fireEvent.dragOver(target, { dataTransfer: transfer });
+  await act(async () => fireEvent.drop(target, { dataTransfer: transfer }));
+  expect(save.mock.calls[0][0]).toEqual(['b', 'c', 'a']);
+  view.rerender(<DataTable {...base} sourceCount={4} profile="list" model={{ kind: 'client', rows }} reorder={reorder(save)} />);
+  expect(screen.getByRole('button', { name: 'Move a' })).toBeDisabled();
+});

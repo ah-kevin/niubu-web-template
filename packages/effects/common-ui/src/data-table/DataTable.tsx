@@ -138,6 +138,7 @@ function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
         ...viewProps,
         reorderAllowed:
           props.model.kind === 'client' &&
+          props.sourceCount === props.resultCount &&
           !table.state.sorting.length &&
           !Object.values(filters.values).some(Boolean) &&
           table.getRowModel().rows.length === props.model.rows.length,
@@ -204,6 +205,7 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
         ...viewProps,
         reorderAllowed:
           props.model.kind === 'client' &&
+          props.sourceCount === props.resultCount &&
           !table.state.sorting.length &&
           !Object.values(filters.values).some(Boolean) &&
           table.getRowModel().rows.length === props.model.rows.length,
@@ -224,7 +226,8 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
                 type="button"
                 disabled={
                   props.readState !== 'ready' ||
-                  !props.resultCount ||
+                  !viewProps.resultCount ||
+                  !!props.refresh ||
                   (props.model.kind === 'server' && !props.onSelectAllResults)
                 }
                 onClick={() => {
