@@ -1,6 +1,7 @@
 import { beforeAll, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Button } from '@niubu/shadcn-ui/button';
+import { Badge } from '@niubu/shadcn-ui/badge';
 import { Input } from '@niubu/shadcn-ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@niubu/shadcn-ui/tabs';
 import { Switch } from '@niubu/shadcn-ui/switch';
@@ -49,4 +50,10 @@ it.each(['ghost','link','link-danger'] as const)('keeps disabled %s buttons tran
  const button=screen.getByRole('button');
  const colors=matchingRules(rules,button,'background-color').map(rule=>rule.style.getPropertyValue('background-color'));
  expect(colors.at(-1)).toBe('rgba(0, 0, 0, 0)');
+});
+
+it.each(['destructive','danger'] as const)('uses the existing error surface for %s badges', variant => {
+ render(<Badge variant={variant}>Danger</Badge>);
+ const colors=matchingRules(rules,screen.getByText('Danger'),'background-color').map(rule=>rule.style.getPropertyValue('background-color'));
+ expect(colors.at(-1)).toBe('var(--control-error-background)');
 });

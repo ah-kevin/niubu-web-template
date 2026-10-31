@@ -6,9 +6,9 @@ import { renderLoginStyleScene } from '../tests/login-style-scene';
 let rules: CompiledStyleRule[];
 beforeAll(async () => { rules = readCompiledRules(await compilePlaygroundStyles()); });
 
-// Independent reference: Vben's Ant large controls, used by its authentication form.
+// Authentication retains its large-control geometry while consuming the approved design tokens.
 // This checks the emitted app CSS and shared consumption, without claiming browser layout.
-it.each(['light', 'dark'])('uses the Vben large-control skin in both authentication consumers in %s', async mode => {
+it.each(['light', 'dark'])('uses the shared large-control skin in both authentication consumers in %s', async mode => {
   const f = await renderLoginStyleScene();
   document.documentElement.dataset.theme = mode;
   document.documentElement.dataset.density = 'standard';
@@ -18,7 +18,7 @@ it.each(['light', 'dark'])('uses the Vben large-control skin in both authenticat
     expect(token('--control-height-lg')).toBe('40px');
     expect(token('--control-font-size-lg')).toBe('16px');
     expect(token('--control-line-height-lg')).toBe('24px');
-    expect(token('--control-border')).toBe(mode === 'light' ? '#e4e4e7' : '#36363a');
+    expect(token('--control-border')).toBe(mode === 'light' ? '#cdd0d6' : '#4a4a50');
     const login = screen.getByLabelText('账号');
     for (const input of [login, screen.getByLabelText('Other account')]) {
       const border = matchingRules(rules, input, 'border-color');
