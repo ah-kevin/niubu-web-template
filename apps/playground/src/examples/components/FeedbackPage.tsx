@@ -21,9 +21,11 @@ import { RouteErrorBoundary, RoutePending } from '@niubu/layouts/routing';
 import { Button } from '@niubu/shadcn-ui/button';
 import { CircleAlert, ClipboardList, ListChecks, Maximize } from '@niubu/icons';
 import { ExampleDetails, ExamplePage, ExampleSection } from '../ExamplePage';
+import type { FeedbackControlKind } from './control-kinds';
 
 export type ExampleRecord = { id: string; name: string };
 export type FeedbackPageProps = {
+  only?: FeedbackControlKind;
   saveRecord?: (record: ExampleRecord, context: { signal: AbortSignal }) => Promise<void>;
 };
 type Kind = 'Modal' | 'Drawer';
@@ -272,7 +274,7 @@ function SupplementalOverlays() {
   );
 }
 
-function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
+function FeedbackExamples({ saveRecord = simulateSave, only }: FeedbackPageProps) {
   const { t, localize } = useFeedbackText();
   const [kind, setKind] = useState<Kind | null>(null);
   const [record, setRecord] = useState(initialRecord);
@@ -310,181 +312,202 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
     if (!signal.aborted) setQueueResult(`${confirmed ? 'Confirmed' : 'Cancelled'} · alert completed`);
   }
   return (
-    <ExamplePage title={t('title')} description={t('pageDescription')} actions={<DocumentationLink kind="overlay" />}>
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-2">
-        <ExampleSection
-          title={t('overlays')}
-          description={t('overlaysHelp')}
-          footer={
-            <>
-              <Button type="button" variant="outline" onClick={() => setKind('Drawer')}>
-                {t('open', { kind: 'Drawer' })}
-              </Button>
-              <Button type="button" onClick={() => setKind('Modal')}>
-                {t('open', { kind: 'Modal' })}
-              </Button>
-            </>
-          }
-        >
-          <div className="flex min-h-20 items-center gap-4">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
-              <ClipboardList aria-hidden="true" className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium">{record.name}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{record.id}</p>
-            </div>
-          </div>
-          <div className="border-t border-border pt-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">{t('savedRecord')}</p>
-            <output className="block break-words text-sm" aria-live="polite" aria-label={t('savedRecord')}>
-              {saved ? `${saved.id} · ${saved.name}` : t('nothingSaved')}
-            </output>
-          </div>
-          {kind && (
-            <RecordEditor
-              kind={kind}
-              record={record}
-              onRecordChange={setRecord}
-              saveRecord={saveRecord}
-              onClose={() => setKind(null)}
-              onSaved={value => {
-                setSaved(value);
-                setRecord(value);
-                setKind(null);
-              }}
-            />
-          )}
-        </ExampleSection>
-        <ExampleSection
-          title={t('queue')}
-          description={t('queueHelp')}
-          footer={
-            <Button
-              type="button"
-              onClick={() => {
-                void queue();
-              }}
-            >
-              {t('queueButton')}
-            </Button>
-          }
-        >
-          <div className="flex min-h-20 items-center gap-4">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
-              <ListChecks aria-hidden="true" className="size-5" />
-            </span>
-            <div className="min-w-0 text-sm">
-              <p className="font-medium">{t('confirmTitle')}</p>
-              <p className="mt-1 text-muted-foreground">{t('alertTitle')}</p>
-            </div>
-          </div>
-          <div className="border-t border-border pt-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">{t('queueResult')}</p>
-            <output className="block break-words text-sm" aria-live="polite" aria-label={t('queueResult')}>
-              {localize(queueResult)}
-            </output>
-          </div>
-        </ExampleSection>
-        <SupplementalOverlays />
-        <MenuAndPopoverExamples />
-        <LoadingExamples />
-        <TableReadFeedbackExample />
-        <ExampleSection title={t('reading')}>
-          <div className="flex flex-wrap gap-2">
-            {(['loading', 'error', 'empty'] as const).map(value => (
-              <Button
-                key={value}
-                type="button"
-                size="sm"
-                variant={readStatus === value ? 'secondary' : 'outline'}
-                aria-pressed={readStatus === value}
-                onClick={() => setReadStatus(value)}
-              >
-                {t(value === 'loading' ? 'showLoading' : value === 'error' ? 'showError' : 'showEmpty')}
-              </Button>
-            ))}
-          </div>
-          <div
-            className="flex min-h-80 items-center justify-center rounded-[var(--radius)] border border-border"
-            aria-label={t('readExample')}
+    <ExamplePage
+      title={only ?? t('title')}
+      description={only ? t('singleHelp') : t('pageDescription')}
+      actions={<DocumentationLink kind="overlay" />}
+    >
+      <div className={only ? 'grid min-w-0 items-start gap-4' : 'grid min-w-0 items-start gap-4 lg:grid-cols-2'}>
+        {(!only || only === 'Modal' || only === 'Drawer') && (
+          <ExampleSection
+            title={only ?? t('overlays')}
+            description={t('overlaysHelp')}
+            footer={
+              <>
+                {(!only || only === 'Drawer') && (
+                  <Button type="button" variant="outline" onClick={() => setKind('Drawer')}>
+                    {t('open', { kind: 'Drawer' })}
+                  </Button>
+                )}
+                {(!only || only === 'Modal') && (
+                  <Button type="button" onClick={() => setKind('Modal')}>
+                    {t('open', { kind: 'Modal' })}
+                  </Button>
+                )}
+              </>
+            }
           >
-            <ReadState
-              status={readStatus}
-              onRetry={() => {
-                setReadAction('Retried');
-                setReadStatus('loading');
-              }}
-              onReset={() => {
-                setReadAction('Filters reset');
-                setReadStatus('loading');
-              }}
-              onNavigate={() => setReadAction('Returned to sample')}
-            />
-          </div>
-          <output
-            className="block break-words text-sm text-muted-foreground"
-            aria-live="polite"
-            aria-label={t('readAction')}
-          >
-            {localize(readAction)}
-          </output>
-          <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-            <Button type="button" size="sm" variant="outline" onClick={() => setPendingRoute(value => !value)}>
-              {pendingRoute ? t('hidePending') : t('showPending')}
-            </Button>
-            <div className="min-h-6" aria-label={t('pendingExample')}>
-              {pendingRoute && <RoutePending />}
+            <div className="flex min-h-20 items-center gap-4">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
+                <ClipboardList aria-hidden="true" className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{record.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{record.id}</p>
+              </div>
             </div>
-          </div>
-        </ExampleSection>
-        <ExampleSection title={t('states')}>
-          <div className="flex flex-wrap gap-2">
-            {(Object.keys(states) as (keyof typeof states)[]).map(value => (
-              <Button
-                key={value}
-                type="button"
-                size="sm"
-                variant={state === value ? 'secondary' : 'outline'}
-                aria-pressed={state === value}
-                onClick={() => setState(value)}
-              >
-                {t('showState', { state: value === 'Offline' ? t('offline') : value })}
-              </Button>
-            ))}
-          </div>
-          <div className="flex min-h-80 items-center justify-center rounded-[var(--radius)] border border-border px-6 py-5">
-            <RouteErrorBoundary title={t('stateTitle')} appTitle={t('appTitle')}>
-              <SystemStatePage
-                code={state}
-                heading={localize(states[state].heading)}
-                description={localize(states[state].description)}
-                icon={<CircleAlert aria-hidden="true" />}
-                footer={t('footer')}
-                actions={[{ id: 'return', label: t('return'), onClick: () => setStateAction('Returned to sample') }]}
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">{t('savedRecord')}</p>
+              <output className="block break-words text-sm" aria-live="polite" aria-label={t('savedRecord')}>
+                {saved ? `${saved.id} · ${saved.name}` : t('nothingSaved')}
+              </output>
+            </div>
+            {kind && (
+              <RecordEditor
+                kind={kind}
+                record={record}
+                onRecordChange={setRecord}
+                saveRecord={saveRecord}
+                onClose={() => setKind(null)}
+                onSaved={value => {
+                  setSaved(value);
+                  setRecord(value);
+                  setKind(null);
+                }}
               />
-            </RouteErrorBoundary>
-          </div>
-          <output
-            className="block break-words text-sm text-muted-foreground"
-            aria-live="polite"
-            aria-label={t('stateAction')}
+            )}
+          </ExampleSection>
+        )}
+        {!only && (
+          <ExampleSection
+            title={t('queue')}
+            description={t('queueHelp')}
+            footer={
+              <Button
+                type="button"
+                onClick={() => {
+                  void queue();
+                }}
+              >
+                {t('queueButton')}
+              </Button>
+            }
           >
-            {localize(stateAction)}
-          </output>
-        </ExampleSection>
+            <div className="flex min-h-20 items-center gap-4">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary/10 text-primary">
+                <ListChecks aria-hidden="true" className="size-5" />
+              </span>
+              <div className="min-w-0 text-sm">
+                <p className="font-medium">{t('confirmTitle')}</p>
+                <p className="mt-1 text-muted-foreground">{t('alertTitle')}</p>
+              </div>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">{t('queueResult')}</p>
+              <output className="block break-words text-sm" aria-live="polite" aria-label={t('queueResult')}>
+                {localize(queueResult)}
+              </output>
+            </div>
+          </ExampleSection>
+        )}
+        {!only && <SupplementalOverlays />}
+        {(!only || ['ConfirmDialog', 'Popover', 'Tooltip', 'DropdownMenu', 'ContextMenu'].includes(only)) && (
+          <MenuAndPopoverExamples only={only} />
+        )}
+        {(!only || only === 'Loading') && <LoadingExamples />}
+        {only === 'EmptyState' && <EmptyStateExamples />}
+        {!only && <TableReadFeedbackExample />}
+        {!only && (
+          <ExampleSection title={t('reading')}>
+            <div className="flex flex-wrap gap-2">
+              {(['loading', 'error', 'empty'] as const).map(value => (
+                <Button
+                  key={value}
+                  type="button"
+                  size="sm"
+                  variant={readStatus === value ? 'secondary' : 'outline'}
+                  aria-pressed={readStatus === value}
+                  onClick={() => setReadStatus(value)}
+                >
+                  {t(value === 'loading' ? 'showLoading' : value === 'error' ? 'showError' : 'showEmpty')}
+                </Button>
+              ))}
+            </div>
+            <div
+              className="flex min-h-80 items-center justify-center rounded-[var(--radius)] border border-border"
+              aria-label={t('readExample')}
+            >
+              <ReadState
+                status={readStatus}
+                onRetry={() => {
+                  setReadAction('Retried');
+                  setReadStatus('loading');
+                }}
+                onReset={() => {
+                  setReadAction('Filters reset');
+                  setReadStatus('loading');
+                }}
+                onNavigate={() => setReadAction('Returned to sample')}
+              />
+            </div>
+            <output
+              className="block break-words text-sm text-muted-foreground"
+              aria-live="polite"
+              aria-label={t('readAction')}
+            >
+              {localize(readAction)}
+            </output>
+            <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+              <Button type="button" size="sm" variant="outline" onClick={() => setPendingRoute(value => !value)}>
+                {pendingRoute ? t('hidePending') : t('showPending')}
+              </Button>
+              <div className="min-h-6" aria-label={t('pendingExample')}>
+                {pendingRoute && <RoutePending />}
+              </div>
+            </div>
+          </ExampleSection>
+        )}
+        {!only && (
+          <ExampleSection title={t('states')}>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(states) as (keyof typeof states)[]).map(value => (
+                <Button
+                  key={value}
+                  type="button"
+                  size="sm"
+                  variant={state === value ? 'secondary' : 'outline'}
+                  aria-pressed={state === value}
+                  onClick={() => setState(value)}
+                >
+                  {t('showState', { state: value === 'Offline' ? t('offline') : value })}
+                </Button>
+              ))}
+            </div>
+            <div className="flex min-h-80 items-center justify-center rounded-[var(--radius)] border border-border px-6 py-5">
+              <RouteErrorBoundary title={t('stateTitle')} appTitle={t('appTitle')}>
+                <SystemStatePage
+                  code={state}
+                  heading={localize(states[state].heading)}
+                  description={localize(states[state].description)}
+                  icon={<CircleAlert aria-hidden="true" />}
+                  footer={t('footer')}
+                  actions={[{ id: 'return', label: t('return'), onClick: () => setStateAction('Returned to sample') }]}
+                />
+              </RouteErrorBoundary>
+            </div>
+            <output
+              className="block break-words text-sm text-muted-foreground"
+              aria-live="polite"
+              aria-label={t('stateAction')}
+            >
+              {localize(stateAction)}
+            </output>
+          </ExampleSection>
+        )}
       </div>
-      <ExampleDetails title={t('implementation')}>
-        <p>{t('help')}</p>
-        <p>{t('boundaryHelp')}</p>
-      </ExampleDetails>
+      {!only && (
+        <ExampleDetails title={t('implementation')}>
+          <p>{t('help')}</p>
+          <p>{t('boundaryHelp')}</p>
+        </ExampleDetails>
+      )}
     </ExamplePage>
   );
 }
 
 export function FeedbackPage(props: FeedbackPageProps) {
   return (
-    <OverlayProvider>
+    <OverlayProvider key={props.only ?? 'all'}>
       <FeedbackExamples {...props} />
     </OverlayProvider>
   );
@@ -605,7 +628,7 @@ function MenuSample({ kind }: { kind: keyof typeof feedbackMenus }) {
     </div>
   );
 }
-function MenuAndPopoverExamples() {
+function MenuAndPopoverExamples({ only }: { only?: FeedbackControlKind }) {
   const { t } = useFeedbackText();
   const overlay = useOverlay();
   const [result, setResult] = useState<boolean | null>(null);
@@ -627,30 +650,36 @@ function MenuAndPopoverExamples() {
       });
   }
   return (
-    <ExampleSection title={t('menuSamples')} description={t('menuHelp')}>
+    <ExampleSection title={only ?? t('menuSamples')} description={t('menuHelp')}>
       <div className="flex flex-wrap items-start gap-4">
-        <MenuSample kind="dropdown" />
-        <MenuSample kind="context" />
+        {(!only || only === 'DropdownMenu') && <MenuSample kind="dropdown" />}
+        {(!only || only === 'ContextMenu') && <MenuSample kind="context" />}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline">
-              {t('popoverOpen')}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent aria-label={t('popoverOpen')}>
-            <p>{t('popoverHelp')}</p>
-          </PopoverContent>
-        </Popover>
-        <Tooltip content={t('disabledTooltip')}>
-          <span tabIndex={0} aria-label={t('tooltipHelpLabel')}>
-            <Button disabled>{t('menuDisabled')}</Button>
-          </span>
-        </Tooltip>
-        <Button type="button" variant="destructive" onClick={confirmDanger}>
-          {t('dangerConfirm')}
-        </Button>
+        {(!only || only === 'Popover') && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline">
+                {t('popoverOpen')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent aria-label={t('popoverOpen')}>
+              <p>{t('popoverHelp')}</p>
+            </PopoverContent>
+          </Popover>
+        )}
+        {(!only || only === 'Tooltip') && (
+          <Tooltip content={t('disabledTooltip')}>
+            <span tabIndex={0} aria-label={t('tooltipHelpLabel')}>
+              <Button disabled>{t('menuDisabled')}</Button>
+            </span>
+          </Tooltip>
+        )}
+        {(!only || only === 'ConfirmDialog') && (
+          <Button type="button" variant="destructive" onClick={confirmDanger}>
+            {t('dangerConfirm')}
+          </Button>
+        )}
       </div>
       {result !== null && <output aria-live="polite">{t(result ? 'dangerAccepted' : 'dangerCancelled')}</output>}
     </ExampleSection>
@@ -689,6 +718,33 @@ function LoadingExamples() {
       <div className="rounded-lg border border-border">
         <Loading label={t('loadingRegion')} />
       </div>
+    </ExampleSection>
+  );
+}
+
+function EmptyStateExamples() {
+  const { t, localize } = useFeedbackText();
+  const [status, setStatus] = useState<'empty' | 'source-empty'>('source-empty');
+  const [action, setAction] = useState('No read action');
+  return (
+    <ExampleSection title="EmptyState" description={t('singleHelp')}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant={status === 'source-empty' ? 'default' : 'outline'} onClick={() => setStatus('source-empty')}>
+          {t('sourceEmpty')}
+        </Button>
+        <Button variant={status === 'empty' ? 'default' : 'outline'} onClick={() => setStatus('empty')}>
+          {t('showEmpty')}
+        </Button>
+      </div>
+      <ReadState
+        status={status}
+        onReset={() => {
+          setAction('Filters reset');
+          setStatus('source-empty');
+        }}
+        onNavigate={() => setAction('Returned to sample')}
+      />
+      <output aria-live="polite">{localize(action)}</output>
     </ExampleSection>
   );
 }
