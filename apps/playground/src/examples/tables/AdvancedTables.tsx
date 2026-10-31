@@ -636,7 +636,7 @@ function HeaderExample() {
         profile="list"
         model={{ kind: 'client', rows }}
         {...ready(rows, seed.length)}
-        columns={[
+        columns={helper.columns([
           ...columns,
           helper.accessor('age', { id: 'age', header: text('age'), cell: ctx => number(ctx.getValue()) }),
           helper.accessor('daysInPen', {
@@ -644,7 +644,7 @@ function HeaderExample() {
             header: text('daysInPen'),
             cell: ctx => number(ctx.getValue()),
           }),
-        ]}
+        ])}
         labels={labels}
         getRowId={getRowId}
         caption={text('header')}

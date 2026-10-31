@@ -49,7 +49,7 @@ it('offers a link action that is a real anchor inside the row menu', async () =>
 
 it('includes a genuinely disabled primary action example', () => {
   const { container } = render(<PresentationExample scope="north" />);
-  const row = container.querySelector('tr[data-row-id="presentation-empty"]')!;
+  const row = container.querySelector<HTMLTableRowElement>('tr[data-row-id="presentation-empty"]')!;
   const action = within(row).getByRole('button', { name: '查看详情' });
   expect(action).toBeDisabled();
   fireEvent.click(action);

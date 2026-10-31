@@ -115,7 +115,7 @@ it('updates the layout row status when marking it reviewed', async () => {
   const tag = 'NB-2026-0418-0';
   fireEvent.pointerDown(screen.getByRole('button', { name: `${tag} 的更多操作` }), { button: 0, ctrlKey: false });
   fireEvent.click(await screen.findByRole('menuitem', { name: '标记复核' }));
-  await waitFor(() => expect(within(container.querySelector('tr[data-row-id="a1-0"]')!).getByText('已复核')).toBeVisible());
+  await waitFor(() => expect(within(container.querySelector<HTMLTableRowElement>('tr[data-row-id="a1-0"]')!).getByText('已复核')).toBeVisible());
 });
 
 it('provides the header hint and complete three-column row details', async () => {
@@ -127,7 +127,7 @@ it('provides the header hint and complete three-column row details', async () =>
   view.unmount();
   const details = render(<AdvancedTables scenario="expand" />);
   fireEvent.click(screen.getByRole('button', { name: '展开 NB-2026-0418 详情' }));
-  const row = details.container.querySelector('.pattern-detail-row')!;
+  const row = details.container.querySelector<HTMLTableRowElement>('.pattern-detail-row')!;
   for (const field of ['出生日期', '品种', '父号', '母号', '最近称重', '疫苗']) expect(within(row).getByText(field)).toBeVisible();
   expect(within(row).getByText('CN-2023-0112')).toBeVisible();
   expect(row.querySelector('dl')).toHaveClass('sm:grid-cols-3');
