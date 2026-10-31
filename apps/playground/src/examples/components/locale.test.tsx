@@ -1,12 +1,15 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@niubu/locales/react';
 import { createPreferenceManager, PreferenceProvider } from '@niubu/preferences';
 import { createStoragePort } from '@niubu/hooks/storage';
 import { createPlaygroundI18n } from '../../locales';
 import { ComponentsPage } from './ComponentsPage';
 import { FeedbackPage, type ExampleRecord } from './FeedbackPage';
+
+beforeAll(() => vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }));
+afterAll(() => vi.unstubAllGlobals());
 
 it('switches flat-key control copy in place while retaining selected values and applied output', async () => {
   const i18n = createPlaygroundI18n('zh-CN', { lang: 'zh-CN', dir: 'ltr' });

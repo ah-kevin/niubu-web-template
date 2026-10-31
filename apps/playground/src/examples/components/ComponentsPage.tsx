@@ -1,3 +1,4 @@
+import { ControlGallery } from './ControlGallery';
 import { useComponentsText } from './copy';
 import { useId, useState } from 'react';
 import { CircleHelp, ClipboardList, Menu, Settings2 } from '@niubu/icons';
@@ -28,6 +29,7 @@ export function ComponentsPage() {
     : t('noChannels');
   return (
     <ExamplePage title={t('title')} description={t('pageDescription')}>
+      <ControlGallery />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-2">
         <ExampleSection
           title={t('choices')}
