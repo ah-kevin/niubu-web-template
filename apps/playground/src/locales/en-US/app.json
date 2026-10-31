@@ -972,5 +972,22 @@
   "designSystem.completeList": "Complete list page",
   "examples.components.followGlobal": "Follow global",
   "examples.components.simplePagination": "Simple pagination",
-  "examples.completeList.followGlobal": "Follow global"
+  "examples.completeList.followGlobal": "Follow global",
+  "examples.components.searchLabel": "Search records",
+  "examples.components.searchPlaceholder": "Enter a record name",
+  "examples.components.regions": "Regions",
+  "examples.components.selectAllRegions": "Select all regions",
+  "examples.components.regionA": "Region A",
+  "examples.components.regionB": "Region B",
+  "examples.components.radioUnavailable": "Unavailable view",
+  "examples.components.online": "Online",
+  "examples.components.offline": "Offline",
+  "examples.components.warningDot": "Warning",
+  "examples.components.fault": "Fault",
+  "examples.components.summaryCard": "Summary card",
+  "examples.components.allRecords": "All records",
+  "examples.components.summaryDescription": "A read-only summary with independent actions.",
+  "examples.components.summaryContent": "128 records in this synthetic collection.",
+  "examples.components.exportSummary": "Export summary",
+  "examples.components.viewSummary": "View summary"
 }

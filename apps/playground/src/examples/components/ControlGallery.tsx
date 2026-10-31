@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import { usePreviewAppearance, type PreviewTheme, type PreviewDensity } from '../usePreviewAppearance';
-import { CircleHelp, Plus } from '@niubu/icons';
+import { CircleHelp, Plus, Search } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
-import { Input } from '@niubu/shadcn-ui/input';
+import { Input, InputGroup, InputGroupAddon } from '@niubu/shadcn-ui/input';
 import { Textarea } from '@niubu/shadcn-ui/textarea';
 import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
@@ -12,7 +12,7 @@ import { Switch } from '@niubu/shadcn-ui/switch';
 import { Slider } from '@niubu/shadcn-ui/slider';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@niubu/shadcn-ui/tabs';
 import { Badge } from '@niubu/shadcn-ui/badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@niubu/shadcn-ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@niubu/shadcn-ui/card';
 import { Divider, Separator } from '@niubu/shadcn-ui/separator';
 import { Pagination } from '@niubu/common-ui/pagination';
 import { ScrollArea, ScrollBar } from '@niubu/shadcn-ui/scroll-area';
@@ -39,6 +39,7 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
   const [choice, setChoice] = useState('a');
   const [checked, setChecked] = useState(false);
   const [mixed, setMixed] = useState<boolean | 'indeterminate'>('indeterminate');
+  const [regions, setRegions] = useState<string[]>([]);
   const [radio, setRadio] = useState('a');
   const [enabled, setEnabled] = useState(true);
   const [slider, setSlider] = useState([40]);
@@ -172,7 +173,9 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'Input') && (
             <ExampleSection title={t('textTitle')}>
-              <Label htmlFor={`${id}-input`}>{t('inputLabel')}</Label>
+              <Label htmlFor={`${id}-input`} data-disabled={disabled ? '' : undefined}>
+                {t('inputLabel')}
+              </Label>
               <Input
                 id={`${id}-input`}
                 placeholder={t('placeholder')}
@@ -181,11 +184,32 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 aria-describedby={errors ? `${id}-input-error` : undefined}
               />
               {errorText('input')}
+              <Label htmlFor={`${id}-search`} data-disabled={disabled ? '' : undefined}>
+                {t('searchLabel')}
+              </Label>
+              <InputGroup>
+                <InputGroupAddon aria-hidden="true">
+                  <Search />
+                </InputGroupAddon>
+                <Input
+                  id={`${id}-search`}
+                  type="search"
+                  placeholder={t('searchPlaceholder')}
+                  disabled={disabled}
+                  aria-invalid={errors || undefined}
+                  aria-describedby={errors ? `${id}-input-error` : undefined}
+                />
+                <InputGroupAddon aria-hidden="true">
+                  <kbd>⌘K</kbd>
+                </InputGroupAddon>
+              </InputGroup>
             </ExampleSection>
           )}
           {(!only || only === 'Textarea') && (
             <ExampleSection title={t('textareaTitle')}>
-              <Label htmlFor={`${id}-textarea`}>{t('textLabel')}</Label>
+              <Label htmlFor={`${id}-textarea`} data-disabled={disabled ? '' : undefined}>
+                {t('textLabel')}
+              </Label>
               <Textarea
                 id={`${id}-textarea`}
                 placeholder={t('placeholder')}
@@ -206,7 +230,9 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'NumberInput') && (
             <ExampleSection title={t('numberTitle')}>
-              <Label htmlFor={`${id}-quantity`}>{t('quantity')}</Label>
+              <Label htmlFor={`${id}-quantity`} data-disabled={disabled ? '' : undefined}>
+                {t('quantity')}
+              </Label>
               <NumberInput
                 id={`${id}-quantity`}
                 controls
@@ -222,7 +248,9 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 aria-describedby={errors ? `${id}-number-error` : undefined}
               />
               {errorText('number')}
-              <Label htmlFor={`${id}-draft`}>{t('decimalDraft')}</Label>
+              <Label htmlFor={`${id}-draft`} data-disabled={disabled ? '' : undefined}>
+                {t('decimalDraft')}
+              </Label>
               <NumberInput
                 id={`${id}-draft`}
                 controls
@@ -239,7 +267,9 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'Select') && (
             <ExampleSection title={t('selectTitle')}>
-              <Label htmlFor={`${id}-select`}>{t('selectLabel')}</Label>
+              <Label htmlFor={`${id}-select`} data-disabled={disabled ? '' : undefined}>
+                {t('selectLabel')}
+              </Label>
               <Select
                 id={`${id}-select`}
                 label={t('selectLabel')}
@@ -260,7 +290,7 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'Checkbox') && (
             <ExampleSection title={t('checkboxTitle')}>
-              <label className="flex items-center gap-2">
+              <Label className="flex items-center gap-2" data-disabled={disabled ? '' : undefined}>
                 <Checkbox
                   checked={checked}
                   onCheckedChange={value => setChecked(value === true)}
@@ -268,11 +298,11 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                   aria-invalid={errors || undefined}
                 />
                 {t('checkLabel')}
-              </label>
-              <label className="flex items-center gap-2">
+              </Label>
+              <Label className="flex items-center gap-2" data-disabled={disabled ? '' : undefined}>
                 <Checkbox checked={mixed} onCheckedChange={setMixed} disabled={disabled} />
                 {t('mixedLabel')}
-              </label>
+              </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -282,6 +312,33 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 {t('cycleMixed')}
               </Button>
               {errorText('checkbox')}
+              <fieldset className="grid gap-2">
+                <legend className="mb-2 text-sm font-medium">{t('regions')}</legend>
+                <Label data-disabled={disabled ? '' : undefined}>
+                  <Checkbox
+                    checked={regions.length === 2 ? true : regions.length ? 'indeterminate' : false}
+                    onCheckedChange={value => setRegions(value === true ? ['a', 'b'] : [])}
+                    disabled={disabled}
+                    aria-invalid={errors || undefined}
+                  />
+                  {t('selectAllRegions')}
+                </Label>
+                {(['a', 'b'] as const).map(value => (
+                  <Label key={value} data-disabled={disabled ? '' : undefined}>
+                    <Checkbox
+                      checked={regions.includes(value)}
+                      disabled={disabled}
+                      aria-invalid={errors || undefined}
+                      onCheckedChange={checked =>
+                        setRegions(previous =>
+                          checked === true ? [...previous, value] : previous.filter(region => region !== value),
+                        )
+                      }
+                    />
+                    {t(value === 'a' ? 'regionA' : 'regionB')}
+                  </Label>
+                ))}
+              </fieldset>
             </ExampleSection>
           )}
           {(!only || only === 'Radio') && (
@@ -293,11 +350,19 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 disabled={disabled}
                 aria-invalid={errors || undefined}
               >
-                {(['a', 'b'] as const).map(value => (
-                  <label key={value} className="flex items-center gap-2">
-                    <RadioGroupItem value={value} aria-invalid={errors || undefined} />
-                    {t(value === 'a' ? 'radioA' : 'radioB')}
-                  </label>
+                {(['a', 'unavailable', 'b'] as const).map(value => (
+                  <Label
+                    key={value}
+                    className="flex items-center gap-2"
+                    data-disabled={disabled || value === 'unavailable' ? '' : undefined}
+                  >
+                    <RadioGroupItem
+                      value={value}
+                      disabled={disabled || value === 'unavailable'}
+                      aria-invalid={errors || undefined}
+                    />
+                    {t(value === 'a' ? 'radioA' : value === 'b' ? 'radioB' : 'radioUnavailable')}
+                  </Label>
                 ))}
               </RadioGroup>
               {errorText('radio')}
@@ -305,10 +370,10 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'Switch') && (
             <ExampleSection title={t('switchTitle')}>
-              <label className="flex items-center gap-2">
+              <Label className="flex items-center gap-2" data-disabled={disabled ? '' : undefined}>
                 <Switch checked={enabled} onCheckedChange={setEnabled} disabled={disabled} />
                 {t('switchLabel')}
-              </label>
+              </Label>
             </ExampleSection>
           )}
           {(!only || only === 'Slider') && (
@@ -366,6 +431,21 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 <Badge count={count} aria-label={t('notificationCount', { count })} />
                 <Badge dot aria-label={t('newContent')} />
               </div>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    ['success', 'online'],
+                    ['neutral', 'offline'],
+                    ['warning', 'warningDot'],
+                    ['danger', 'fault'],
+                  ] as const
+                ).map(([variant, key]) => (
+                  <Badge key={key} variant={variant}>
+                    <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+                    {t(key)}
+                  </Badge>
+                ))}
+              </div>
               <Button type="button" variant="outline" disabled={disabled} onClick={() => setCount(value => value + 1)}>
                 {t('moreNotifications')}
               </Button>
@@ -373,6 +453,31 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'Card') && (
             <ExampleSection title={t('cardTitle')}>
+              <Card>
+                <CardHeader>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle>{t('summaryCard')}</CardTitle>
+                    <Button type="button" variant="link" disabled={disabled} onClick={() => setAction(t('allRecords'))}>
+                      {t('allRecords')}
+                    </Button>
+                  </div>
+                  <CardDescription>{t('summaryDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent>{t('summaryContent')}</CardContent>
+                <CardFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={disabled}
+                    onClick={() => setAction(t('exportSummary'))}
+                  >
+                    {t('exportSummary')}
+                  </Button>
+                  <Button type="button" disabled={disabled} onClick={() => setAction(t('viewSummary'))}>
+                    {t('viewSummary')}
+                  </Button>
+                </CardFooter>
+              </Card>
               <Card
                 interactive
                 selected={selected}
@@ -485,7 +590,9 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
               </Label>
               <Input id={`${id}-optional`} disabled={disabled} />
               <div className="flex items-center gap-2">
-                <Label htmlFor={`${id}-helped`}>{t('hintLabel')}</Label>
+                <Label htmlFor={`${id}-helped`} data-disabled={disabled ? '' : undefined}>
+                  {t('hintLabel')}
+                </Label>
                 <Tooltip content={t('hintText')}>
                   <Button type="button" size="icon-sm" variant="ghost" aria-label={t('hintText')}>
                     <CircleHelp aria-hidden />

@@ -972,5 +972,22 @@
   "designSystem.completeList": "完整列表页",
   "examples.components.followGlobal": "跟随全局",
   "examples.components.simplePagination": "简洁分页",
-  "examples.completeList.followGlobal": "跟随全局"
+  "examples.completeList.followGlobal": "跟随全局",
+  "examples.components.searchLabel": "搜索记录",
+  "examples.components.searchPlaceholder": "请输入记录名称",
+  "examples.components.regions": "区域",
+  "examples.components.selectAllRegions": "选择所有区域",
+  "examples.components.regionA": "A 区",
+  "examples.components.regionB": "B 区",
+  "examples.components.radioUnavailable": "暂不可用的视图",
+  "examples.components.online": "在线",
+  "examples.components.offline": "离线",
+  "examples.components.warningDot": "告警",
+  "examples.components.fault": "故障",
+  "examples.components.summaryCard": "概览卡片",
+  "examples.components.allRecords": "全部记录",
+  "examples.components.summaryDescription": "只读概览，操作按钮分别执行各自的动作。",
+  "examples.components.summaryContent": "此合成集合共 128 条记录。",
+  "examples.components.exportSummary": "导出概览",
+  "examples.components.viewSummary": "查看概览"
 }

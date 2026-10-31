@@ -5,6 +5,11 @@ import { Badge } from '@niubu/shadcn-ui/badge';
 import { Input } from '@niubu/shadcn-ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@niubu/shadcn-ui/tabs';
 import { Switch } from '@niubu/shadcn-ui/switch';
+import { ScrollArea, ScrollBar } from '@niubu/shadcn-ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@niubu/shadcn-ui/popover';
+import { densityTokens } from '@niubu/core-design';
+import type { CSSProperties } from 'react';
+import { ReadState } from '@niubu/common-ui/read-state';
 import { compilePlaygroundStyles, matchingRules, readCompiledRules, type CompiledStyleRule } from '../../tests/compiled-styles';
 let rules: CompiledStyleRule[];
 beforeAll(async () => { rules = readCompiledRules(await compilePlaygroundStyles()); });
@@ -56,4 +61,45 @@ it.each(['destructive','danger'] as const)('uses the existing error surface for 
  render(<Badge variant={variant}>Danger</Badge>);
  const colors=matchingRules(rules,screen.getByText('Danger'),'background-color').map(rule=>rule.style.getPropertyValue('background-color'));
  expect(colors.at(-1)).toBe('var(--control-error-background)');
+});
+
+it('constrains a wide scroll area to its grid cell while retaining a horizontal viewport', () => {
+ const view=render(<div className="grid"><ScrollArea type="always" aria-label="Wide records"><div style={{width:1600}}>Wide content</div><ScrollBar orientation="horizontal" /></ScrollArea></div>);
+ const area=screen.getByLabelText('Wide records');
+ const values=(prop:string)=>matchingRules(rules,area,prop).map(rule=>rule.style.getPropertyValue(prop));
+ expect(values('min-width').at(-1)).toBe('0px');
+ expect(values('max-width').at(-1)).toBe('100%');
+ const viewport=view.container.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]')!;
+ expect(viewport.style.overflowX).toBe('scroll');
+ expect(screen.getByText('Wide content')).toHaveStyle({width:'1600px'});
+});
+
+it.each([['standard', '16px'], ['compact', '12px']] as const)('uses card padding for a %s popover', async (density, expected) => {
+ render(<Popover open><PopoverTrigger asChild><button type="button">Open</button></PopoverTrigger><PopoverContent aria-label="Card popover" style={densityTokens[density] as CSSProperties}>Contents</PopoverContent></Popover>);
+ const content=await screen.findByRole('dialog',{name:'Card popover'});
+ const padding=matchingRules(rules,content,'padding').at(-1)?.style.getPropertyValue('padding') ?? '';
+ const token=/^var\((--[a-z-]+)\)$/.exec(padding)?.[1];
+ expect(token && (content as HTMLElement).style.getPropertyValue(token)).toBe(expected);
+});
+
+it.each([
+ ['standard', undefined, false, '40px'],
+ ['compact', undefined, false, '24px'],
+ ['standard', 'compact', false, '24px'],
+ ['compact', 'standard', false, '40px'],
+ ['compact', 'standard', true, '24px'],
+] as const)('resolves ReadState padding for outer %s, inner %s and compact=%s', (outer, inner, compact, expected) => {
+ const view=render(<div data-density={outer} style={{fontSize:18}}><div data-density={inner}><ReadState status="empty" compact={compact} actions={null} /></div></div>);
+ const state=view.container.querySelector('.pattern-read-state')!;
+ const block=matchingRules(rules,state,'padding-block').at(-1)?.style.getPropertyValue('padding-block') ?? '';
+ const variable=/^var\((--[a-z-]+),\s*([^)]+)\)$/.exec(block);
+ let resolved=block;
+ if(variable) {
+  resolved=variable[2];
+  for(let node: Element|null=state;node;node=node.parentElement) {
+   const value=matchingRules(rules,node,variable[1]).at(-1)?.style.getPropertyValue(variable[1]);
+   if(value) {resolved=value;break;}
+  }
+ }
+ expect(resolved).toBe(expected);
 });
