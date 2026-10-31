@@ -96,3 +96,77 @@ it('creates, edits and confirms deletion of synthetic records through the live f
   fireEvent.click(within(confirmation).getByRole('button', { name: '删除' }));
   await waitFor(() => expect(screen.queryByText('TEST-NEW')).not.toBeInTheDocument());
 });
+
+it.each(['edit', 'move', 'delete'] as const)('clamps a filtered last page after %s changes the real result', async action => {
+  mount();
+  await selectOption(screen.getByRole('combobox', { name: '状态' }), '转栏中');
+  fireEvent.click(screen.getByRole('button', { name: '查询' }));
+  fireEvent.click(screen.getByRole('button', { name: '第 6 页' }));
+  expect(screen.getByText('CN-2026-0799')).toBeVisible();
+  fireEvent.change(screen.getByRole('textbox', { name: '耳标号' }), { target: { value: 'unapplied draft' } });
+  expect(screen.getByRole('button', { name: '第 6 页' })).toHaveAttribute('aria-current', 'page');
+  if (action === 'edit') {
+    await openAction('CN-2026-0799', '编辑牛只');
+    const editor = await screen.findByRole('dialog', { name: '编辑牛只' });
+    await selectOption(within(editor).getByRole('combobox', { name: '状态' }), '在栏');
+    await saveEditor();
+  } else if (action === 'move') {
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择 animal-127' }));
+    fireEvent.click(screen.getByRole('button', { name: '批量转栏' }));
+    const move = await screen.findByRole('dialog', { name: '选择目标栏舍' });
+    fireEvent.click(within(move).getByRole('button', { name: '保存' }));
+  } else {
+    await openAction('CN-2026-0799', '删除');
+    const remove = await screen.findByRole('dialog', { name: '删除牛只档案' });
+    fireEvent.click(within(remove).getByRole('button', { name: '删除' }));
+  }
+  await waitFor(() => expect(screen.getByRole('button', { name: '第 5 页' })).toHaveAttribute('aria-current', 'page'));
+  expect(screen.queryByRole('button', { name: '第 6 页' })).not.toBeInTheDocument();
+  expect(screen.queryByText('CN-2026-0799')).not.toBeInTheDocument();
+  expect(screen.getByRole('table').querySelectorAll('tbody tr[data-row-id]')).toHaveLength(5);
+});
+
+it('keeps every popup in the local theme container, including fullscreen and nested select portals', async () => {
+  const { container } = mount();
+  const root = container.querySelector('[data-theme]')!;
+  const documentTheme = document.documentElement.getAttribute('data-theme');
+  for (const label of ['浅色 · 标准', '浅色 · 紧凑', '深色 · 标准', '深色 · 紧凑']) {
+    await selectOption(screen.getByRole('combobox', { name: '主体外观' }), label);
+    const host = root.querySelector('[data-business-portal-host]')!;
+    const pen = screen.getByRole('combobox', { name: '栏舍' });
+    pen.focus();
+    fireEvent.keyDown(pen, { key: 'ArrowDown' });
+    expect(host).toContainElement(await screen.findByRole('listbox'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'CN-2026-0418 的更多操作' }), { button: 0, ctrlKey: false });
+    expect(host).toContainElement(await screen.findByRole('menu'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: '全屏' }));
+    const tableSection = screen.getByRole('table').closest('section')!;
+    expect(tableSection).toHaveAttribute('data-maximized', 'true');
+    expect(root).toContainElement(tableSection);
+    fireEvent.click(screen.getByRole('button', { name: '显示设置' }));
+    expect(host).toContainElement(await screen.findByRole('dialog', { name: '显示设置' }));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: '退出全屏' }));
+    expect(tableSection).not.toHaveAttribute('data-maximized');
+
+    fireEvent.click(screen.getByRole('button', { name: '新增牛只' }));
+    const editor = await screen.findByRole('dialog', { name: '新增牛只' });
+    expect(host).toContainElement(editor);
+    const nestedPen = within(editor).getByRole('combobox', { name: '栏舍' });
+    nestedPen.focus();
+    fireEvent.keyDown(nestedPen, { key: 'ArrowDown' });
+    expect(host).toContainElement(await screen.findByRole('listbox'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+    fireEvent.click(within(editor).getByRole('button', { name: '关闭' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(document.documentElement.getAttribute('data-theme')).toBe(documentTheme);
+  }
+});
