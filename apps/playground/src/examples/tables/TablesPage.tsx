@@ -1,4 +1,5 @@
 import { AdvancedTables } from './AdvancedTables';
+import { TreeCapabilities } from './TreeCapabilities';
 import { PresentationExample } from './PresentationExample';
 import { createPortal } from 'react-dom';
 import { DocumentationLink } from '../DocumentationLink';
@@ -139,6 +140,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
           <ServerExample scope={scope} load={load} t={t} />
           <TreeExample key={`tree:${scope}`} scope={scope} t={t} />
           <PresentationExample scope={scope} />
+          <TreeCapabilities />
         </div>
       </PreferenceProvider>
       <AdvancedTables />
