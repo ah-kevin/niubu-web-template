@@ -17,3 +17,5 @@
 缺口保留：数组行引擎、跨 owner 合并、独立字段/分组折叠、标签自动测宽、异步 schema、远程搜索/树控件和双向 codec。日期范围复合值通过公开 form.setValue 整体赋值。
 
 These scenes demonstrate existing public form APIs and one form owner. Locale changes keep values and active operations. Missing Vben contracts remain deferred; no additional dependencies are installed.
+
+- E56：失焦显示必填/格式错误；提交校验全部字段并聚焦首个错误，横向标签复用 `layout.labelWidth`。

@@ -11,7 +11,11 @@ import { ReturnPathProvider } from '@niubu/common-ui/return-path';
 import { ActionPreview } from '@niubu/common-ui/action-preview';
 import { Input } from '@niubu/shadcn-ui/input';
 import { Label } from '@niubu/shadcn-ui/label';
-import { ReadState } from '@niubu/common-ui/read-state';
+import { ReadState, Loading, Spinner, Skeleton, Progress } from '@niubu/common-ui/read-state';
+import * as Dropdown from '@niubu/shadcn-ui/dropdown-menu';
+import * as Context from '@niubu/shadcn-ui/context-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@niubu/shadcn-ui/popover';
+import { Tooltip } from '@niubu/shadcn-ui/tooltip';
 import { SystemStatePage } from '@niubu/common-ui/system-state';
 import { RouteErrorBoundary, RoutePending } from '@niubu/layouts/routing';
 import { Button } from '@niubu/shadcn-ui/button';
@@ -383,6 +387,8 @@ function FeedbackExamples({ saveRecord = simulateSave }: FeedbackPageProps) {
           </div>
         </ExampleSection>
         <SupplementalOverlays />
+        <MenuAndPopoverExamples />
+        <LoadingExamples />
         <TableReadFeedbackExample />
         <ExampleSection title={t('reading')}>
           <div className="flex flex-wrap gap-2">
@@ -520,6 +526,169 @@ function TableReadFeedbackExample() {
           ) : undefined
         }
       />
+    </ExampleSection>
+  );
+}
+
+const feedbackMenus = {
+  dropdown: {
+    Root: Dropdown.DropdownMenu,
+    Trigger: Dropdown.DropdownMenuTrigger,
+    Portal: Dropdown.DropdownMenuPortal,
+    Content: Dropdown.DropdownMenuContent,
+    Item: Dropdown.DropdownMenuItem,
+    Check: Dropdown.DropdownMenuCheckboxItem,
+    Radios: Dropdown.DropdownMenuRadioGroup,
+    Radio: Dropdown.DropdownMenuRadioItem,
+    Sub: Dropdown.DropdownMenuSub,
+    SubTrigger: Dropdown.DropdownMenuSubTrigger,
+    SubContent: Dropdown.DropdownMenuSubContent,
+    Separator: Dropdown.DropdownMenuSeparator,
+  },
+  context: {
+    Root: Context.ContextMenu,
+    Trigger: Context.ContextMenuTrigger,
+    Portal: Context.ContextMenuPortal,
+    Content: Context.ContextMenuContent,
+    Item: Context.ContextMenuItem,
+    Check: Context.ContextMenuCheckboxItem,
+    Radios: Context.ContextMenuRadioGroup,
+    Radio: Context.ContextMenuRadioItem,
+    Sub: Context.ContextMenuSub,
+    SubTrigger: Context.ContextMenuSubTrigger,
+    SubContent: Context.ContextMenuSubContent,
+    Separator: Context.ContextMenuSeparator,
+  },
+};
+function MenuSample({ kind }: { kind: keyof typeof feedbackMenus }) {
+  const { t } = useFeedbackText();
+  const M = feedbackMenus[kind];
+  const [checked, setChecked] = useState(false);
+  const [view, setView] = useState('one');
+  const [result, setResult] = useState<'menuChild' | 'menuDanger' | null>(null);
+  return (
+    <div className="grid gap-2">
+      <M.Root>
+        <M.Trigger asChild>
+          <Button type="button" variant="outline">
+            {t(kind === 'context' ? 'contextOpen' : 'dropdownOpen')}
+          </Button>
+        </M.Trigger>
+        <M.Portal>
+          <M.Content>
+            <M.Check checked={checked} onCheckedChange={next => setChecked(next === true)}>
+              {t('menuChecked')}
+            </M.Check>
+            <M.Radios value={view} onValueChange={setView}>
+              <M.Radio value="one">{t('menuOne')}</M.Radio>
+              <M.Radio value="two">{t('menuTwo')}</M.Radio>
+            </M.Radios>
+            <M.Item disabled>{t('menuDisabled')}</M.Item>
+            <M.Sub>
+              <M.SubTrigger>{t('menuMore')}</M.SubTrigger>
+              <M.SubContent>
+                <M.Item onSelect={() => setResult('menuChild')}>{t('menuChild')}</M.Item>
+              </M.SubContent>
+            </M.Sub>
+            <M.Separator />
+            <M.Item variant="danger" onSelect={() => setResult('menuDanger')}>
+              {t('menuDanger')}
+            </M.Item>
+          </M.Content>
+        </M.Portal>
+      </M.Root>
+      <output className="text-xs text-muted-foreground" aria-live="polite">
+        {t('menuResult', {
+          value: `${checked ? '✓ ' : ''}${t(view === 'one' ? 'menuOne' : 'menuTwo')}${result ? ` · ${t(result)}` : ''}`,
+        })}
+      </output>
+    </div>
+  );
+}
+function MenuAndPopoverExamples() {
+  const { t } = useFeedbackText();
+  const overlay = useOverlay();
+  const [result, setResult] = useState<boolean | null>(null);
+  const confirmation = useRef<AbortController | null>(null);
+  useEffect(() => () => confirmation.current?.abort(), []);
+  function confirmDanger() {
+    confirmation.current?.abort();
+    const owner = new AbortController();
+    confirmation.current = owner;
+    void overlay
+      .confirm({
+        title: <FeedbackMessage source="Confirm danger action" />,
+        description: <FeedbackMessage source="This example only changes local state. Initial focus stays on Cancel." />,
+        tone: 'danger',
+        signal: owner.signal,
+      })
+      .then(value => {
+        if (!owner.signal.aborted) setResult(value);
+      });
+  }
+  return (
+    <ExampleSection title={t('menuSamples')} description={t('menuHelp')}>
+      <div className="flex flex-wrap items-start gap-4">
+        <MenuSample kind="dropdown" />
+        <MenuSample kind="context" />
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline">
+              {t('popoverOpen')}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent aria-label={t('popoverOpen')}>
+            <p>{t('popoverHelp')}</p>
+          </PopoverContent>
+        </Popover>
+        <Tooltip content={t('disabledTooltip')}>
+          <span tabIndex={0} aria-label={t('tooltipHelpLabel')}>
+            <Button disabled>{t('menuDisabled')}</Button>
+          </span>
+        </Tooltip>
+        <Button type="button" variant="destructive" onClick={confirmDanger}>
+          {t('dangerConfirm')}
+        </Button>
+      </div>
+      {result !== null && <output aria-live="polite">{t(result ? 'dangerAccepted' : 'dangerCancelled')}</output>}
+    </ExampleSection>
+  );
+}
+function LoadingExamples() {
+  const { t } = useFeedbackText();
+  const [progress, setProgress] = useState(40);
+  const [indeterminate, setIndeterminate] = useState(false);
+  return (
+    <ExampleSection title={t('loadingSamples')} description={t('loadingHelp')}>
+      <div className="flex items-center gap-4">
+        <Spinner size="sm" label={t('spinnerSmall')} />
+        <Spinner label={t('spinnerMedium')} />
+        <Spinner size="lg" label={t('spinnerLarge')} />
+      </div>
+      <div role="group" aria-label={t('skeletonLabel')} className="grid gap-2">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+      <Progress label={t('progressLabel')} value={indeterminate ? undefined : progress} />
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => setProgress(value => (value >= 100 ? 0 : value + 20))}>
+          {t('advanceProgress')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          aria-pressed={indeterminate}
+          onClick={() => setIndeterminate(value => !value)}
+        >
+          {t('unknownProgress')}
+        </Button>
+      </div>
+      <div className="rounded-lg border border-border">
+        <Loading label={t('loadingRegion')} />
+      </div>
     </ExampleSection>
   );
 }

@@ -25,6 +25,7 @@ const cases = [
   ['E53', 'focus', FocusPanel],
   ['E54', 'format', FormatPanel],
   ['E55', 'discard', DiscardPanel],
+  ['E56', 'blurDemo', BlurPanel],
 ] as const;
 
 export type FormsPageProps = {
@@ -661,5 +662,30 @@ function DiscardPanel() {
         </FormFrame>
       )}
     </>
+  );
+}
+
+function BlurPanel() {
+  const text = useFormsText();
+  const [saved, setSaved] = useState(false);
+  const schema = useExampleForm<{ name: string; email: string }>({
+    fields: [
+      { name: 'name', label: 'name', kind: 'text', required: true },
+      { name: 'email', label: 'email', kind: 'text', required: true, schema: z.string().email('emailFormat') },
+    ],
+    defaultValues: { name: '', email: '' },
+    layout: { columns: 1, labelWidth: '6em' },
+    onSubmit: async () => {
+      setSaved(true);
+    },
+  });
+  return (
+    <div className="grid gap-4">
+      <p className="text-sm text-muted-foreground">{text('blurHelp')}</p>
+      <schema.Form submitLabel={text('submit')}>
+        <ExampleFields form={schema.form} {...schema.presentation} />
+      </schema.Form>
+      {saved && <output aria-live="polite">{text('blurSaved')}</output>}
+    </div>
   );
 }

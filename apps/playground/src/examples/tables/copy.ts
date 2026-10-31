@@ -1,5 +1,9 @@
 /** App locale integration is owned by the examples module; standalone fixtures use this fallback. */
 export const tablesCopy = {
+  'examples.tables.expandAll': '展开全部',
+  'examples.tables.collapseAll': '收起全部',
+  'examples.tables.stateBoundary': '加载、失败和空结果保留表头；刷新期间不展示旧行。',
+
   'examples.tables.title': 'DataTable 示例',
   'examples.tables.synthetic':
     '全部记录均为合成数据；服务器由本页私有 fixture 模拟，不访问业务 API。列偏好仅保存在本页会话内。',

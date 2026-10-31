@@ -14,6 +14,7 @@ import {
   useTablePreferences,
   type TableTranslator,
   type TableAlignment,
+  type ExpandedState,
 } from '@niubu/common-ui/data-table';
 import { useTranslation } from '@niubu/locales/react';
 import { createPreferenceManager, PreferenceProvider } from '@niubu/preferences';
@@ -142,6 +143,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
       <ExampleDetails title={t('examples.ui.details')}>
         <p>{t('examples.tables.synthetic')}</p>
         <p>{t('examples.tables.boundary')}</p>
+        <p>{t('examples.tables.stateBoundary')}</p>
       </ExampleDetails>
     </ExamplePage>
   );
@@ -175,6 +177,7 @@ function ExampleGroup({
 type TreeSample = { id: string; name: string; children?: readonly TreeSample[] };
 const treeHelper = createTreeColumnHelper<TreeSample>();
 function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
+  const [expanded, setExpanded] = useState<ExpandedState>({});
   const [align, setAlign] = useState<TableAlignment>('center');
   const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
   const columns = useMemo(
@@ -214,6 +217,7 @@ function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
       <div role="group" aria-label={t('examples.tables.tree')} ref={setToolsHost} />
       <DataTable
         profile="tree-list"
+        expanded={{ kind: 'controlled', value: expanded, onChange: setExpanded }}
         align={align}
         model={{ kind: 'client', rows: roots }}
         readState="ready"
@@ -228,6 +232,16 @@ function TreeExample({ scope, t }: { scope: string; t: TableTranslator }) {
         toolbar={{
           title: null,
           allowMaximize: true,
+          actions: (
+            <>
+              <Button type="button" variant="outline" onClick={() => setExpanded(true)}>
+                {t('examples.tables.expandAll')}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setExpanded({})}>
+                {t('examples.tables.collapseAll')}
+              </Button>
+            </>
+          ),
           render: node => (toolsHost ? createPortal(node, toolsHost) : null),
         }}
         labels={createDataTableLabels(t, { name: t('examples.tables.name') })}

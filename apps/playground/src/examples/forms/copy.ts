@@ -2,6 +2,11 @@ import { useTranslation } from '@niubu/locales/react';
 
 /** App resource keys: app:examples.forms.<key>. The leader owns both locale files. */
 export const formsExampleEnglish = {
+  blurDemo: 'Validate on blur',
+  blurHelp: 'Errors appear after blur. Submit validates all fields and focuses the first error.',
+  emailFormat: 'Enter a valid email',
+  blurSaved: 'Form validated',
+
   title: 'Forms',
   discard: 'Three cancel choices',
   discardHelp:

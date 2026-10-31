@@ -225,3 +225,18 @@ it('opens the public action-preview and returns focus without submitting a servi
 it('demonstrates real opt-in table loading, a single error/retry, and a controlled ready result',async()=>{
  mount();const area=screen.getByRole('heading',{name:'Table loading and error feedback'}).closest('section')!;expect(within(area).getByRole('status',{name:'正在读取'})).toHaveAttribute('aria-busy','true');await userEvent.click(screen.getByRole('button',{name:'Show table error'}));expect(within(area).getAllByRole('alert')).toHaveLength(1);expect(within(area).getByRole('heading',{name:'无法读取记录'})).toBeVisible();expect(within(area).getByText('Synthetic sample data is unavailable. Please retry.')).toBeVisible();expect(within(area).queryByRole('link')).not.toBeInTheDocument();await userEvent.click(within(area).getByRole('button',{name:'重新读取'}));expect(within(area).queryByRole('alert')).not.toBeInTheDocument();expect(within(area).getByRole('status',{name:'正在读取'})).toBeVisible();await userEvent.click(screen.getByRole('button',{name:'Show table data'}));expect(within(area).getByRole('cell',{name:'Ada'})).toBeVisible();expect(within(area).queryByRole('status')).not.toBeInTheDocument();
 });
+
+it('demonstrates determinate and indeterminate progress plus safe danger confirmation', async () => {
+  mount();
+  const progress = screen.getByRole('progressbar', { name: 'Example progress' });
+  expect(progress).toHaveAttribute('aria-valuenow', '40');
+  await userEvent.click(screen.getByRole('button', { name: 'Advance progress' }));
+  expect(progress).toHaveAttribute('aria-valuenow', '60');
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle indeterminate progress' }));
+  expect(progress).not.toHaveAttribute('aria-valuenow');
+  await userEvent.click(screen.getByRole('button', { name: 'Open danger confirmation' }));
+  expect(screen.getByRole('alertdialog', { name: 'Confirm danger action' })).toHaveAttribute('data-tone', 'danger');
+  expect(screen.getByRole('button', { name: '取消' })).toHaveFocus();
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+});

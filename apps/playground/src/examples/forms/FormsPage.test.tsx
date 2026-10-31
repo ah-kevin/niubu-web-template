@@ -320,3 +320,15 @@ it('restores the example filtered draft after choosing preserve',async()=>{
  await userEvent.type(screen.getByRole('textbox',{name:'Name'}),' preserved');await userEvent.click(screen.getByRole('button',{name:'取消'}));await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button',{name:'保留草稿并离开'}));
  await userEvent.click(await screen.findByRole('button',{name:'Reopen example'}));expect(screen.getByRole('textbox',{name:'Name'})).toHaveValue('Ada preserved');
 });
+
+it('demonstrates blur errors and first-error focus in the same form owner', async () => {
+  render(<FormsPage />);
+  await scenario('Validate on blur');
+  const name = screen.getByRole('textbox', { name: 'Name' });
+  await userEvent.click(name);
+  await userEvent.tab();
+  await waitFor(() => expect(name).toHaveAttribute('aria-invalid', 'true'));
+  expect(screen.getByRole('alert').querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(name).toHaveFocus());
+});

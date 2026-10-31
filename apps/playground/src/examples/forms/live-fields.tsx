@@ -45,7 +45,7 @@ export function ExampleFields<V extends Record<string, unknown>, C extends Custo
   if (collapsedError && !expanded) setExpanded(true);
   const style = {
     '--schema-columns': columns,
-    '--schema-label-width': typeof layout?.labelWidth === 'number' ? `${layout.labelWidth}px` : layout?.labelWidth,
+    '--label-w': typeof layout?.labelWidth === 'number' ? `${layout.labelWidth}px` : layout?.labelWidth,
   } as CSSProperties;
   return (
     <div
