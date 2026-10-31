@@ -3,6 +3,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "./cn"
 import { Slot } from "radix-ui"
+import { LoaderCircle } from '@niubu/icons'
 
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-[calc(var(--control-spacing)/2)] rounded-[var(--control-radius)] border text-[length:var(--control-font-size)] leading-[var(--control-line-height)] font-normal whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 outline-none focus-visible:outline-[3px] focus-visible:outline-offset-1 focus-visible:outline-[var(--control-primary-border)] disabled:pointer-events-none disabled:border-[var(--control-border)] disabled:bg-[var(--control-disabled-background)] disabled:text-[var(--control-disabled-foreground)] disabled:shadow-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1em]",
@@ -40,13 +41,25 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  loading,
+  children,
+  disabled,
+  onClick,
+  onClickCapture,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    loading?: boolean
   }) {
   const compactFocus = size === 'xs' || size === 'sm' || size?.startsWith('icon');
   const Comp = asChild ? Slot.Root : "button"
+  const content = loading === undefined ? children : [
+    <span key="indicator" aria-hidden="true" className="inline-flex size-[1em] shrink-0">
+      <LoaderCircle className={cn('size-full motion-reduce:animate-none', loading ? 'animate-spin' : 'invisible')} />
+    </span>,
+    <Slot.Slottable key="content">{children}</Slot.Slottable>,
+  ];
 
   return (
     <Comp
@@ -56,7 +69,20 @@ function Button({
       className={cn('not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:font-medium not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:shadow-none not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:focus-visible:outline-2 not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:focus-visible:outline-solid not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:focus-visible:outline-focus-ring not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:focus-visible:outline-offset-2 not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:disabled:pointer-events-auto not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:disabled:cursor-not-allowed not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:disabled:shadow-none not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:disabled:not-aria-busy:border-border not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:disabled:not-aria-busy:bg-muted not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:disabled:not-aria-busy:text-disabled-foreground',
 buttonVariants({ variant, size }), compactFocus && "not-in-[.preference-drawer,.workspace-header,.desktop-sidebar,.layout-secondary-pane,.layout-recovery,[data-theme-region],[data-control-shell]]:focus-visible:outline-offset-1", className)}
       {...props}
-    />
+      disabled={disabled || loading}
+      aria-busy={loading ?? props['aria-busy']}
+      aria-disabled={loading || props['aria-disabled']}
+      onClickCapture={event => {
+        if (loading) { event.preventDefault(); event.stopPropagation(); return; }
+        onClickCapture?.(event);
+      }}
+      onClick={event => {
+        if (loading) { event.preventDefault(); return; }
+        onClick?.(event);
+      }}
+    >
+      {content}
+    </Comp>
   )
 }
 
