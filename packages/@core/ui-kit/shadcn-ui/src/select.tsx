@@ -72,7 +72,7 @@ export function Select({
       </SelectPrimitive.Trigger>
       {portal.ready && <SelectPrimitive.Portal container={portal.container}>
         <BusinessPortalAdmission>
-        <BusinessPortalContent><SelectPrimitive.Content ref={boundaryRef} data-control-shell={shellContent ? '' : undefined} position="popper" className="not-data-[control-shell]:border not-data-[control-shell]:border-border not-data-[control-shell]:z-[var(--z-dropdown)] preference-select-content z-[80] max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-auto rounded-[var(--control-radius)] bg-popover p-1 text-[length:var(--control-font-size)] leading-[var(--control-line-height)] text-[var(--control-foreground)] shadow-[var(--popup-shadow)]">
+        <BusinessPortalContent><SelectPrimitive.Content ref={boundaryRef} data-control-shell={shellContent ? '' : undefined} position="popper" className="not-data-[control-shell]:border not-data-[control-shell]:border-border preference-select-content z-[var(--z-dropdown)] max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-auto rounded-[var(--control-radius)] bg-popover p-1 text-[length:var(--control-font-size)] leading-[var(--control-line-height)] text-[var(--control-foreground)] shadow-[var(--popup-shadow)]">
           <SelectPrimitive.Viewport>
             {options.map(option => (
               <SelectPrimitive.Item
