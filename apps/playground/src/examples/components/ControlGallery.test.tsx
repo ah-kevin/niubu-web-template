@@ -45,3 +45,14 @@ it('switches bilingual labels without replacing numeric drafts or selected state
  expect(screen.getByRole('button',{name:'Increase draft value'})).toBeInTheDocument();
  } finally {view.unmount();i18n.dispose();}
 });
+
+it('counts text and lets the card itself be toggled from the keyboard', async () => {
+ render(<ControlGallery/>);
+ const notes=screen.getByRole('textbox',{name:'Notes'});
+ await userEvent.type(notes,'hello');
+ expect(screen.getByText('5 / 200')).toBeInTheDocument();
+ expect(notes).toHaveAttribute('maxlength','200');
+ const card=screen.getByRole('button',{name:'Select card'});
+ card.focus();await userEvent.keyboard('{Enter}');expect(card).toHaveAttribute('aria-pressed','true');
+ await userEvent.keyboard(' ');expect(card).toHaveAttribute('aria-pressed','false');
+});

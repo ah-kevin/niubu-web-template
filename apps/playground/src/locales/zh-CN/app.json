@@ -647,7 +647,7 @@
   "examples.components.moreNotifications": "增加通知",
   "examples.components.newContent": "有新内容",
   "examples.components.cardHeading": "可选择的卡片",
-  "examples.components.cardDescription": "点击按钮选择，再次点击取消。",
+  "examples.components.cardDescription": "点击卡片或按 Enter、空格切换选择。",
   "examples.components.selectCard": "选择卡片",
   "examples.components.clearCard": "取消选择卡片",
   "examples.components.dividerText": "分组",
@@ -703,5 +703,9 @@
   "examples.forms.blurSaved": "表单已通过校验",
   "examples.tables.expandAll": "展开全部",
   "examples.tables.collapseAll": "收起全部",
-  "examples.tables.stateBoundary": "加载、失败和空结果保留表头；刷新期间不展示旧行。"
+  "examples.tables.stateBoundary": "加载、失败和空结果保留表头；刷新期间不展示旧行。",
+  "examples.components.textCount": "{{count}} / 200",
+  "examples.components.unitKg": "kg",
+  "examples.components.hintLabel": "带提示的标签",
+  "examples.components.hintText": "可用键盘聚焦查看此标签的说明"
 }

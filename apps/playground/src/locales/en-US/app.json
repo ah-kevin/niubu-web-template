@@ -647,7 +647,7 @@
   "examples.components.moreNotifications": "Add notifications",
   "examples.components.newContent": "New content",
   "examples.components.cardHeading": "Selectable card",
-  "examples.components.cardDescription": "Use the button to select; click again to clear.",
+  "examples.components.cardDescription": "Click the card or press Enter or Space to toggle selection.",
   "examples.components.selectCard": "Select card",
   "examples.components.clearCard": "Clear card selection",
   "examples.components.dividerText": "Group",
@@ -703,5 +703,9 @@
   "examples.forms.blurSaved": "Form validated",
   "examples.tables.expandAll": "Expand all",
   "examples.tables.collapseAll": "Collapse all",
-  "examples.tables.stateBoundary": "Loading, errors and empty results keep the headers. Old rows are not shown during refresh."
+  "examples.tables.stateBoundary": "Loading, errors and empty results keep the headers. Old rows are not shown during refresh.",
+  "examples.components.textCount": "{{count}} / 200",
+  "examples.components.unitKg": "kg",
+  "examples.components.hintLabel": "Label with help",
+  "examples.components.hintText": "This label offers a keyboard-accessible explanation"
 }

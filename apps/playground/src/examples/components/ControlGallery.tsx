@@ -1,6 +1,6 @@
 import { useId, useState, type CSSProperties } from 'react';
 import { densityTokens, resolvePresentationTheme } from '@niubu/core-design';
-import { Plus } from '@niubu/icons';
+import { CircleHelp, Plus } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
 import { Textarea } from '@niubu/shadcn-ui/textarea';
@@ -24,6 +24,7 @@ import {
 } from '@niubu/shadcn-ui/pagination';
 import { ScrollArea, ScrollBar } from '@niubu/shadcn-ui/scroll-area';
 import { Label } from '@niubu/shadcn-ui/label';
+import { Tooltip } from '@niubu/shadcn-ui/tooltip';
 import { BusinessPortalBoundary } from '@niubu/shadcn-ui/business-portal-boundary';
 import { ExampleSection } from '../ExamplePage';
 import { useComponentsText } from './copy';
@@ -38,6 +39,7 @@ export function ControlGallery() {
   const [loading, setLoading] = useState(false);
   const [quantity, setQuantity] = useState<number | null>(2);
   const [draft, setDraft] = useState('01.20');
+  const [notes, setNotes] = useState('');
   const [choice, setChoice] = useState('a');
   const [checked, setChecked] = useState(false);
   const [mixed, setMixed] = useState<boolean | 'indeterminate'>('indeterminate');
@@ -181,8 +183,16 @@ export function ControlGallery() {
               placeholder={t('placeholder')}
               disabled={disabled}
               aria-invalid={errors || undefined}
-              aria-describedby={errors ? `${id}-textarea-error` : undefined}
+              value={notes}
+              onChange={event => setNotes(event.currentTarget.value)}
+              maxLength={200}
+              aria-describedby={[`${id}-textarea-count`, errors ? `${id}-textarea-error` : undefined]
+                .filter(Boolean)
+                .join(' ')}
             />
+            <output id={`${id}-textarea-count`} className="text-caption text-muted-foreground">
+              {t('textCount', { count: notes.length })}
+            </output>
             {errorText('textarea')}
           </ExampleSection>
           <ExampleSection title={t('numberTitle')}>
@@ -190,6 +200,7 @@ export function ControlGallery() {
             <NumberInput
               id={`${id}-quantity`}
               controls
+              unit={t('unitKg')}
               decreaseLabel={t('decrease')}
               increaseLabel={t('increase')}
               value={quantity}
@@ -336,22 +347,30 @@ export function ControlGallery() {
             </Button>
           </ExampleSection>
           <ExampleSection title={t('cardTitle')}>
-            <Card interactive selected={selected}>
+            <Card
+              interactive
+              selected={selected}
+              role="button"
+              tabIndex={disabled ? -1 : 0}
+              aria-label={t(selected ? 'clearCard' : 'selectCard')}
+              aria-pressed={selected}
+              aria-disabled={disabled || undefined}
+              className={disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+              onClick={() => {
+                if (!disabled) setSelected(value => !value);
+              }}
+              onKeyDown={event => {
+                if (!disabled && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                  setSelected(value => !value);
+                }
+              }}
+            >
               <CardHeader>
                 <CardTitle>{t('cardHeading')}</CardTitle>
                 <CardDescription>{t('cardDescription')}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={disabled}
-                  aria-pressed={selected}
-                  onClick={() => setSelected(value => !value)}
-                >
-                  {t(selected ? 'clearCard' : 'selectCard')}
-                </Button>
-              </CardContent>
+              <CardContent>{t(selected ? 'clearCard' : 'selectCard')}</CardContent>
             </Card>
           </ExampleSection>
           <ExampleSection title={t('dividerTitle')}>
@@ -457,6 +476,15 @@ export function ControlGallery() {
               <span className="font-normal text-muted-foreground">{t('optional')}</span>
             </Label>
             <Input id={`${id}-optional`} disabled={disabled} />
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`${id}-helped`}>{t('hintLabel')}</Label>
+              <Tooltip content={t('hintText')}>
+                <Button type="button" size="icon-sm" variant="ghost" aria-label={t('hintText')}>
+                  <CircleHelp aria-hidden />
+                </Button>
+              </Tooltip>
+            </div>
+            <Input id={`${id}-helped`} disabled={disabled} />
             <p className="text-caption text-muted-foreground">{t('labelHelp')}</p>
           </ExampleSection>
         </div>
