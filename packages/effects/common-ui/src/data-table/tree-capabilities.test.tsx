@@ -166,3 +166,30 @@ it('preserves a failed branch when successful sibling requests finish in the sam
   expect(screen.getByText('No children')).toBeVisible();
   expect(loader).toHaveBeenCalledTimes(3);
 });
+
+
+it('starts a fresh internal selection from initial values after changing from a controlled owner', () => {
+  const onChange = vi.fn();
+  const view = render(<Fixture tree={{ selection: { state: { kind: 'controlled', value: { one: true }, onChange }, labels: selectionLabels } }} />);
+  view.rerender(<Fixture tree={{ selection: { state: { kind: 'internal', initial: { two: true } }, labels: selectionLabels } }} />);
+  fireEvent.click(screen.getByRole('button', { name: '展开 Root' }));
+  expect(screen.getByRole('checkbox', { name: 'Select One' })).not.toBeChecked();
+  expect(screen.getByRole('checkbox', { name: 'Select Two' })).toBeChecked();
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+it('does not revive retired internal selection across an internal-controlled-internal transition', () => {
+  const view = render(<Fixture tree={{ selection: { state: { kind: 'internal', initial: { one: true } }, labels: selectionLabels } }} />);
+  fireEvent.click(screen.getByRole('button', { name: '展开 Root' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Two' }));
+  const onChange = vi.fn();
+  view.rerender(<Fixture tree={{ selection: { state: { kind: 'controlled', value: { two: true }, onChange }, labels: selectionLabels } }} />);
+  fireEvent.click(screen.getByRole('button', { name: '展开 Root' }));
+  expect(screen.getByRole('checkbox', { name: 'Select One' })).not.toBeChecked();
+  expect(screen.getByRole('checkbox', { name: 'Select Two' })).toBeChecked();
+  view.rerender(<Fixture tree={{ selection: { state: { kind: 'internal', initial: {} }, labels: selectionLabels } }} />);
+  fireEvent.click(screen.getByRole('button', { name: '展开 Root' }));
+  expect(screen.getByRole('checkbox', { name: 'Select One' })).not.toBeChecked();
+  expect(screen.getByRole('checkbox', { name: 'Select Two' })).not.toBeChecked();
+  expect(onChange).not.toHaveBeenCalled();
+});

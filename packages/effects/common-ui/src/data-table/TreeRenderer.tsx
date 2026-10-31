@@ -28,7 +28,8 @@ export function TreeRenderer<T extends RowData>(props: TreeListTableProps<T>) {
     [props.model.rows, props.getRowId, props.getSubRows],
   );
   validateTreeReadModel(props.model, props, nodeCount);
-  return <OwnedTree key={props.tree?.lazy?.ownerKey ?? 'static'} {...props} />;
+  const instanceKey = JSON.stringify([props.tree?.lazy?.ownerKey ?? null, props.tree?.selection?.state.kind ?? null]);
+  return <OwnedTree key={instanceKey} {...props} />;
 }
 
 function OwnedTree<T extends RowData>(props: TreeListTableProps<T>) {
