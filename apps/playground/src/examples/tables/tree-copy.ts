@@ -24,4 +24,10 @@ export const treeCopy = {
   'examples.treeCapabilities.error': '子节点加载失败',
   'examples.treeCapabilities.retry': '重试',
   'examples.treeCapabilities.empty': '无子节点',
+  'examples.treeCapabilities.actions': '操作',
+  'examples.treeCapabilities.add': '新增子级',
+  'examples.treeCapabilities.edit': '编辑节点',
+  'examples.treeCapabilities.save': '保存节点',
+  'examples.treeCapabilities.cancel': '取消',
+  'examples.treeCapabilities.invalidNode': '请输入节点名称和有效的非负整数数量。',
 } as const;

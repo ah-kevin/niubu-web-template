@@ -920,5 +920,11 @@
   "designSystem.actions": "行操作",
   "examples.advancedTables.applyFilters": "应用筛选",
   "examples.advancedTables.editingAllowed": "允许编辑当前记录",
-  "examples.advancedTables.inspected": "已查看 {{id}}，选择未改变"
+  "examples.advancedTables.inspected": "已查看 {{id}}，选择未改变",
+  "examples.treeCapabilities.actions": "操作",
+  "examples.treeCapabilities.add": "新增子级",
+  "examples.treeCapabilities.edit": "编辑节点",
+  "examples.treeCapabilities.save": "保存节点",
+  "examples.treeCapabilities.cancel": "取消",
+  "examples.treeCapabilities.invalidNode": "请输入节点名称和有效的非负整数数量。"
 }

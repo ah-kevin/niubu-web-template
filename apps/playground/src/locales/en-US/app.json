@@ -920,5 +920,11 @@
   "designSystem.actions": "Row actions",
   "examples.advancedTables.applyFilters": "Apply filters",
   "examples.advancedTables.editingAllowed": "Allow editing",
-  "examples.advancedTables.inspected": "Viewed {{id}}; selection unchanged"
+  "examples.advancedTables.inspected": "Viewed {{id}}; selection unchanged",
+  "examples.treeCapabilities.actions": "Actions",
+  "examples.treeCapabilities.add": "Add child",
+  "examples.treeCapabilities.edit": "Edit node",
+  "examples.treeCapabilities.save": "Save node",
+  "examples.treeCapabilities.cancel": "Cancel",
+  "examples.treeCapabilities.invalidNode": "Enter a node name and a valid nonnegative integer count."
 }
