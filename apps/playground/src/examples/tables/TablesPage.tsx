@@ -1,3 +1,4 @@
+import { AdvancedTables } from './AdvancedTables';
 import { PresentationExample } from './PresentationExample';
 import { createPortal } from 'react-dom';
 import { DocumentationLink } from '../DocumentationLink';
@@ -140,6 +141,7 @@ export function TablesPage({ load = loadSyntheticTablePage }: { load?: Synthetic
           <PresentationExample scope={scope} />
         </div>
       </PreferenceProvider>
+      <AdvancedTables />
       <ExampleDetails title={t('examples.ui.details')}>
         <p>{t('examples.tables.synthetic')}</p>
         <p>{t('examples.tables.boundary')}</p>
