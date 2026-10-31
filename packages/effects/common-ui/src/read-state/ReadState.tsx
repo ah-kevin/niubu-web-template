@@ -54,7 +54,7 @@ export function ReadState({
   const href = safeReturnTo(fallback, '');
   return (
     <section
-      className="pattern-read-state flex min-w-0 flex-col items-center gap-2 px-4 py-10 data-[compact]:py-6 text-center [overflow-wrap:anywhere]"
+      className="pattern-read-state flex min-w-0 flex-col items-center gap-2 px-4 text-center [overflow-wrap:anywhere]"
       data-compact={compact || undefined}
       role={status === 'error' ? 'alert' : 'status'}
       aria-busy={status === 'loading'}

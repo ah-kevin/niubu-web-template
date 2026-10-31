@@ -128,6 +128,7 @@ export function ControlledField<
       description={description}
       unit={unit}
       required={required}
+      disabled={disabled}
       error={error}
       resolveMessage={resolveMessage}
     >
@@ -216,7 +217,12 @@ export function ControlledField<
                 aria-describedby={shell['aria-describedby']}
               >
                 {options.map((option, index) => (
-                  <Label className="flex items-center gap-2" key={option.value} htmlFor={`${shell.id}-${index}`}>
+                  <Label
+                    className="flex items-center gap-2"
+                    key={option.value}
+                    htmlFor={`${shell.id}-${index}`}
+                    data-disabled={disabled || option.disabled ? '' : undefined}
+                  >
                     <Checkbox
                       {...(inputProps as React.ComponentProps<typeof Checkbox>)}
                       {...binding}
@@ -251,7 +257,12 @@ export function ControlledField<
                 onValueChange={field.onChange}
               >
                 {options.map((option, index) => (
-                  <Label className="flex items-center gap-2" key={option.value} htmlFor={`${shell.id}-${index}`}>
+                  <Label
+                    className="flex items-center gap-2"
+                    key={option.value}
+                    htmlFor={`${shell.id}-${index}`}
+                    data-disabled={disabled || option.disabled ? '' : undefined}
+                  >
                     <RadioGroupItem
                       {...shell}
                       aria-labelledby={undefined}

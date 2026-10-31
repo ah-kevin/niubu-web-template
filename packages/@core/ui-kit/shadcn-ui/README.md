@@ -19,3 +19,5 @@ Import ./button, ./input, ./label, ./table, ./dialog, ./sheet, ./alert-dialog or
 完整交互示例在 Playground `/examples/components`。示例中的主题与密度仅影响该示例容器。
 
 数字输入的步进模式支持 `unit` 文本后缀，后缀通过描述关联到输入，不进入提交值；普通输入模式保持不变。可交互 Card 由调用方提供按钮语义和键盘处理，Playground 展示点击、Enter 与空格切换。
+
+`./input` 同时导出 `InputGroup`、`InputGroupAddon`。将原 `Input` 放在前后缀之间即可组合；Input 的 ref、name 和表单值保持原行为，点击非交互前后缀会聚焦输入。装饰性图标使用 `aria-hidden`；有意义的单位或说明由调用方通过 `aria-describedby` 关联。

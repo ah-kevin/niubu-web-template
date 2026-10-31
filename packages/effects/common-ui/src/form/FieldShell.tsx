@@ -13,6 +13,7 @@ export function FieldShell({
   description,
   unit,
   required,
+  disabled,
   error,
   resolveMessage,
   children,
@@ -27,7 +28,7 @@ export function FieldShell({
   return (
     <div className="schema-field grid min-w-0 gap-1">
       <div className="schema-field-heading flex items-baseline gap-1 text-[length:var(--control-font-size)] font-normal">
-        <Label className="font-normal" id={labelId} htmlFor={id}>
+        <Label className="font-normal" id={labelId} htmlFor={id} data-disabled={disabled ? '' : undefined}>
           {label}
         </Label>
         {unit && <span className="schema-field-unit text-xs text-muted-foreground">{unit}</span>}

@@ -22,7 +22,7 @@ export function ScrollBar({
 }
 export function ScrollArea({ className, children, ...props }: React.ComponentProps<typeof ScrollPrimitive.Root>) {
   return (
-    <ScrollPrimitive.Root {...props} className={cn('relative', className)}>
+    <ScrollPrimitive.Root {...props} className={cn('relative min-w-0 max-w-full overflow-hidden', className)}>
       <ScrollPrimitive.Viewport className="size-full rounded-[inherit]">{children}</ScrollPrimitive.Viewport>
       <ScrollBar />
       <ScrollPrimitive.Corner />

@@ -1,3 +1,17 @@
+.pattern-read-state {
+  padding-block: var(--read-state-padding-block, 40px);
+}
+/* Each density boundary supplies the value inherited by its own read states. */
+[data-density='standard'] {
+  --read-state-padding-block: 40px;
+}
+[data-density='compact'] {
+  --read-state-padding-block: 24px;
+}
+.pattern-read-state[data-compact] {
+  padding-block: 24px;
+}
+
 .pattern-loading {
   display: flex;
   min-width: 0;
