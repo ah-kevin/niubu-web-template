@@ -11,6 +11,7 @@ import { Modal } from '@niubu/common-ui/overlay';
 import { useTranslation } from '@niubu/locales/react';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
+import { Badge } from '@niubu/shadcn-ui/badge';
 import { ExamplePage, ExampleSection } from '../ExamplePage';
 import { treeCopy } from './tree-copy';
 
@@ -21,6 +22,8 @@ type Node = {
   name?: string;
   prefixParent?: boolean;
   count: number;
+  kind: 'farm' | 'zone' | 'pen';
+  status: 'active' | 'full' | 'disabled';
   disabled?: boolean;
   lazy?: boolean;
 };
@@ -28,13 +31,37 @@ type TreeState = { nodes: Record<string, Node>; children: Record<string, string[
 type Editor = { kind: 'add' | 'edit'; nodeId: string; name: string; count: string; error?: string };
 const createTree = (): TreeState => ({
   nodes: {
-    farm: { id: 'farm', labelKey: 'farm', count: 80 },
-    zone: { id: 'zone', parentId: 'farm', labelKey: 'zone', count: 50 },
-    one: { id: 'one', parentId: 'zone', labelKey: 'one', count: 30 },
-    locked: { id: 'locked', parentId: 'zone', labelKey: 'locked', count: 20, disabled: true },
-    lazy: { id: 'lazy', parentId: 'farm', labelKey: 'lazy', count: 30, lazy: true },
-    retry: { id: 'retry', parentId: 'farm', labelKey: 'retryNode', count: 0, lazy: true },
-    empty: { id: 'empty', parentId: 'farm', labelKey: 'emptyNode', count: 0, lazy: true },
+    farm: { id: 'farm', kind: 'farm', status: 'active', labelKey: 'farm', count: 80 },
+    zone: { id: 'zone', kind: 'zone', status: 'active', parentId: 'farm', labelKey: 'zone', count: 50 },
+    one: { id: 'one', kind: 'pen', status: 'full', parentId: 'zone', labelKey: 'one', count: 30 },
+    locked: {
+      id: 'locked',
+      kind: 'pen',
+      status: 'disabled',
+      parentId: 'zone',
+      labelKey: 'locked',
+      count: 20,
+      disabled: true,
+    },
+    lazy: { id: 'lazy', kind: 'zone', status: 'active', parentId: 'farm', labelKey: 'lazy', count: 30, lazy: true },
+    retry: {
+      id: 'retry',
+      kind: 'zone',
+      status: 'active',
+      parentId: 'farm',
+      labelKey: 'retryNode',
+      count: 0,
+      lazy: true,
+    },
+    empty: {
+      id: 'empty',
+      kind: 'zone',
+      status: 'active',
+      parentId: 'farm',
+      labelKey: 'emptyNode',
+      count: 0,
+      lazy: true,
+    },
   },
   children: { farm: ['zone', 'lazy', 'retry', 'empty'], zone: ['one', 'locked'] },
 });
@@ -97,12 +124,32 @@ export function TreeCapabilities() {
   const headers = {
     name: t('examples.treeCapabilities.name'),
     count: t('examples.treeCapabilities.count'),
+    kind: t('examples.treeCapabilities.kind'),
+    status: t('examples.treeCapabilities.status'),
     actions: t('examples.treeCapabilities.actions'),
   };
   const columns = useMemo(
     () =>
       helper.columns([
         helper.accessor(getRowLabel, { id: 'name', header: t('examples.treeCapabilities.name'), size: 420 }),
+        helper.accessor('kind', {
+          id: 'kind',
+          header: t('examples.treeCapabilities.kind'),
+          cell: context => t(`examples.treeCapabilities.kind.${context.getValue()}`),
+        }),
+        helper.accessor('status', {
+          id: 'status',
+          header: t('examples.treeCapabilities.status'),
+          cell: context => (
+            <Badge
+              variant={
+                context.getValue() === 'active' ? 'success' : context.getValue() === 'full' ? 'warning' : 'neutral'
+              }
+            >
+              {t(`examples.treeCapabilities.status.${context.getValue()}`)}
+            </Badge>
+          ),
+        }),
         helper.accessor('count', { id: 'count', header: t('examples.treeCapabilities.count'), size: 120 }),
         helper.display({
           id: 'actions',
@@ -131,7 +178,16 @@ export function TreeCapabilities() {
     const id = editor.kind === 'add' ? `added-${++nextId.current}` : editor.nodeId;
     setTree(previous => {
       const node: Node =
-        editor.kind === 'add' ? { id, parentId: editor.nodeId, name, count } : { ...previous.nodes[id], name, count };
+        editor.kind === 'add'
+          ? {
+              id,
+              parentId: editor.nodeId,
+              name,
+              count,
+              kind: previous.nodes[editor.nodeId].kind === 'farm' ? 'zone' : 'pen',
+              status: 'active',
+            }
+          : { ...previous.nodes[id], name, count };
       const nodes = { ...previous.nodes, [id]: node };
       // Replacing affected ancestors makes native row caches consume the new child objects.
       for (let ancestor = node.parentId; ancestor; ancestor = nodes[ancestor].parentId)
@@ -229,7 +285,7 @@ export function TreeCapabilities() {
           columnAlign={{ count: 'end' }}
           expanded={{ kind: 'controlled', value: expanded, onChange: setExpanded }}
           tree={{
-            search: { query },
+            search: { query, matchCountLabel: count => t('examples.treeCapabilities.matches', { count }) },
             selection: {
               state: { kind: 'controlled', value: selected, onChange: setSelected },
               isDisabled: node => !!node.disabled,
@@ -268,6 +324,8 @@ export function TreeCapabilities() {
                         : [
                             {
                               id: `${node.id}-child`,
+                              kind: 'pen',
+                              status: 'active',
                               parentId: node.id,
                               labelKey: 'child',
                               prefixParent: true,

@@ -38,7 +38,12 @@ function PresentationActionCell({ row }: { row: { original: Sample } }) {
       ownerKey={`synthetic:${owner.scope}:${record.id}`}
       rowLabel={record.name ?? t('examples.tables.emptyRecord')}
       actions={[
-        { id: 'view', label: t('examples.tables.viewDetails'), onSelect: () => owner.onAction(record, 'detail') },
+        {
+          id: 'view',
+          label: t('examples.tables.viewDetails'),
+          disabled: record.name === null,
+          onSelect: () => owner.onAction(record, 'detail'),
+        },
         { id: 'dialog', label: t('examples.tables.openDialog'), onSelect: () => owner.onAction(record, 'detail') },
         { id: 'link', label: t('examples.tables.openLink'), href: '#table-presentation' },
         {

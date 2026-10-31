@@ -29,13 +29,15 @@ import {
 } from '@niubu/shadcn-ui/dialog';
 import { completeListCopy } from './complete-list-copy';
 
-const statuses = ['active', 'quarantine', 'moving', 'alert', 'departed'] as const;
+const initialStatuses = ['active', 'quarantine', 'moving', 'alert', 'departed'] as const;
+const statuses = [...initialStatuses, 'disabled'] as const;
 const pens = ['a', 'b', 'c'] as const;
 type Status = (typeof statuses)[number];
 type Pen = (typeof pens)[number];
 type AnimalValues = { tag: string; pen: Pen; status: Status; weight: number; age: number; note: string };
 type Animal = AnimalValues & { id: string };
-type Panel = { kind: 'create' } | { kind: 'view' | 'edit' | 'delete'; row: Animal } | { kind: 'move'; ids: string[] };
+type Panel =
+  { kind: 'create' } | { kind: 'view' | 'edit' | 'delete' | 'disable'; row: Animal } | { kind: 'move'; ids: string[] };
 const getRowId = (row: Animal) => row.id;
 const helper = createSelectableColumnHelper<Animal>();
 const tones: Record<Status, BadgeProps['variant']> = {
@@ -44,13 +46,14 @@ const tones: Record<Status, BadgeProps['variant']> = {
   moving: 'info',
   alert: 'danger',
   departed: 'neutral',
+  disabled: 'neutral',
 };
 const seedRows = (): Animal[] =>
   Array.from({ length: 128 }, (_, i) => ({
     id: `animal-${i}`,
     tag: `CN-2026-${String(418 + i * 3).padStart(4, '0')}`,
     pen: pens[Math.floor(i / 2) % pens.length],
-    status: statuses[i % statuses.length],
+    status: initialStatuses[i % initialStatuses.length],
     weight: [486.5, 352, 418.2, 301.7, 545][i % 5],
     age: [612, 401, 520, 355, 730][i % 5],
     note: '',
@@ -74,13 +77,25 @@ function AnimalActions({ row }: { row: Animal }) {
       rowLabel={row.tag}
       ownerKey={`complete-list:${row.id}`}
       actions={[
-        { id: 'view', label: t('examples.completeList.view'), onSelect: () => open({ kind: 'view', row }) },
+        {
+          id: 'view',
+          label: t('examples.completeList.view'),
+          disabled: row.status === 'departed' || row.status === 'disabled',
+          onSelect: () => open({ kind: 'view', row }),
+        },
         { id: 'edit', label: t('examples.completeList.edit'), onSelect: () => open({ kind: 'edit', row }) },
         {
           id: 'move',
           label: t('examples.completeList.move'),
-          disabled: row.status === 'quarantine' || row.status === 'departed',
+          disabled: row.status === 'quarantine' || row.status === 'departed' || row.status === 'disabled',
           onSelect: () => open({ kind: 'move', ids: [row.id] }),
+        },
+        {
+          id: 'disable',
+          label: t('examples.completeList.disable'),
+          destructive: true,
+          disabled: row.status === 'departed' || row.status === 'disabled',
+          onSelect: () => open({ kind: 'disable', row }),
         },
         {
           id: 'delete',
@@ -186,7 +201,9 @@ export function CompleteListPage() {
     [headers, t, number],
   );
   const chosen = rows.filter(row => selection[row.id]);
-  const movable = chosen.filter(row => row.status !== 'quarantine' && row.status !== 'departed');
+  const movable = chosen.filter(
+    row => row.status !== 'quarantine' && row.status !== 'departed' && row.status !== 'disabled',
+  );
   const displayRows = state === 'ready' ? filtered : [];
   const ready = state === 'ready' || state === 'empty';
   const closePanel = () => {
@@ -258,11 +275,13 @@ export function CompleteListPage() {
       ? t('examples.completeList.create')
       : panel?.kind === 'edit'
         ? t('examples.completeList.edit')
-        : panel?.kind === 'delete'
-          ? t('examples.completeList.deleteTitle')
-          : panel?.kind === 'move'
-            ? t('examples.completeList.moveTitle')
-            : t('examples.completeList.detail');
+        : panel?.kind === 'disable'
+          ? t('examples.completeList.disableTitle')
+          : panel?.kind === 'delete'
+            ? t('examples.completeList.deleteTitle')
+            : panel?.kind === 'move'
+              ? t('examples.completeList.moveTitle')
+              : t('examples.completeList.detail');
   return (
     <div
       className="grid min-w-0 gap-[var(--workspace-section-gap)] bg-background p-[var(--workspace-card-padding)] text-foreground"
@@ -418,9 +437,11 @@ export function CompleteListPage() {
               <DialogHeader>
                 <DialogTitle>{title}</DialogTitle>
                 <DialogDescription>
-                  {panel.kind === 'delete'
-                    ? t('examples.completeList.deleteDescription', { tag: panel.row.tag })
-                    : t('examples.completeList.synthetic')}
+                  {panel.kind === 'disable'
+                    ? t('examples.completeList.disableDescription', { tag: panel.row.tag })
+                    : panel.kind === 'delete'
+                      ? t('examples.completeList.deleteDescription', { tag: panel.row.tag })
+                      : t('examples.completeList.synthetic')}
                 </DialogDescription>
               </DialogHeader>
               {panel.kind === 'create' || panel.kind === 'edit' ? (
@@ -468,6 +489,21 @@ export function CompleteListPage() {
                   <Button variant="outline" onClick={closePanel}>
                     {t('examples.completeList.close')}
                   </Button>
+                  {panel.kind === 'disable' && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        commitRows(rows.map(row => (row.id === panel.row.id ? { ...row, status: 'disabled' } : row)));
+                        setSelection(previous =>
+                          Object.fromEntries(Object.entries(previous).filter(([id]) => id !== panel.row.id)),
+                        );
+                        setFeedback(t('examples.completeList.disabled'));
+                        setPanel(null);
+                      }}
+                    >
+                      {t('examples.completeList.disable')}
+                    </Button>
+                  )}
                   {panel.kind === 'delete' && (
                     <Button variant="destructive" onClick={() => remove(panel.row)}>
                       {t('examples.completeList.delete')}

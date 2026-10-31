@@ -5,7 +5,6 @@ import {
   RowActions,
   createDataTableLabels,
   createListColumnHelper,
-  createReadColumnHelper,
   createSelectableColumnHelper,
   mergeConsecutiveRows,
   type TableColumnFilters,
@@ -19,6 +18,7 @@ import { formatDateOnly, formatQuantity } from '@niubu/locales';
 import { useTranslation } from '@niubu/locales/react';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Checkbox } from '@niubu/shadcn-ui/checkbox';
+import { Badge } from '@niubu/shadcn-ui/badge';
 import { Input } from '@niubu/shadcn-ui/input';
 import { NumberInput } from '@niubu/shadcn-ui/number-input';
 import { Select } from '@niubu/shadcn-ui/select';
@@ -33,6 +33,7 @@ type DemoRow = {
   status: 'normal' | 'pending' | 'reviewed';
   weight: number;
   age: number;
+  daysInPen: number;
   note: string;
   count: number;
 };
@@ -45,6 +46,7 @@ const seed: readonly DemoRow[] = [
     status: 'normal',
     weight: 486.5,
     age: 612,
+    daysInPen: 204,
     note: 'longNote',
     count: 38,
   },
@@ -56,6 +58,7 @@ const seed: readonly DemoRow[] = [
     status: 'pending',
     weight: 452,
     age: 401,
+    daysInPen: 133,
     note: 'longNote',
     count: 22,
   },
@@ -67,6 +70,7 @@ const seed: readonly DemoRow[] = [
     status: 'normal',
     weight: 418.2,
     age: 520,
+    daysInPen: 173,
     note: 'longNote',
     count: 30,
   },
@@ -78,6 +82,7 @@ const seed: readonly DemoRow[] = [
     status: 'pending',
     weight: 401.9,
     age: 355,
+    daysInPen: 118,
     note: 'longNote',
     count: 28,
   },
@@ -89,14 +94,22 @@ const seed: readonly DemoRow[] = [
     status: 'reviewed',
     weight: 377.4,
     age: 730,
+    daysInPen: 243,
     note: 'longNote',
     count: 12,
   },
 ];
 const helper = createListColumnHelper<DemoRow>();
 const selectionHelper = createSelectableColumnHelper<DemoRow>();
-const readHelper = createReadColumnHelper<DemoRow>();
 const getRowId = (row: DemoRow) => row.id;
+function DemoStatus({ value }: { value: DemoRow['status'] }) {
+  const { t } = useTranslation('app', advancedTablesCopy);
+  return (
+    <Badge variant={value === 'normal' ? 'success' : value === 'pending' ? 'warning' : 'info'}>
+      {t(`examples.advancedTables.${value}`)}
+    </Badge>
+  );
+}
 const ready = (rows: readonly DemoRow[], sourceCount = rows.length) => ({
   readState: 'ready' as const,
   sourceCount,
@@ -119,9 +132,21 @@ function useDemo() {
   );
   const date = (value: string) => formatDateOnly(value, { locale });
   const headers = Object.fromEntries(
-    ['tag', 'zone', 'pen', 'status', 'weight', 'age', 'note', 'entered', 'owner', 'updated', 'actions', 'count'].map(
-      id => [id, text(id === 'tag' ? 'id' : id)],
-    ),
+    [
+      'tag',
+      'zone',
+      'pen',
+      'status',
+      'weight',
+      'age',
+      'note',
+      'entered',
+      'owner',
+      'updated',
+      'actions',
+      'count',
+      'daysInPen',
+    ].map(id => [id, text(id === 'tag' ? 'id' : id)]),
   );
   const columns = useMemo(
     () =>
@@ -133,14 +158,18 @@ function useDemo() {
           cell: ctx => text(ctx.getValue() === 'A' ? 'zoneA' : 'zoneB'),
         }),
         helper.accessor('pen', { id: 'pen', header: text('pen') }),
-        helper.accessor('status', { id: 'status', header: text('status'), cell: ctx => text(ctx.getValue()) }),
+        helper.accessor('status', {
+          id: 'status',
+          header: text('status'),
+          cell: ctx => <DemoStatus value={ctx.getValue()} />,
+        }),
         helper.accessor('weight', { id: 'weight', header: text('weight'), cell: ctx => number(ctx.getValue(), 1) }),
         helper.accessor('note', {
           id: 'note',
           header: text('note'),
           size: 280,
           enableSorting: false,
-          cell: ctx => <CellText value={text(ctx.getValue())} />,
+          cell: ctx => <CellText value={ctx.getValue() === 'longNote' ? text('longNote') : ctx.getValue()} />,
         }),
       ]),
     [text, number],
@@ -150,7 +179,11 @@ function useDemo() {
       selectionHelper.columns([
         selectionHelper.accessor('tag', { id: 'tag', header: text('id'), size: 190 }),
         selectionHelper.accessor('pen', { id: 'pen', header: text('pen') }),
-        selectionHelper.accessor('status', { id: 'status', header: text('status'), cell: ctx => text(ctx.getValue()) }),
+        selectionHelper.accessor('status', {
+          id: 'status',
+          header: text('status'),
+          cell: ctx => <DemoStatus value={ctx.getValue()} />,
+        }),
         selectionHelper.accessor('weight', {
           id: 'weight',
           header: text('weight'),
@@ -335,27 +368,62 @@ export function AdvancedTables({ scenario = 'choose', scenarioHref }: AdvancedTa
   );
 }
 function ReadExample() {
-  const { text, number, labels } = useDemo();
-  const columns = readHelper.columns([
-    readHelper.accessor('tag', { id: 'tag', header: text('id') }),
-    readHelper.accessor('weight', { id: 'weight', header: text('weight'), cell: ctx => number(ctx.getValue(), 1) }),
-    readHelper.accessor('note', {
+  const { text, number, labels, selectionLabels } = useDemo();
+  const [state, setState] = useState<'ready' | 'initial' | 'empty'>('ready');
+  const columns = selectionHelper.columns([
+    selectionHelper.accessor('tag', { id: 'tag', header: text('id'), size: 190 }),
+    selectionHelper.accessor('pen', { id: 'pen', header: text('pen') }),
+    selectionHelper.accessor('status', {
+      id: 'status',
+      header: text('status'),
+      cell: ctx => <DemoStatus value={ctx.getValue()} />,
+    }),
+    selectionHelper.accessor('weight', {
+      id: 'weight',
+      header: text('weight'),
+      cell: ctx => number(ctx.getValue(), 1),
+    }),
+    selectionHelper.accessor('age', { id: 'age', header: text('age'), cell: ctx => number(ctx.getValue()) }),
+    selectionHelper.accessor('note', {
       id: 'note',
       header: text('note'),
-      cell: ctx => <CellText value={text(ctx.getValue())} />,
+      size: 280,
+      cell: ctx => <CellText value={ctx.getValue() === 'longNote' ? text('longNote') : ctx.getValue()} />,
     }),
   ]);
+  const rows = state === 'ready' ? seed : [];
+  const metadata: TableReadMetadata =
+    state === 'initial'
+      ? { readState: 'pending', sourceCount: null, resultCount: null }
+      : ready(rows, state === 'empty' ? 0 : seed.length);
   return (
     <Block id="read" title={text('read')} hint={text('readHint')}>
+      <Select
+        label={text('state')}
+        value={state}
+        onValueChange={value => {
+          if (value === 'ready' || value === 'initial' || value === 'empty') setState(value);
+        }}
+        options={['ready', 'initial', 'empty'].map(value => ({ value, label: text(value) }))}
+      />
       <DataTable
-        profile="read"
-        model={{ kind: 'client', rows: seed }}
-        {...ready(seed)}
+        profile="selectable-list"
+        model={{ kind: 'client', rows }}
+        {...metadata}
         columns={columns}
         labels={labels}
         getRowId={getRowId}
         caption={text('read')}
-        columnAlign={{ weight: 'end', note: 'start' }}
+        selectionLabels={selectionLabels}
+        rowSelection={{ kind: 'internal', initial: { a2: true } }}
+        pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 5 } }}
+        statePresentation="feedback"
+        columnAlign={{ weight: 'end', age: 'end', note: 'start' }}
+        emptyAction={
+          <Button variant="outline" onClick={() => setState('ready')}>
+            {text('reload')}
+          </Button>
+        }
       />
     </Block>
   );
@@ -406,6 +474,7 @@ function SelectionExample({ mode }: { mode: 'selection' | 'single' }) {
             labels={labels}
             getRowId={getRowId}
             caption={text('selection')}
+            columnAlign={{ weight: 'end' }}
             selectionLabels={selectionLabels}
             canSelectRow={row => row.status !== 'pending'}
             rowSelection={{ kind: 'controlled', value: selected, onChange: setSelected }}
@@ -424,6 +493,7 @@ function SelectionExample({ mode }: { mode: 'selection' | 'single' }) {
             labels={labels}
             getRowId={getRowId}
             caption={text('single')}
+            columnAlign={{ weight: 'end' }}
             selectionMode="single"
             selectionLabels={selectionLabels}
             canSelectRow={row => row.status !== 'pending'}
@@ -440,12 +510,14 @@ function LayoutExample() {
     [bordered, setBordered] = useState(false),
     [wrap, setWrap] = useState(true);
   const [viewed, setViewed] = useState<string | null>(null);
-  const rows = seed.flatMap((row, index) =>
-    Array.from({ length: 4 }, (_, copy) => ({
-      ...row,
-      id: `${row.id}-${copy}`,
-      tag: `${row.tag}-${index * 4 + copy}`,
-    })),
+  const [rows, setRows] = useState(() =>
+    seed.flatMap((row, index) =>
+      Array.from({ length: 4 }, (_, copy) => ({
+        ...row,
+        id: `${row.id}-${copy}`,
+        tag: `${row.tag}-${index * 4 + copy}`,
+      })),
+    ),
   );
   const columns = selectionHelper.columns([
     selectionHelper.accessor('tag', { id: 'tag', header: text('id'), size: 190 }),
@@ -455,7 +527,11 @@ function LayoutExample() {
       cell: ctx => text(ctx.getValue() === 'A' ? 'zoneA' : 'zoneB'),
     }),
     selectionHelper.accessor('pen', { id: 'pen', header: text('pen') }),
-    selectionHelper.accessor('status', { id: 'status', header: text('status'), cell: ctx => text(ctx.getValue()) }),
+    selectionHelper.accessor('status', {
+      id: 'status',
+      header: text('status'),
+      cell: ctx => <DemoStatus value={ctx.getValue()} />,
+    }),
     selectionHelper.accessor('weight', {
       id: 'weight',
       header: text('weight'),
@@ -466,7 +542,7 @@ function LayoutExample() {
       id: 'note',
       header: text('note'),
       size: 280,
-      cell: ctx => <CellText value={text(ctx.getValue())} />,
+      cell: ctx => <CellText value={ctx.getValue() === 'longNote' ? text('longNote') : ctx.getValue()} />,
     }),
     selectionHelper.display({ id: 'entered', header: text('entered'), cell: () => date('2026-03-12') }),
     selectionHelper.display({ id: 'owner', header: text('owner'), cell: () => text('person') }),
@@ -484,7 +560,12 @@ function LayoutExample() {
             {
               id: 'review',
               label: text('mark'),
-              onSelect: () => setViewed(`${ctx.row.original.tag} · ${text('reviewed')}`),
+              onSelect: () => {
+                setRows(previous =>
+                  previous.map(row => (row.id === ctx.row.id ? { ...row, status: 'reviewed' } : row)),
+                );
+                setViewed(`${ctx.row.original.tag} · ${text('reviewed')}`);
+              },
             },
           ]}
         />
@@ -523,7 +604,7 @@ function LayoutExample() {
   );
 }
 function HeaderExample() {
-  const { text, columns, labels, filters } = useDemo();
+  const { text, number, columns, labels, filters } = useDemo();
   const [manual, setManual] = useState(false);
   const [values, setValues] = useState<MultiColumnFilterValues>({});
   const matches = (value: string | readonly string[] | undefined, actual: string) =>
@@ -555,11 +636,21 @@ function HeaderExample() {
         profile="list"
         model={{ kind: 'client', rows }}
         {...ready(rows, seed.length)}
-        columns={columns}
+        columns={[
+          ...columns,
+          helper.accessor('age', { id: 'age', header: text('age'), cell: ctx => number(ctx.getValue()) }),
+          helper.accessor('daysInPen', {
+            id: 'daysInPen',
+            header: text('daysInPen'),
+            cell: ctx => number(ctx.getValue()),
+          }),
+        ]}
         labels={labels}
         getRowId={getRowId}
         caption={text('header')}
         columnFilters={config}
+        columnHints={{ daysInPen: text('daysInPenHint') }}
+        columnAlign={{ weight: 'end', age: 'end', daysInPen: 'end', note: 'start' }}
         enableSortingRemoval
       />
     </Block>
@@ -577,15 +668,36 @@ function ExpandExample() {
         labels={labels}
         getRowId={getRowId}
         caption={text('expand')}
+        columnAlign={{ weight: 'end', note: 'start' }}
         details={{
           label: (row, expanded) => text(expanded ? 'collapseRow' : 'expandRow', { id: row.tag }),
           render: row => (
             <div className="grid gap-3">
-              <dl className="grid grid-cols-[auto_1fr_auto_1fr] gap-3">
-                <dt>{text('born')}</dt>
-                <dd>{date('2025-02-26')}</dd>
-                <dt>{text('breed')}</dt>
-                <dd>{text('breedValue')}</dd>
+              <dl className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <dt>{text('born')}</dt>
+                  <dd>{date('2025-02-26')}</dd>
+                </div>
+                <div>
+                  <dt>{text('breed')}</dt>
+                  <dd>{text('breedValue')}</dd>
+                </div>
+                <div>
+                  <dt>{text('father')}</dt>
+                  <dd>CN-2023-0112</dd>
+                </div>
+                <div>
+                  <dt>{text('mother')}</dt>
+                  <dd>CN-2022-0870</dd>
+                </div>
+                <div>
+                  <dt>{text('lastWeighed')}</dt>
+                  <dd>{date('2026-10-28')}</dd>
+                </div>
+                <div>
+                  <dt>{text('vaccines')}</dt>
+                  <dd>{text('vaccinesValue')}</dd>
+                </div>
               </dl>
               <table aria-label={`${row.tag} ${text('event')}`}>
                 <thead>
@@ -614,23 +726,12 @@ function EditExample() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fail, setFail] = useState(false);
   const [eligible, setEligible] = useState(true);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const newIds = useRef(new Set<string>());
   const nextId = useRef(0);
   return (
     <Block id="edit" title={text('edit')} hint={text('editHint')}>
       <div className="flex flex-wrap items-center gap-4">
-        <Button
-          type="button"
-          disabled={editingId !== null}
-          onClick={() => {
-            const id = `new-${++nextId.current}`;
-            newIds.current.add(id);
-            setRows(previous => [{ ...seed[0], id, tag: '', weight: 0 }, ...previous]);
-            setEditingId(id);
-          }}
-        >
-          {text('new')}
-        </Button>
         <Toggle checked={eligible} onChange={setEligible}>
           {text('editingAllowed')}
         </Toggle>
@@ -642,15 +743,29 @@ function EditExample() {
         profile="list"
         model={{ kind: 'client', rows }}
         {...ready(rows)}
-        columns={columns.filter(column => column.id !== 'note')}
+        columns={columns.filter(column => column.id !== 'zone')}
         labels={labels}
         getRowId={getRowId}
         caption={text('edit')}
+        columnAlign={{ weight: 'end', note: 'start' }}
+        pagination={{ kind: 'controlled', value: pagination, onChange: setPagination }}
         editing={{
           ownerKey: 'synthetic-inline-edit',
+          editableColumns: ['tag', 'pen', 'status', 'weight', 'note'],
+          addRow: {
+            label: text('new'),
+            disabled: !eligible,
+            onAdd: () => {
+              const id = `new-${++nextId.current}`;
+              newIds.current.add(id);
+              setRows(previous => [...previous, { ...seed[0], id, tag: '', note: '', weight: 0 }]);
+              setPagination(previous => ({ ...previous, pageIndex: Math.floor(rows.length / previous.pageSize) }));
+              setEditingId(id);
+            },
+          },
           canEdit: () => eligible,
           rowId: { kind: 'controlled', value: editingId, onChange: setEditingId },
-          createDraft: row => ({ ...row }),
+          createDraft: row => ({ ...row, note: row.note === 'longNote' ? text('longNote') : row.note }),
           labels: {
             edit: text('editing'),
             save: text('save'),
@@ -660,7 +775,7 @@ function EditExample() {
             actions: text('actions'),
           },
           renderCell: ({ columnId, draft, setDraft, error, disabled }) =>
-            ['tag', 'pen', 'weight', 'status'].includes(columnId) ? (
+            ['tag', 'pen', 'weight', 'status', 'note'].includes(columnId) ? (
               <div className="grid gap-1">
                 {columnId === 'weight' ? (
                   <NumberInput
@@ -684,14 +799,16 @@ function EditExample() {
                 ) : (
                   <Input
                     aria-label={text(columnId === 'tag' ? 'id' : columnId)}
-                    value={columnId === 'tag' ? draft.tag : draft.pen}
+                    value={columnId === 'tag' ? draft.tag : columnId === 'note' ? draft.note : draft.pen}
                     disabled={disabled}
                     aria-invalid={!!error}
                     onChange={event =>
                       setDraft(
                         columnId === 'tag'
                           ? { ...draft, tag: event.target.value }
-                          : { ...draft, pen: event.target.value },
+                          : columnId === 'note'
+                            ? { ...draft, note: event.target.value }
+                            : { ...draft, pen: event.target.value },
                       )
                     }
                   />
@@ -716,7 +833,17 @@ function EditExample() {
             newIds.current.delete(draft.id);
           },
           onCancel: row => {
-            if (newIds.current.delete(row.id)) setRows(previous => previous.filter(item => item.id !== row.id));
+            if (newIds.current.delete(row.id)) {
+              const remaining = rows.filter(item => item.id !== row.id);
+              setRows(remaining);
+              setPagination(previous => ({
+                ...previous,
+                pageIndex: Math.min(
+                  previous.pageIndex,
+                  Math.max(0, Math.ceil(remaining.length / previous.pageSize) - 1),
+                ),
+              }));
+            }
           },
         }}
       />
@@ -820,6 +947,7 @@ function DragExample() {
         labels={labels}
         getRowId={getRowId}
         caption={text('drag')}
+        columnAlign={{ weight: 'end' }}
         columnFilters={filters}
         sorting={{ kind: 'controlled', value: sorting, onChange: setSorting }}
         pagination={{ kind: 'controlled', value: { pageIndex: 0, pageSize: paginate ? 2 : 25 }, onChange: () => {} }}

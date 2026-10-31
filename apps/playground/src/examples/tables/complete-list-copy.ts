@@ -58,4 +58,10 @@ export const completeListCopy = {
   'examples.completeList.note.alert': '食欲下降，需关注',
   'examples.completeList.note.departed': '—',
   'examples.completeList.invalidNote': '备注不能超过 500 个字符。',
+  'examples.completeList.disable': '停用',
+  'examples.completeList.disableTitle': '停用牛只档案',
+  'examples.completeList.disableDescription': '确认停用 {{tag}}？此操作只修改本页合成数据。',
+  'examples.completeList.disabled': '已停用当前记录。',
+  'examples.completeList.status.disabled': '已停用',
+  'examples.completeList.note.disabled': '记录已停用',
 } as const;

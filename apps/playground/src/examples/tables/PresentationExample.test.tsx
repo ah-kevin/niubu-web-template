@@ -45,3 +45,13 @@ it('offers a link action that is a real anchor inside the row menu', async () =>
  fireEvent.pointerDown(screen.getByRole('button',{name:'演示记录 A 的更多操作'}),{button:0,ctrlKey:false});
  expect(await screen.findByRole('menuitem',{name:'链接动作'})).toHaveAttribute('href','#table-presentation');
 });
+
+
+it('includes a genuinely disabled primary action example', () => {
+  const { container } = render(<PresentationExample scope="north" />);
+  const row = container.querySelector('tr[data-row-id="presentation-empty"]')!;
+  const action = within(row).getByRole('button', { name: '查看详情' });
+  expect(action).toBeDisabled();
+  fireEvent.click(action);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});

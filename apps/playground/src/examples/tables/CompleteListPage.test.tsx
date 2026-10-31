@@ -170,3 +170,18 @@ it('keeps every popup in the local theme container, including fullscreen and nes
     expect(document.documentElement.getAttribute('data-theme')).toBe(documentTheme);
   }
 });
+
+
+it('disables departed-row viewing and persists the confirmed disable action', async () => {
+  mount();
+  const departed = screen.getByText('CN-2026-0430').closest('tr')!;
+  expect(within(departed).getByRole('button', { name: '查看' })).toBeDisabled();
+  await openAction('CN-2026-0418', '停用');
+  const dialog = await screen.findByRole('dialog', { name: '停用牛只档案' });
+  fireEvent.click(within(dialog).getByRole('button', { name: '停用' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  const disabled = screen.getByText('CN-2026-0418').closest('tr')!;
+  expect(within(disabled).getByText('已停用')).toHaveAttribute('data-slot', 'badge');
+  expect(within(disabled).getByRole('button', { name: '查看' })).toBeDisabled();
+  expect(screen.getByRole('checkbox', { name: '选择 animal-0' })).not.toBeChecked();
+});

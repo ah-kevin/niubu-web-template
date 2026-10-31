@@ -30,4 +30,13 @@ export const treeCopy = {
   'examples.treeCapabilities.save': '保存节点',
   'examples.treeCapabilities.cancel': '取消',
   'examples.treeCapabilities.invalidNode': '请输入节点名称和有效的非负整数数量。',
+  'examples.treeCapabilities.kind': '类型',
+  'examples.treeCapabilities.kind.farm': '牧场',
+  'examples.treeCapabilities.kind.zone': '区域',
+  'examples.treeCapabilities.kind.pen': '栏舍',
+  'examples.treeCapabilities.status': '状态',
+  'examples.treeCapabilities.status.active': '运行中',
+  'examples.treeCapabilities.status.full': '已满',
+  'examples.treeCapabilities.status.disabled': '停用',
+  'examples.treeCapabilities.matches': '共 {{count}} 个匹配',
 } as const;

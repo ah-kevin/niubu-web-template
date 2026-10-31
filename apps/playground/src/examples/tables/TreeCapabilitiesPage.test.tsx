@@ -99,3 +99,15 @@ it('adds a child to a loaded empty branch and retires its no-children note', asy
   expect(screen.queryByText('无子节点')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '收起 D 区（空结果）' })).toHaveAttribute('aria-expanded', 'true');
 });
+
+
+it('shows type/status badges, a mixed parent background and the actual match count', () => {
+  const { container } = render(<TreeCapabilitiesPage />);
+  expect(screen.getByRole('columnheader', { name: /类型/ })).toBeVisible();
+  expect(screen.getByRole('columnheader', { name: /状态/ })).toBeVisible();
+  expect(screen.getByText('已满')).toHaveAttribute('data-slot', 'badge');
+  expect(container.querySelector('tr[data-row-id="farm"]')).toHaveAttribute('data-state', 'selected');
+  fireEvent.change(screen.getByRole('textbox', { name: '搜索节点' }), { target: { value: 'A 区 1 栏' } });
+  expect(screen.getByText('共 1 个匹配')).toBeVisible();
+  expect(container.querySelectorAll('tbody tr[data-row-id]')).toHaveLength(3);
+});
