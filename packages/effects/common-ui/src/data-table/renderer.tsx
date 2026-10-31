@@ -198,7 +198,7 @@ function HeaderView<T extends RowData>({
           (column.getCanSort() ? (
             <Button
               className={cn(
-                'h-auto w-full min-w-0 gap-1 p-0 text-[length:var(--control-font-size)] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
+                'h-auto w-full min-w-0 shrink gap-1 p-0 text-[length:var(--control-font-size)] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
                 alignment === 'start'
                   ? 'justify-start pe-6 text-start'
                   : alignment === 'center'
