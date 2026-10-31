@@ -3,6 +3,10 @@ import { ColumnFilterControl } from './ColumnFilterControl';
 import { resolveCellSpans } from './advanced-helpers';
 import { useOwnedState } from './advanced-state';
 import { useRowEditing, useRowReorder } from './advanced-interactions';
+import { TreeText } from './TreeText';
+import type { TreeLoad } from './useTreeChildren';
+import type { searchTree, treeSelection } from './tree-model';
+import { Spinner } from '../read-state/Loading';
 import { columnAlignment } from './alignment';
 import { Loading, ReadState, Skeleton } from '../read-state';
 import { nativeTableClassName } from './table-class-names';
@@ -941,19 +945,62 @@ export function SelectableView<T extends RowData>({
 export function TreeView<T extends RowData>({
   table,
   props,
+  capabilities,
 }: {
   table: ReactTable<typeof treeFeatures, T>;
   props: TreeListTableProps<T>;
+  capabilities: {
+    loads: ReadonlyMap<string, TreeLoad<T>>;
+    load: (row: T, retry?: boolean) => void;
+    search: ReturnType<typeof searchTree<T>>;
+    cascade: ReturnType<typeof treeSelection<T>>;
+    changeSelection: (row: T | undefined, checked: boolean) => void;
+  };
 }) {
   const { t } = useTranslation();
   // Tree rows read as an outline, so they start-align unless the caller overrides it.
   const alignProps = { align: props.align ?? 'start', columnAlign: props.columnAlign };
+  const { search, cascade, changeSelection, loads, load } = capabilities;
+  const selection = props.tree?.selection;
+  const visibleRows: Row<typeof treeFeatures, T>[] = [];
+  function visit(rows: Row<typeof treeFeatures, T>[]) {
+    for (const row of rows) {
+      visibleRows.push(row);
+      if (search.active ? search.expanded.has(row.original) : row.getIsExpanded()) visit(row.subRows);
+    }
+  }
+  visit(table.getPreExpandedRowModel().rows);
   return (
     <ListLayout
       table={table}
       props={props}
       headerGroups={table.getHeaderGroups()}
-      rows={table.getRowModel().rows}
+      rows={visibleRows}
+      isRowSelected={selection ? row => cascade.states.get(row.id)?.checked === true : undefined}
+      selectionHeader={
+        selection && (
+          <SelectionCheckbox
+            label={selection.labels.selectAll}
+            disabled={props.readState !== 'ready' || cascade.disabled}
+            selected={cascade.all}
+            indeterminate={!cascade.all && cascade.some}
+            onChange={checked => changeSelection(undefined, checked)}
+          />
+        )
+      }
+      selectionCell={
+        selection
+          ? row => (
+              <SelectionCheckbox
+                label={selection.labels.selectRow(row.original)}
+                selected={cascade.states.get(row.id)?.checked === true}
+                indeterminate={cascade.states.get(row.id)?.mixed}
+                disabled={cascade.states.get(row.id)?.disabled}
+                onChange={checked => changeSelection(row.original, checked)}
+              />
+            )
+          : undefined
+      }
       renderHeader={header => (
         <HeaderView<T>
           header={header}
@@ -995,19 +1042,55 @@ export function TreeView<T extends RowData>({
                       variant="ghost"
                       size="icon-xs"
                       className="pattern-tree-toggle size-[var(--control-height-sm)] rounded-sm border-0 bg-transparent p-0 text-muted-foreground shadow-none! hover:bg-muted hover:text-foreground [&_svg]:size-[var(--control-icon-size)]"
-                      data-state={row.getIsExpanded() ? 'open' : 'closed'}
-                      aria-expanded={row.getIsExpanded()}
-                      aria-label={t(row.getIsExpanded() ? 'common:table.collapseRow' : 'common:table.expandRow', {
-                        name: props.getRowLabel(row.original),
-                      })}
-                      onClick={row.getToggleExpandedHandler()}
+                      data-state={
+                        (search.active ? search.expanded.has(row.original) : row.getIsExpanded()) ? 'open' : 'closed'
+                      }
+                      aria-expanded={search.active ? search.expanded.has(row.original) : row.getIsExpanded()}
+                      aria-label={t(
+                        (search.active ? search.expanded.has(row.original) : row.getIsExpanded())
+                          ? 'common:table.collapseRow'
+                          : 'common:table.expandRow',
+                        {
+                          name: props.getRowLabel(row.original),
+                        },
+                      )}
+                      disabled={search.active}
+                      data-loading={loads.get(row.id)?.status === 'loading' || undefined}
+                      aria-busy={loads.get(row.id)?.status === 'loading' || undefined}
+                      onClick={() => row.toggleExpanded()}
                     >
-                      <ChevronDown aria-hidden="true" className={row.getIsExpanded() ? '' : '-rotate-90'} />
+                      {loads.get(row.id)?.status === 'loading' ? (
+                        <Spinner size="sm" label={props.tree?.lazy?.labels.loading} />
+                      ) : (
+                        <ChevronDown
+                          aria-hidden="true"
+                          className={
+                            (search.active ? search.expanded.has(row.original) : row.getIsExpanded())
+                              ? ''
+                              : '-rotate-90'
+                          }
+                        />
+                      )}
                     </Button>
                   )}
                 </span>
                 <div className="min-w-0">
-                  <table.FlexRender cell={cell} />
+                  {search.active ? (
+                    <TreeText text={props.getRowLabel(row.original)} query={props.tree?.search?.query ?? ''} />
+                  ) : (
+                    <table.FlexRender cell={cell} />
+                  )}
+                  {loads.get(row.id)?.status === 'error' && (
+                    <span className="ms-2 inline-flex items-center gap-1 text-destructive-text" role="alert">
+                      {props.tree?.lazy?.labels.error}
+                      <Button type="button" variant="link" size="sm" onClick={() => load(row.original, true)}>
+                        {props.tree?.lazy?.labels.retry}
+                      </Button>
+                    </span>
+                  )}
+                  {loads.get(row.id)?.status === 'ready' && loads.get(row.id)?.children?.length === 0 && (
+                    <span className="ms-2 text-muted-foreground">{props.tree?.lazy?.labels.empty}</span>
+                  )}
                 </div>
               </div>
             ) : (

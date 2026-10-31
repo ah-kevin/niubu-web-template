@@ -1,5 +1,6 @@
 import type { AdvancedTableOptions, TableLayoutOptions } from './advanced-types';
 import type { ReactNode } from 'react';
+import type { TreeOptions } from './tree-options';
 import type {
   RowData,
   ColumnPinningState,
@@ -118,6 +119,8 @@ export type SelectableTableProps<T extends RowData> = BaseTableProps<T> &
   };
 export type TreeListTableProps<T extends RowData> = BaseTableProps<T> &
   Omit<ListSlices, 'pagination'> & {
+    /** Optional cascade selection, lazy children and plain-text search. */
+    tree?: TreeOptions<T>;
     profile: 'tree-list';
     model: Extract<DataModel<T>, { kind: 'client' }>;
     columns: TableOptions<typeof treeFeatures, T>['columns'];

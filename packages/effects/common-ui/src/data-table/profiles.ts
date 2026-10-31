@@ -28,6 +28,7 @@ export const listFeatures = tableFeatures({
 });
 export const selectableListFeatures = tableFeatures({ ...listFeatures, rowSelectionFeature });
 export const treeFeatures = tableFeatures({
+  rowSelectionFeature,
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
   sortFns: { basic: sortFn_basic, alphanumeric: sortFn_alphanumeric },
