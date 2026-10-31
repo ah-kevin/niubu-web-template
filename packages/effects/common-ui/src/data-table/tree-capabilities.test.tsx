@@ -127,3 +127,42 @@ it('turns duplicate child IDs into retryable row errors', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Failed children');
   expect(screen.queryByText('Duplicate')).not.toBeInTheDocument();
 });
+
+
+it('publishes newly loaded descendant IDs to the selection owner', async () => {
+  const rows = [{ id: 'lazy', name: 'Lazy' }];
+  const onChange = vi.fn();
+  function Owner() {
+    const [value, setValue] = useState<RowSelectionState>({ lazy: true });
+    return <Fixture rows={rows} tree={{
+      selection: { state: { kind: 'controlled', value, onChange: next => { onChange(next); setValue(next); } }, labels: selectionLabels },
+      lazy: { ownerKey: 'selection-load', hasChildren: row => row.id === 'lazy', loadChildren: async () => [{ id: 'child', name: 'Child' }], labels: lazyLabels },
+    }} />;
+  }
+  render(<Owner />);
+  fireEvent.click(screen.getByRole('button', { name: '展开 Lazy' }));
+  expect(await screen.findByRole('checkbox', { name: 'Select Child' })).toBeChecked();
+  await waitFor(() => expect(onChange).toHaveBeenCalledWith({ lazy: true, child: true }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Child' }));
+  expect(screen.getByRole('checkbox', { name: 'Select Lazy' })).not.toBeChecked();
+  expect(onChange).toHaveBeenLastCalledWith({});
+});
+
+
+it('preserves a failed branch when successful sibling requests finish in the same turn', async () => {
+  const rows = [{ id: 'good', name: 'Good' }, { id: 'bad', name: 'Bad' }, { id: 'empty', name: 'Empty' }];
+  const completions = new Map<string, { resolve: (rows: Node[]) => void; reject: (error: Error) => void }>();
+  const loader = vi.fn((row: Node) => new Promise<Node[]>((resolve, reject) => completions.set(row.id, { resolve, reject })));
+  render(<Fixture rows={rows} tree={{ lazy: { ownerKey: 'parallel-branches', hasChildren: row => !row.id.includes('-child'), loadChildren: loader, labels: lazyLabels } }} />);
+  for (const name of ['Good', 'Bad', 'Empty']) fireEvent.click(screen.getByRole('button', { name: `展开 ${name}` }));
+  expect(loader).toHaveBeenCalledTimes(3);
+  await act(async () => {
+    completions.get('good')!.resolve([{ id: 'good-child', name: 'Loaded child' }]);
+    completions.get('bad')!.reject(Error('Synthetic error'));
+    completions.get('empty')!.resolve([]);
+  });
+  expect(await screen.findByRole('alert')).toHaveTextContent('Failed children');
+  expect(screen.getByText('Loaded child')).toBeVisible();
+  expect(screen.getByText('No children')).toBeVisible();
+  expect(loader).toHaveBeenCalledTimes(3);
+});

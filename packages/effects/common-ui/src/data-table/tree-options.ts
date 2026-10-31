@@ -3,6 +3,7 @@ import type { SliceOwner } from './types';
 
 export interface TreeOptions<T> {
   selection?: {
+    /** Successful child loads publish newly inherited selected IDs to this owner. */
     state: SliceOwner<RowSelectionState>;
     /** Disabled nodes are cascade barriers; their subtree is left unchanged. */
     isDisabled?: (row: T) => boolean;

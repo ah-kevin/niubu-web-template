@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RowData } from '@tanstack/react-table';
 import { treeFeatures } from './profiles';
 import type { TreeListTableProps } from './types';
@@ -40,6 +40,23 @@ function OwnedTree<T extends RowData>(props: TreeListTableProps<T>) {
   const selection = props.tree?.selection;
   const selected = selection?.state.kind === 'controlled' ? selection.state.value : internalSelection;
   const cascade = treeSelection(props.model.rows, getSubRows, props.getRowId, selected, selection?.isDisabled);
+  const observedLoads = useRef(loads);
+  const materializedSelection = cascade.materialized;
+  useEffect(() => {
+    const previous = observedLoads.current;
+    observedLoads.current = loads;
+    if (
+      selection?.state.kind !== 'controlled' ||
+      ![...loads].some(([id, entry]) => entry.status === 'ready' && previous.get(id) !== entry)
+    )
+      return;
+    if (
+      Object.keys(selected).length === Object.keys(materializedSelection).length &&
+      Object.keys(materializedSelection).every(id => selected[id] === true)
+    )
+      return;
+    selection.state.onChange(materializedSelection);
+  }, [loads, selection, selected, materializedSelection]);
   const search = useMemo(
     () => searchTree(props.model.rows, getSubRows, props.getRowLabel, props.tree?.search?.query ?? ''),
     [props.model.rows, getSubRows, props.getRowLabel, props.tree?.search?.query],

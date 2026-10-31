@@ -141,13 +141,12 @@ it('preserves tree column accessor inference with its concrete native feature ty
   expectTypeOf(columns).toExtend<TableOptions<typeof treeFeatures, Item>['columns']>();
 });
 
-// Compile-time boundaries: tree state is native, while pagination and selection stay absent.
+// Compile-time boundaries: tree expansion and selection are native; pagination stays absent.
 export function treeFeatureBoundaries(tree: ReactTable<typeof treeFeatures, Item>, list: ReactTable<typeof listFeatures, Item>, props: TreeListTableProps<Item>) {
   tree.setExpanded({ id: true });
   tree.toggleAllRowsExpanded();
   // @ts-expect-error expansion does not add pagination to this profile
   tree.setPagination({ pageIndex: 0, pageSize: 10 });
-  // @ts-expect-error tree profile has no selection owner
   tree.setRowSelection({ id: true });
   // @ts-expect-error list profile does not acquire tree APIs
   list.setExpanded(true);

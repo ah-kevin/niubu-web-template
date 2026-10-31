@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { RowData } from '@tanstack/react-table';
 import type { TreeListTableProps } from './types';
 import { validateTreeRows } from './identity';
 
 export type TreeLoad<T> = { row: T; status: 'loading' | 'ready' | 'error'; children?: readonly T[] };
 
-export function useTreeChildren<T>(props: TreeListTableProps<T>) {
+export function useTreeChildren<T extends RowData>(props: TreeListTableProps<T>) {
   const [loads, setLoads] = useState(new Map<string, TreeLoad<T>>());
   const pending = useRef(new Map<string, { row: T; controller: AbortController }>());
   const current = useRef(props);
@@ -62,7 +63,8 @@ export function useTreeChildren<T>(props: TreeListTableProps<T>) {
       return;
     const controller = new AbortController();
     pending.current.set(id, { row, controller });
-    setLoads(previous => new Map(previous).set(id, { row, status: 'loading' }));
+    cache.current = new Map(cache.current).set(id, { row, status: 'loading' });
+    setLoads(cache.current);
     void (async () => {
       try {
         const children = await lazy.loadChildren(row, { signal: controller.signal });
@@ -79,8 +81,10 @@ export function useTreeChildren<T>(props: TreeListTableProps<T>) {
         cache.current = new Map(cache.current).set(id, { row, status: 'ready', children });
         setLoads(cache.current);
       } catch {
-        if (!controller.signal.aborted && pending.current.get(id)?.controller === controller)
-          setLoads(previous => new Map(previous).set(id, { row, status: 'error' }));
+        if (!controller.signal.aborted && pending.current.get(id)?.controller === controller) {
+          cache.current = new Map(cache.current).set(id, { row, status: 'error' });
+          setLoads(cache.current);
+        }
       } finally {
         if (pending.current.get(id)?.controller === controller) pending.current.delete(id);
       }

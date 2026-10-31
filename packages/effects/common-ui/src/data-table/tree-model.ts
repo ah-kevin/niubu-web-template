@@ -69,13 +69,23 @@ export function treeSelection<T>(
       function apply(row: T, index: number) {
         if (states.get(id(row))?.disabled) return;
         if (checked) next[id(row)] = true;
-        else next[id(row)] = false;
+        else delete next[id(row)];
         (children(row, index) ?? []).forEach(apply);
       }
       if (target) apply(target, indices.get(target) ?? 0);
       else rows.forEach(apply);
-      // Recompute all ancestors from the changed leaves, including collapsed branches.
-      return treeSelection(rows, children, id, next, disabled).materialized;
+      // Reconcile ancestors from materialized child IDs without inheriting a stale parent selection.
+      function reconcile(row: T, index: number) {
+        if (states.get(id(row))?.disabled) return;
+        const enabledChildren = (children(row, index) ?? []).filter(child => !states.get(id(child))?.disabled);
+        enabledChildren.forEach(child => reconcile(child, indices.get(child) ?? 0));
+        if (enabledChildren.length) {
+          if (enabledChildren.every(child => next[id(child)])) next[id(row)] = true;
+          else delete next[id(row)];
+        }
+      }
+      rows.forEach(reconcile);
+      return next;
     },
     materialized,
   };
