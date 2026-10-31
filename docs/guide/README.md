@@ -22,6 +22,8 @@
 | 选择测试、验证样式、构建或部署               | [工程与部署](./engineering-deploy.md)                    | 该页的既有测试索引；交付门槛见[工作方式](./workflow.md)                                                                                                                                                                |
 | 查已有组件用法和 Vben 视觉对照               | [Vben 能力对照与示例索引](./vben-examples-comparison.md) | Playground 中的现有示例                                                                                                                                                                                                |
 
+主体区控件、浮层与反馈的当前样式和新增 API 见[主体区设计系统](./design-system.md)。
+
 源码是接口的最终依据，包的可用入口以 `package.json` 的 exports 为准。Starter 展示产品装配，Playground 展示公共能力；参考源码时在目标 app 内按需适配，app 之间不互相导入。系统资源页面有自己的 DTO、权限和 API，不能当作任意业务的通用 CRUD 接口。
 
 mock 的启动、接入和替换数据见 [backend-mock README](../../apps/backend-mock/README.md)。模板冻结 1.0 前，回流改动的核对方式见[工作方式](./workflow.md)；冻结后业务仓库不再接收模板更新。
