@@ -2,6 +2,12 @@
 
 组件沿用当前主题与密度 token；Playground 默认跟随全局外观配置。基础组件和完整列表页可显式切换局部浅深色/密度用于对照，局部预览仍保留全局预设、主色、圆角和字号，并可切回“跟随全局”。页面壳层沿用原实现。
 
+## 基础控件组合
+
+`@niubu/shadcn-ui/input` 同时导出 `InputGroup`、`InputGroupAddon`，用于图标、快捷键或单位前后缀。保留原生 Input 的值、ref 和表单绑定；装饰图标应设为 `aria-hidden`，有语义的说明通过 `aria-describedby` 关联。
+
+`Button loading={busy}` 会预留加载图标空间，切换忙碌状态时保留宽度并阻止重复操作；未传 `loading` 时保持普通按钮布局。表单禁用状态同时传递给控件和标签。空状态与气泡采用各自的标准/紧凑间距，不复用弹窗内边距。
+
 ## 浮层与菜单
 
 业务弹层继续使用 `@niubu/common-ui/overlay` 的 `Modal`、`Drawer`。`size="wide"` 使用大尺寸 token，`fullscreen` 优先；标题、底部操作保持可见，内容独立滚动。关闭、dirty 确认、取消、焦点恢复沿用原 owner。`data-scroll` 表示内容超过可视高度。
@@ -38,8 +44,10 @@ Popover 默认带箭头，`PopoverContent showArrow={false}` 可隐藏，`Popove
 
 - `layout`：`stickyHeader`、`maxHeight`、`striped`、`bordered` 与 `wrap`；固定列继续使用 `columnPinning`。
 - `columnFilters`：`local` 模式由 `matches` 在完整客户端数据中匹配；`manual` 模式由调用方接收受控筛选值并查询。`selection: 'multiple'` 使用类型化数组，同列条件为 OR、不同列为 AND。筛选由图标气泡编辑，应用后显示条件标签；保留默认单值接口。
+- `columnHints`：按列 ID 提供表头提示文字，支持悬停与键盘聚焦。
 - `details`：按稳定行 ID 保存展开状态，`render(row)` 提供详情内容；只展示一层详情。
 - `editing`：`createDraft` 返回独立草稿，`renderCell` 组合现有控件，`validate` 返回按列的错误，`onSave` 接收 AbortSignal。调用方提交新 rows，组件不直接修改原模型。取消、owner 变化及行离开当前视图会终止旧操作。
+- `editing.editableColumns` 标记可编辑列的悬停提示；`editing.addRow` 在表格底部提供新增入口，由调用方追加记录、切换分页并指定编辑行。
 - `cellSpan`：根据当前可见页面行列返回 `rowSpan/colSpan`；`mergeConsecutiveRows` 可生成相邻分组合并。不要将过滤前的固定行下标用于合并。
 - `summary`：`renderCell` 根据当前展示页生成 `tfoot`，在标签中明确统计口径。
 - `reorder`：通过必需的 `ownerKey` 界定数据所有者，回调使用稳定引用；使用原生拖拽或键盘移动，`onReorder` 接收建议的完整行 ID 顺序和 AbortSignal；只在客户端完整且无排序/筛选干扰的序列中启用。数据仍由调用方确认保存。
@@ -56,6 +64,7 @@ Popover 默认带箭头，`PopoverContent showArrow={false}` 可隐藏，`Popove
 - `selection.state`：受控或内部行选择；父子级联，祖先显示半选。`isDisabled` 指定的节点及其子树不参与级联。
 - `lazy`：`ownerKey` 界定身份/作用域；`hasChildren` 声明未加载分支；`loadChildren(row, { signal })` 返回子节点。展开去重，失败可重试，owner 更换和卸载会取消旧请求，迟到结果不会写入新 owner。
 - `search.query`：在已加载节点标签中搜索，保留匹配节点的祖先并临时展开；清空后恢复原展开。高亮按文本渲染，不接受 HTML，也不自动查询未知子节点。
+- `search.matchCountLabel` 可显示实际匹配数，匹配记录的祖先仅用于保留结构，不计入命中数。
 
 原静态完整树、单行展开、展开全部/收起全部和受控 `expanded` 继续可用；名称列默认起始对齐。
 
