@@ -1,3 +1,4 @@
+import type { AdvancedTableOptions, TableLayoutOptions } from './advanced-types';
 import type { ReactNode } from 'react';
 import type {
   RowData,
@@ -68,6 +69,7 @@ export type BaseTableProps<T> = TableReadMetadata & {
 };
 export type ReadTableProps<T extends RowData> = BaseTableProps<T> & {
   profile: 'read';
+  layout?: TableLayoutOptions;
   model: Extract<DataModel<T>, { kind: 'client' }>;
   columns: TableOptions<typeof readFeatures, T>['columns'];
 };
@@ -90,14 +92,17 @@ export interface ListSlices {
   onResetColumns?: () => void;
 }
 export type ListTableProps<T extends RowData> = BaseTableProps<T> &
-  ListSlices & {
+  ListSlices &
+  AdvancedTableOptions<T> & {
     profile: 'list';
     model: DataModel<T>;
     columns: TableOptions<typeof listFeatures, T>['columns'];
   };
 export type SelectableTableProps<T extends RowData> = BaseTableProps<T> &
-  ListSlices & {
+  ListSlices &
+  AdvancedTableOptions<T> & {
     profile: 'selectable-list';
+    selectionMode?: 'multiple' | 'single';
     model: DataModel<T>;
     columns: TableOptions<typeof selectableListFeatures, T>['columns'];
     rowSelection: SliceOwner<RowSelectionState>;

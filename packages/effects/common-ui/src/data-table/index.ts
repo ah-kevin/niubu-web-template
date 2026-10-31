@@ -54,3 +54,18 @@ export { CellText } from './CellText';
 export type { CellTextProps } from './CellText';
 export { CollectionCell } from './CollectionCell';
 export type { CollectionCellProps } from './CollectionCell';
+
+export type {
+  AdvancedTableOptions,
+  TableLayoutOptions,
+  TableColumnFilters,
+  ColumnFilterValues,
+  ColumnFilterField,
+  TableDetails,
+  TableEditing,
+  CellSpan,
+  CellSpanContext,
+  TableSummary,
+  TableReorder,
+} from './advanced-types';
+export { mergeConsecutiveRows } from './advanced-helpers';

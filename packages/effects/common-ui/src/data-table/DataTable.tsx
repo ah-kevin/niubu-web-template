@@ -1,9 +1,10 @@
+import { useColumnFilters } from './advanced-state';
 import { columnAlignment } from './alignment';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
 import { rowActivation } from './row-activation';
 import type { RowData } from '@tanstack/react-table';
-import { useMemo, type ReactElement } from 'react';
+import { useMemo, useId, type ReactElement } from 'react';
 import { listFeatures, readFeatures, selectableListFeatures } from './profiles';
 import { validateColumnIds, validateReadModel, validateRowIds } from './identity';
 import { useDataTable } from './useDataTable';
@@ -19,6 +20,8 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>): ReactEle
     return <TreeRenderer key={`${listInstanceKey(props)}:${props.expanded?.kind ?? 'internal'}`} {...props} />;
   validateRowIds(props.model.rows, props.getRowId);
   validateReadModel(props.model, props);
+  if (props.profile !== 'read' && props.refresh && props.readState !== 'ready')
+    throw Error('Refresh retains a ready model; pending reads require empty rows');
   if (props.profile === 'read') return <ReadRenderer {...props} />;
   if (props.profile === 'list') return <ListRenderer key={listInstanceKey(props)} {...props} />;
   return <SelectableRenderer key={`${listInstanceKey(props)}:${props.rowSelection.kind}`} {...props} />;
@@ -33,8 +36,18 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
   });
   const rows = table.getRowModel().rows;
   return (
-    <section className={nativeTableClassName} aria-label={props.caption}>
-      <div className="native-table-scroll max-w-full overflow-x-auto overscroll-x-contain">
+    <section
+      className={nativeTableClassName}
+      aria-label={props.caption}
+      data-sticky-header={props.layout?.stickyHeader || undefined}
+      data-striped={props.layout?.striped || undefined}
+      data-bordered={props.layout?.bordered || undefined}
+      data-wrap={props.layout?.wrap === true || undefined}
+    >
+      <div
+        className="native-table-scroll max-w-full overflow-auto overscroll-x-contain"
+        style={{ maxHeight: props.layout?.maxHeight }}
+      >
         <table className="w-full">
           <caption>{props.caption}</caption>
           <thead>
@@ -64,7 +77,13 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
             {rows.map(row => (
               <tr key={row.id} data-row-id={row.id} {...rowActivation(row.original, props.onRowActivate)}>
                 {row.getAllCells().map(cell => (
-                  <td key={cell.id} style={{ textAlign: columnAlignment(props, cell.column.id) }}>
+                  <td
+                    key={cell.id}
+                    data-wrap={
+                      (Array.isArray(props.layout?.wrap) && props.layout.wrap.includes(cell.column.id)) || undefined
+                    }
+                    style={{ textAlign: columnAlignment(props, cell.column.id) }}
+                  >
                     <table.FlexRender cell={cell} />
                   </td>
                 ))}
@@ -77,12 +96,30 @@ function ReadRenderer<T extends RowData>(props: ReadTableProps<T>) {
   );
 }
 function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
+  const filters = useColumnFilters(props.model.rows, props.columnFilters);
+  if (props.model.kind === 'server' && props.columnFilters?.mode === 'local')
+    throw Error('Local column filters require the complete client model');
+  const viewProps = {
+    ...props,
+    ...(props.readState === 'ready'
+      ? {
+          readState: 'ready' as const,
+          resultCount: props.columnFilters?.mode === 'local' ? filters.rows.length : props.resultCount,
+        }
+      : { readState: props.readState, resultCount: null, sourceCount: null }),
+    filterValues: filters.values,
+    onFilterChange: (id: string, value: string) => {
+      filters.update(previous => ({ ...previous, [id]: value }));
+      table.setPageIndex(0);
+    },
+  };
+
   const columnIds = useMemo(() => validateColumnIds(props.columns, true), [props.columns]);
   validateListOwnership(props, columnIds);
   const table = useDataTable({
     features: listFeatures,
     columns: props.columns,
-    data: props.model.rows,
+    data: filters.rows,
     getRowId: props.getRowId,
     defaultColumn: defaults,
     autoResetPageIndex: false,
@@ -94,16 +131,47 @@ function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
     enableSortingRemoval: false,
     ...listOwnership(props, columnIds),
   });
-  return <ListView table={table} props={props} />;
+  return (
+    <ListView
+      table={table}
+      props={{
+        ...viewProps,
+        reorderAllowed:
+          props.model.kind === 'client' &&
+          !table.state.sorting.length &&
+          !Object.values(filters.values).some(Boolean) &&
+          table.getRowModel().rows.length === props.model.rows.length,
+      }}
+    />
+  );
 }
 function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
+  const selectionName = useId();
+  const filters = useColumnFilters(props.model.rows, props.columnFilters);
+  if (props.model.kind === 'server' && props.columnFilters?.mode === 'local')
+    throw Error('Local column filters require the complete client model');
+  const viewProps = {
+    ...props,
+    ...(props.readState === 'ready'
+      ? {
+          readState: 'ready' as const,
+          resultCount: props.columnFilters?.mode === 'local' ? filters.rows.length : props.resultCount,
+        }
+      : { readState: props.readState, resultCount: null, sourceCount: null }),
+    filterValues: filters.values,
+    onFilterChange: (id: string, value: string) => {
+      filters.update(previous => ({ ...previous, [id]: value }));
+      table.setPageIndex(0);
+    },
+  };
+
   const columnIds = useMemo(() => validateColumnIds(props.columns, true), [props.columns]);
   validateListOwnership(props, columnIds);
   const owners = listOwnership(props, columnIds);
   const table = useDataTable({
     features: selectableListFeatures,
     columns: props.columns,
-    data: props.model.rows,
+    data: filters.rows,
     getRowId: props.getRowId,
     defaultColumn: defaults,
     autoResetPageIndex: false,
@@ -132,7 +200,14 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
   return (
     <SelectableView
       table={table}
-      props={props}
+      props={{
+        ...viewProps,
+        reorderAllowed:
+          props.model.kind === 'client' &&
+          !table.state.sorting.length &&
+          !Object.values(filters.values).some(Boolean) &&
+          table.getRowModel().rows.length === props.model.rows.length,
+      }}
       selectionSummary={
         <div
           data-active={Object.keys(selected).length > 0 || undefined}
@@ -142,22 +217,24 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
             {props.selectionLabels.selected(Object.keys(selected).length)}
           </span>
           <div className="flex flex-wrap items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              disabled={
-                props.readState !== 'ready' ||
-                !props.resultCount ||
-                (props.model.kind === 'server' && !props.onSelectAllResults)
-              }
-              onClick={() => {
-                if (props.model.kind === 'server') props.onSelectAllResults?.();
-                else table.toggleAllRowsSelected(true);
-              }}
-            >
-              {props.selectionLabels.selectAllResults(props.resultCount ?? 0)}
-            </Button>
+            {props.selectionMode !== 'single' && (
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                disabled={
+                  props.readState !== 'ready' ||
+                  !props.resultCount ||
+                  (props.model.kind === 'server' && !props.onSelectAllResults)
+                }
+                onClick={() => {
+                  if (props.model.kind === 'server') props.onSelectAllResults?.();
+                  else table.toggleAllRowsSelected(true);
+                }}
+              >
+                {props.selectionLabels.selectAllResults(viewProps.resultCount ?? 0)}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -168,27 +245,44 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
               {props.selectionLabels.clearSelection}
             </Button>
           </div>
-          {props.model.kind === 'server' && !props.onSelectAllResults && (
+          {props.selectionMode !== 'single' && props.model.kind === 'server' && !props.onSelectAllResults && (
             <span className="basis-full text-muted-foreground">{props.selectionLabels.allResultsUnavailable}</span>
           )}
         </div>
       }
       selectionHeader={
-        <SelectionCheckbox
-          label={props.selectionLabels.selectPage}
-          disabled={props.readState !== 'ready'}
-          selected={table.getIsAllPageRowsSelected()}
-          indeterminate={table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()}
-          onChange={selected => table.toggleAllPageRowsSelected(selected)}
-        />
+        props.selectionMode === 'single' ? (
+          <span className="sr-only">{props.selectionLabels.selectPage}</span>
+        ) : (
+          <SelectionCheckbox
+            label={props.selectionLabels.selectPage}
+            disabled={props.readState !== 'ready' || !!props.refresh}
+            selected={table.getIsAllPageRowsSelected()}
+            indeterminate={table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()}
+            onChange={selected => table.toggleAllPageRowsSelected(selected)}
+          />
+        )
       }
-      selectionCell={row => (
-        <SelectionCheckbox
-          selected={selected[row.id] === true}
-          label={props.selectionLabels.selectRow(row.id)}
-          onChange={selected => row.toggleSelected(selected)}
-        />
-      )}
+      selectionCell={row =>
+        props.selectionMode === 'single' ? (
+          <input
+            type="radio"
+            className="pattern-table-radio"
+            name={selectionName}
+            checked={selected[row.id] === true}
+            aria-label={props.selectionLabels.selectRow(row.id)}
+            disabled={props.readState !== 'ready' || !!props.refresh}
+            onChange={() => table.setRowSelection({ [row.id]: true })}
+          />
+        ) : (
+          <SelectionCheckbox
+            selected={selected[row.id] === true}
+            disabled={props.readState !== 'ready' || !!props.refresh}
+            label={props.selectionLabels.selectRow(row.id)}
+            onChange={selected => row.toggleSelected(selected)}
+          />
+        )
+      }
     />
   );
 }

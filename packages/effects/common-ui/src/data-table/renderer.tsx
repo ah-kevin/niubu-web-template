@@ -1,3 +1,8 @@
+import type { AdvancedTableOptions, CellSpan, ColumnFilterValues } from './advanced-types';
+import { ColumnFilterControl } from './ColumnFilterControl';
+import { resolveCellSpans } from './advanced-helpers';
+import { useOwnedState } from './advanced-state';
+import { useRowEditing, useRowReorder } from './advanced-interactions';
 import { columnAlignment } from './alignment';
 import { Loading, ReadState, Skeleton } from '../read-state';
 import { nativeTableClassName } from './table-class-names';
@@ -122,6 +127,7 @@ export const SelectionCheckbox = memo(function SelectionCheckbox({
 });
 function pinnedStyle<T extends RowData>(
   column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T> | Column<typeof treeFeatures, T>,
+  leadingWidth = 0,
 ): CSSProperties {
   const pin = column.getIsPinned();
   const width = column.getSize();
@@ -130,7 +136,7 @@ function pinnedStyle<T extends RowData>(
     minWidth: width,
     maxWidth: width,
     position: pin ? 'sticky' : undefined,
-    insetInlineStart: pin === 'start' ? column.getStart('start') : undefined,
+    insetInlineStart: pin === 'start' ? column.getStart('start') + leadingWidth : undefined,
     insetInlineEnd: pin === 'end' ? column.getAfter('end') : undefined,
     zIndex: pin ? 2 : undefined,
     background: pin ? 'var(--table-row-background, var(--card, Canvas))' : undefined,
@@ -146,7 +152,11 @@ function HeaderView<T extends RowData>({
   children,
   alignment,
   disabled,
+  filter,
+  leadingWidth,
 }: {
+  leadingWidth?: number;
+  filter?: ReactNode;
   header: ListNativeHeader<T>;
   disabled?: boolean;
   labels: TableLabels;
@@ -169,7 +179,7 @@ function HeaderView<T extends RowData>({
       }
       scope={header.colSpan > 1 ? 'colgroup' : 'col'}
       colSpan={header.colSpan}
-      style={{ ...pinnedStyle(column), width, minWidth: width, maxWidth: width, textAlign: alignment }}
+      style={{ ...pinnedStyle(column, leadingWidth), width, minWidth: width, maxWidth: width, textAlign: alignment }}
       aria-sort={
         column.getCanSort() ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined
       }
@@ -207,6 +217,7 @@ function HeaderView<T extends RowData>({
         ) : (
           children
         ))}
+      {filter}
       {column.getCanResize() && (
         <Button
           variant="ghost"
@@ -244,13 +255,22 @@ function CellView<T extends RowData>({
   column,
   children,
   alignment,
+  span,
+  width,
+  leadingWidth,
 }: {
+  leadingWidth?: number;
+  span?: CellSpan;
+  width?: number;
   column: Column<typeof listFeatures, T> | Column<typeof selectableListFeatures, T> | Column<typeof treeFeatures, T>;
   children: ReactNode;
   alignment: TableAlignment;
 }) {
   return (
     <td
+      rowSpan={span?.rowSpan}
+      colSpan={span?.colSpan}
+      data-column-id={column.id}
       data-fixed={column.getIsPinned() || undefined}
       data-fixed-edge={
         column.getIsPinned() === 'start'
@@ -259,7 +279,11 @@ function CellView<T extends RowData>({
             ? column.getStart('end') === 0 || undefined
             : undefined
       }
-      style={{ ...pinnedStyle(column), textAlign: alignment }}
+      style={{
+        ...pinnedStyle(column, leadingWidth),
+        textAlign: alignment,
+        ...(width ? { width, minWidth: width, maxWidth: width } : {}),
+      }}
     >
       <div className="pattern-cell-content">{children}</div>
     </td>
@@ -396,17 +420,59 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
   footer,
 }: {
   table: PresentationTable<T>;
-  props: BaseTableProps<T> & ListSlices;
+  props: BaseTableProps<T> &
+    ListSlices &
+    AdvancedTableOptions<T> & {
+      reorderAllowed?: boolean;
+      filterValues?: ColumnFilterValues;
+      onFilterChange?: (id: string, value: string) => void;
+    };
   headerGroups: readonly { id: string; headers: readonly H[] }[];
   rows: readonly R[];
   renderHeader: (header: H) => ReactNode;
-  renderCells: (row: R) => ReactNode;
+  renderCells: (row: R, spans: Map<string, CellSpan | null>, editing: ReturnType<typeof useRowEditing<T>>) => ReactNode;
   selectionHeader?: ReactNode;
   selectionCell?: (row: R) => ReactNode;
   selectionSummary?: ReactNode;
   isRowSelected?: (row: R) => boolean;
   footer?: ReactNode;
 }) {
+  const [expanded, setExpanded] = useOwnedState(props.details?.expanded, {});
+  const enabled = props.readState === 'ready' && !props.refresh;
+  const editing = useRowEditing(props.editing, rows, enabled);
+  const reorder = useRowReorder(props.reorder, rows, enabled && !!props.reorderAllowed && !editing.id);
+  const displayRows = reorder.rows;
+  const columns = [
+    ...table.getStartVisibleLeafColumns(),
+    ...table.getCenterVisibleLeafColumns(),
+    ...table.getEndVisibleLeafColumns(),
+  ];
+  const columnIds = columns.map(column => column.id);
+  const auxCount = (selectionHeader ? 1 : 0) + (props.details ? 1 : 0) + (props.reorder ? 1 : 0);
+  const totalColumns = columns.length + auxCount + (props.editing ? 1 : 0);
+  const spans = resolveCellSpans(
+    displayRows.map(row => row.original),
+    columnIds,
+    props.cellSpan,
+    columns.map(column => column.getIsPinned()),
+    new Set(displayRows.flatMap((row, i) => (expanded[row.id] || editing.id === row.id ? [i] : []))),
+  );
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [scrollEdges, setScrollEdges] = useState({ start: false, end: false });
+  const scroll = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = scroll.current;
+    if (!node) return;
+    const update = () => {
+      const offset = Math.abs(node.scrollLeft);
+      setScrollEdges({ start: offset > 1, end: node.scrollWidth - node.clientWidth - offset > 1 });
+    };
+    update();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    observer?.observe(node);
+    if (node.firstElementChild) observer?.observe(node.firstElementChild);
+    return () => observer?.disconnect();
+  }, [columns.length, props.layout?.maxHeight]);
   const [maximized, setMaximized] = useState(false);
   const section = useRef<HTMLElement>(null);
   if (maximized && !props.toolbar?.allowMaximize) setMaximized(false);
@@ -442,6 +508,15 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
       )}
       aria-label={props.caption}
       data-maximized={maximized || undefined}
+      data-sticky-header={props.layout?.stickyHeader || undefined}
+      data-striped={props.layout?.striped || undefined}
+      data-bordered={props.layout?.bordered || undefined}
+      data-wrap={props.layout?.wrap === true || undefined}
+      data-advanced-layout={props.layout ? true : undefined}
+      data-scroll-start={scrollEdges.start || undefined}
+      data-scroll-end={scrollEdges.end || undefined}
+      data-refresh={props.refresh}
+      style={{ '--table-leading-width': `${auxCount * 40}px` } as CSSProperties}
     >
       <TableToolbar
         table={table}
@@ -450,29 +525,88 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
         maximized={maximized}
         onMaximizeChange={setMaximized}
       />
+      {props.columnFilters && Object.values(props.filterValues ?? {}).some(Boolean) && (
+        <div className="flex flex-wrap gap-2 px-3 py-2" aria-label={props.columnFilters.activeLabel}>
+          {Object.entries(props.filterValues ?? {})
+            .filter(([, value]) => !!value)
+            .map(([id, value]) => (
+              <Button
+                key={id}
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={!enabled}
+                onClick={() => props.onFilterChange?.(id, '')}
+                aria-label={`${props.columnFilters?.clearLabel}: ${props.columnFilters?.fields[id]?.label}`}
+              >
+                {props.columnFilters?.fields[id]?.label}:{' '}
+                {props.columnFilters?.fields[id]?.options?.find(option => option.value === value)?.label ?? value} ×
+              </Button>
+            ))}
+        </div>
+      )}
+      {reorder.message && (
+        <div
+          className="px-3 py-2 text-sm"
+          role={reorder.message === props.reorder?.labels.failed ? 'alert' : 'status'}
+          aria-live="polite"
+        >
+          {reorder.message}
+        </div>
+      )}
+      {props.refresh === 'error' && (
+        <div role="alert" className="px-3 py-2">
+          {props.labels.error}
+          {props.emptyAction}
+        </div>
+      )}
       <div
+        ref={scroll}
+        style={{ maxHeight: props.layout?.maxHeight }}
+        onScroll={event => {
+          const node = event.currentTarget;
+          const offset = Math.abs(node.scrollLeft);
+          setScrollEdges({ start: offset > 1, end: node.scrollWidth - node.clientWidth - offset > 1 });
+        }}
         className={cn(
-          'native-table-scroll max-w-full overflow-x-auto overscroll-x-contain',
-          maximized && 'min-h-0 flex-1 overflow-y-auto',
+          'native-table-scroll relative max-w-full overflow-x-auto overscroll-x-contain',
+          (maximized || props.layout?.maxHeight) && 'min-h-0 flex-1 overflow-y-auto',
         )}
       >
+        {props.refresh === 'pending' && (
+          <div className="pattern-refresh-overlay">
+            <Loading label={props.labels.pending} />
+          </div>
+        )}
         <table
+          inert={props.refresh === 'pending' || undefined}
           style={{
-            width: selectionHeader
-              ? `calc(${table.getTotalSize()}px + var(--control-height) + 1rem)`
-              : table.getTotalSize(),
+            width: table.getTotalSize() + auxCount * 40 + (props.editing ? 160 : 0),
             tableLayout: 'fixed',
           }}
+          aria-busy={props.refresh === 'pending' || undefined}
         >
           <caption className="sr-only">{props.caption}</caption>
+          <colgroup>
+            {Array.from({ length: auxCount }, (_, i) => (
+              <col key={`aux-${i}`} style={{ width: 40 }} />
+            ))}
+            {columns.map(column => (
+              <col key={column.id} style={{ width: column.getSize() }} />
+            ))}
+            {props.editing && <col style={{ width: 160 }} />}
+          </colgroup>
           <thead>
             {headerGroups.map(group => (
               <tr key={group.id}>
+                {props.reorder && <th aria-label={props.reorder.labels.pickedUp} className="pattern-aux-cell" />}
+                {props.details && <th className="pattern-aux-cell" />}
                 {selectionHeader && (
                   <th
                     scope="col"
                     className="pattern-selection-cell"
-                    style={{ width: 'calc(var(--control-height) + 1rem)' }}
+                    data-fixed={props.layout ? 'start' : undefined}
+                    style={{ width: 40, insetInlineStart: (props.details ? 40 : 0) + (props.reorder ? 40 : 0) }}
                   >
                     {selectionHeader}
                   </th>
@@ -480,33 +614,159 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
                 {group.headers.map(header => (
                   <Fragment key={header.id}>{renderHeader(header)}</Fragment>
                 ))}
+                {props.editing && <th scope="col">{props.editing.labels.actions}</th>}
               </tr>
             ))}
           </thead>
           <tbody>
-            {(props.readState !== 'ready' || rows.length === 0) && (
+            {((props.readState !== 'ready' && props.readState !== 'pending') ||
+              (props.readState === 'ready' && rows.length === 0)) && (
               <tr>
-                <td
-                  colSpan={table.getVisibleLeafColumns().length + (selectionHeader ? 1 : 0)}
-                  className="pattern-table-state"
-                >
-                  <ReadMessage props={props} hasRows={false} />
+                <td colSpan={totalColumns} className="pattern-table-state">
+                  <ReadMessage
+                    props={{
+                      ...props,
+                      emptyAction: (
+                        <>
+                          {props.emptyAction}
+                          {props.columnFilters && Object.values(props.filterValues ?? {}).some(Boolean) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                Object.keys(props.filterValues ?? {}).forEach(id => props.onFilterChange?.(id, ''))
+                              }
+                            >
+                              {props.columnFilters.clearLabel}
+                            </Button>
+                          )}
+                        </>
+                      ),
+                    }}
+                    hasRows={false}
+                  />
                 </td>
               </tr>
             )}
-            {rows.map(row => (
-              <tr
-                key={row.id}
-                data-row-id={row.id}
-                aria-selected={isRowSelected?.(row)}
-                data-state={isRowSelected?.(row) ? 'selected' : undefined}
-                {...rowActivation(row.original, props.onRowActivate)}
-              >
-                {selectionCell && <td className="pattern-selection-cell">{selectionCell(row)}</td>}
-                {renderCells(row)}
-              </tr>
+            {props.readState === 'pending' &&
+              Array.from({ length: 'pagination' in table.state ? table.state.pagination.pageSize : 3 }, (_, index) => (
+                <tr key={`skeleton-${index}`} data-skeleton-row="true">
+                  <td colSpan={totalColumns}>
+                    {index === 0 && (
+                      <span role="status" aria-busy="true" className="sr-only">
+                        {props.labels.pending}
+                      </span>
+                    )}
+                    <Skeleton className="h-[var(--control-height)] w-full" />
+                  </td>
+                </tr>
+              ))}
+            {displayRows.map((row, index) => (
+              <Fragment key={row.id}>
+                <tr
+                  data-row-id={row.id}
+                  data-editing={editing.id === row.id || undefined}
+                  data-dragging={reorder.active === row.id || undefined}
+                  data-merge-hover={
+                    (hovered !== null &&
+                      spans.some((cells, origin) =>
+                        cells.some(
+                          cell =>
+                            cell &&
+                            cell.rowSpan > 1 &&
+                            hovered >= origin &&
+                            hovered < origin + cell.rowSpan &&
+                            index >= origin &&
+                            index < origin + cell.rowSpan,
+                        ),
+                      )) ||
+                    undefined
+                  }
+                  aria-selected={isRowSelected?.(row)}
+                  data-state={isRowSelected?.(row) ? 'selected' : undefined}
+                  onMouseEnter={() => setHovered(index)}
+                  onMouseLeave={() => setHovered(null)}
+                  onDragOver={event => {
+                    if (reorder.active) {
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = 'move';
+                    }
+                  }}
+                  onDrop={event => {
+                    if (reorder.active) {
+                      event.preventDefault();
+                      reorder.drop(row.id);
+                    }
+                  }}
+                  {...rowActivation(
+                    row.original,
+                    enabled && !editing.id && !reorder.active ? props.onRowActivate : undefined,
+                  )}
+                >
+                  {props.reorder && <td className="pattern-aux-cell">{reorder.handle(row)}</td>}
+                  {props.details && (
+                    <td className="pattern-aux-cell">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={!enabled || props.details.canExpand?.(row.original) === false}
+                        aria-expanded={!!expanded[row.id]}
+                        aria-label={props.details.label(row.original, !!expanded[row.id])}
+                        onClick={() => setExpanded(previous => ({ ...previous, [row.id]: !previous[row.id] }))}
+                      >
+                        <ChevronDown aria-hidden="true" className={expanded[row.id] ? '' : '-rotate-90'} />
+                      </Button>
+                    </td>
+                  )}
+                  {selectionCell && (
+                    <td
+                      className="pattern-selection-cell"
+                      data-fixed={props.layout ? 'start' : undefined}
+                      style={{ insetInlineStart: (props.details ? 40 : 0) + (props.reorder ? 40 : 0) }}
+                    >
+                      {selectionCell(row)}
+                    </td>
+                  )}
+                  {renderCells(row, new Map(columnIds.map((id, c) => [id, spans[index][c]])), editing)}
+                  {props.editing && <td>{editing.actions(row.id, row.original)}</td>}
+                </tr>
+                {props.details && expanded[row.id] && (
+                  <tr className="pattern-detail-row">
+                    <td colSpan={totalColumns}>{props.details.render(row.original)}</td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
+          {props.summary && (
+            <tfoot aria-label={props.summary.label}>
+              <tr>
+                {auxCount > 0 && <td colSpan={auxCount} />}
+                {resolveCellSpans(
+                  [null],
+                  columnIds,
+                  ({ columnId }) => ({ colSpan: props.summary?.colSpan?.(columnId, columnIds) }),
+                  columns.map(column => column.getIsPinned()),
+                )[0].map(
+                  (span, index) =>
+                    span && (
+                      <td
+                        key={columnIds[index]}
+                        colSpan={span.colSpan}
+                        style={{ textAlign: columnAlignment(props, columnIds[index]) }}
+                      >
+                        {props.summary?.renderCell(
+                          columnIds[index],
+                          displayRows.map(row => row.original),
+                        )}
+                      </td>
+                    ),
+                )}
+                {props.editing && <td />}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       {props.readState === 'ready' && footer}
@@ -518,7 +778,13 @@ export function ListView<T extends RowData>({
   props,
 }: {
   table: ReactTable<typeof listFeatures, T>;
-  props: BaseTableProps<T> & ListSlices;
+  props: BaseTableProps<T> &
+    ListSlices &
+    AdvancedTableOptions<T> & {
+      reorderAllowed?: boolean;
+      filterValues?: ColumnFilterValues;
+      onFilterChange?: (id: string, value: string) => void;
+    };
 }) {
   const [initialPageSize] = useState(() => table.state.pagination.pageSize);
   return (
@@ -533,19 +799,51 @@ export function ListView<T extends RowData>({
       renderHeader={header => (
         <HeaderView<T>
           header={header}
+          leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0)}
           labels={props.labels}
-          disabled={props.readState !== 'ready'}
+          disabled={props.readState !== 'ready' || !!props.refresh}
+          filter={
+            props.columnFilters?.fields[header.column.id] && (
+              <ColumnFilterControl
+                field={props.columnFilters.fields[header.column.id]}
+                value={props.filterValues?.[header.column.id] ?? ''}
+                onChange={value => props.onFilterChange?.(header.column.id, value)}
+                clearLabel={props.columnFilters.clearLabel}
+                activeLabel={props.columnFilters.activeLabel}
+                disabled={props.readState !== 'ready' || !!props.refresh}
+              />
+            )
+          }
           alignment={columnAlignment(props, header.column.id)}
         >
           <table.FlexRender header={header} />
         </HeaderView>
       )}
-      renderCells={row =>
-        row.getVisibleCells().map(cell => (
-          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(props, cell.column.id)}>
-            <table.FlexRender cell={cell} />
-          </CellView>
-        ))
+      renderCells={(row, spans, editing) =>
+        row.getVisibleCells().map((cell, index, cells) => {
+          const span = spans.get(cell.column.id);
+          if (span === null) return null;
+          return (
+            <CellView<T>
+              key={cell.id}
+              column={cell.column}
+              alignment={columnAlignment(props, cell.column.id)}
+              span={span}
+              leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0)}
+              width={cells
+                .slice(index, index + (span?.colSpan ?? 1))
+                .reduce((sum, item) => sum + item.column.getSize(), 0)}
+            >
+              <div
+                data-wrap={
+                  (Array.isArray(props.layout?.wrap) && props.layout.wrap.includes(cell.column.id)) || undefined
+                }
+              >
+                {editing.renderCell(row.id, row.original, cell.column.id) ?? <table.FlexRender cell={cell} />}
+              </div>
+            </CellView>
+          );
+        })
       }
     />
   );
@@ -558,7 +856,13 @@ export function SelectableView<T extends RowData>({
   selectionSummary,
 }: {
   table: ReactTable<typeof selectableListFeatures, T>;
-  props: BaseTableProps<T> & ListSlices;
+  props: BaseTableProps<T> &
+    ListSlices &
+    AdvancedTableOptions<T> & {
+      reorderAllowed?: boolean;
+      filterValues?: ColumnFilterValues;
+      onFilterChange?: (id: string, value: string) => void;
+    };
   selectionHeader?: ReactNode;
   selectionCell?: (row: Row<typeof selectableListFeatures, T>) => ReactNode;
   selectionSummary?: ReactNode;
@@ -580,19 +884,51 @@ export function SelectableView<T extends RowData>({
       renderHeader={header => (
         <HeaderView<T>
           header={header}
+          leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader ? 40 : 0)}
           labels={props.labels}
-          disabled={props.readState !== 'ready'}
+          disabled={props.readState !== 'ready' || !!props.refresh}
+          filter={
+            props.columnFilters?.fields[header.column.id] && (
+              <ColumnFilterControl
+                field={props.columnFilters.fields[header.column.id]}
+                value={props.filterValues?.[header.column.id] ?? ''}
+                onChange={value => props.onFilterChange?.(header.column.id, value)}
+                clearLabel={props.columnFilters.clearLabel}
+                activeLabel={props.columnFilters.activeLabel}
+                disabled={props.readState !== 'ready' || !!props.refresh}
+              />
+            )
+          }
           alignment={columnAlignment(props, header.column.id)}
         >
           <table.FlexRender header={header} />
         </HeaderView>
       )}
-      renderCells={row =>
-        row.getVisibleCells().map(cell => (
-          <CellView<T> key={cell.id} column={cell.column} alignment={columnAlignment(props, cell.column.id)}>
-            <table.FlexRender cell={cell} />
-          </CellView>
-        ))
+      renderCells={(row, spans, editing) =>
+        row.getVisibleCells().map((cell, index, cells) => {
+          const span = spans.get(cell.column.id);
+          if (span === null) return null;
+          return (
+            <CellView<T>
+              key={cell.id}
+              column={cell.column}
+              alignment={columnAlignment(props, cell.column.id)}
+              span={span}
+              leadingWidth={(props.details ? 40 : 0) + (props.reorder ? 40 : 0) + (selectionHeader ? 40 : 0)}
+              width={cells
+                .slice(index, index + (span?.colSpan ?? 1))
+                .reduce((sum, item) => sum + item.column.getSize(), 0)}
+            >
+              <div
+                data-wrap={
+                  (Array.isArray(props.layout?.wrap) && props.layout.wrap.includes(cell.column.id)) || undefined
+                }
+              >
+                {editing.renderCell(row.id, row.original, cell.column.id) ?? <table.FlexRender cell={cell} />}
+              </div>
+            </CellView>
+          );
+        })
       }
     />
   );

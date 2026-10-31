@@ -1,3 +1,4 @@
+@import './advanced-styles.css';
 /* Resize hit areas remain independent from the mini table's visual density. */
 .native-data-table .pattern-column-resizer {
   position: absolute;
