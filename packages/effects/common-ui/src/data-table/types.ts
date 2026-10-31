@@ -104,6 +104,7 @@ export type SelectableTableProps<T extends RowData> = BaseTableProps<T> &
   AdvancedTableOptions<T> & {
     profile: 'selectable-list';
     selectionMode?: 'multiple' | 'single';
+    canSelectRow?: (row: T) => boolean;
     model: DataModel<T>;
     columns: TableOptions<typeof selectableListFeatures, T>['columns'];
     rowSelection: SliceOwner<RowSelectionState>;

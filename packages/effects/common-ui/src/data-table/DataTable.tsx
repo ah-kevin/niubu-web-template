@@ -1,4 +1,5 @@
-import { useColumnFilters } from './advanced-state';
+import { useColumnFilters, hasFilterValue } from './advanced-state';
+import type { ColumnFilterValue } from './advanced-types';
 import { columnAlignment } from './alignment';
 import { nativeTableClassName } from './table-class-names';
 import { Button } from '@niubu/shadcn-ui/button';
@@ -108,8 +109,11 @@ function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
         }
       : { readState: props.readState, resultCount: null, sourceCount: null }),
     filterValues: filters.values,
-    onFilterChange: (id: string, value: string) => {
-      filters.update(previous => ({ ...previous, [id]: value }));
+    onFilterChange: (id: string, value: ColumnFilterValue) => {
+      filters.update(previous => ({
+        ...previous,
+        [id]: props.columnFilters?.selection === 'multiple' || typeof value === 'string' ? value : (value[0] ?? ''),
+      }));
       table.setPageIndex(0);
     },
   };
@@ -128,7 +132,8 @@ function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
     ...(props.model.kind === 'server' ? { rowCount: props.model.rowCount } : {}),
     columnResizeMode: 'onChange',
     enableMultiSort: false,
-    enableSortingRemoval: false,
+    enableSortingRemoval: props.enableSortingRemoval ?? false,
+    ...(props.enableSortingRemoval ? { sortDescFirst: false } : {}),
     ...listOwnership(props, columnIds),
   });
   return (
@@ -140,7 +145,7 @@ function ListRenderer<T extends RowData>(props: ListTableProps<T>) {
           props.model.kind === 'client' &&
           props.sourceCount === props.resultCount &&
           !table.state.sorting.length &&
-          !Object.values(filters.values).some(Boolean) &&
+          !Object.values(filters.values).some(hasFilterValue) &&
           table.getRowModel().rows.length === props.model.rows.length,
       }}
     />
@@ -160,8 +165,11 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
         }
       : { readState: props.readState, resultCount: null, sourceCount: null }),
     filterValues: filters.values,
-    onFilterChange: (id: string, value: string) => {
-      filters.update(previous => ({ ...previous, [id]: value }));
+    onFilterChange: (id: string, value: ColumnFilterValue) => {
+      filters.update(previous => ({
+        ...previous,
+        [id]: props.columnFilters?.selection === 'multiple' || typeof value === 'string' ? value : (value[0] ?? ''),
+      }));
       table.setPageIndex(0);
     },
   };
@@ -181,7 +189,10 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
     ...(props.model.kind === 'server' ? { rowCount: props.model.rowCount } : {}),
     columnResizeMode: 'onChange',
     enableMultiSort: false,
-    enableSortingRemoval: false,
+    enableSortingRemoval: props.enableSortingRemoval ?? false,
+    ...(props.enableSortingRemoval ? { sortDescFirst: false } : {}),
+    enableRowSelection: row => props.canSelectRow?.(row.original) !== false,
+    enableMultiRowSelection: props.selectionMode !== 'single',
     enableSubRowSelection: false,
     enableRowRangeSelection: false,
     ...owners,
@@ -203,11 +214,19 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
       table={table}
       props={{
         ...viewProps,
+        onRowActivate:
+          props.selectionMode === 'single'
+            ? row => {
+                if (props.canSelectRow?.(row) === false) return;
+                table.setRowSelection({ [props.getRowId(row)]: true });
+                props.onRowActivate?.(row);
+              }
+            : props.onRowActivate,
         reorderAllowed:
           props.model.kind === 'client' &&
           props.sourceCount === props.resultCount &&
           !table.state.sorting.length &&
-          !Object.values(filters.values).some(Boolean) &&
+          !Object.values(filters.values).some(hasFilterValue) &&
           table.getRowModel().rows.length === props.model.rows.length,
       }}
       selectionSummary={
@@ -259,7 +278,11 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
         ) : (
           <SelectionCheckbox
             label={props.selectionLabels.selectPage}
-            disabled={props.readState !== 'ready' || !!props.refresh}
+            disabled={
+              props.readState !== 'ready' ||
+              !!props.refresh ||
+              !table.getRowModel().rows.some(row => row.getCanSelect())
+            }
             selected={table.getIsAllPageRowsSelected()}
             indeterminate={table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()}
             onChange={selected => table.toggleAllPageRowsSelected(selected)}
@@ -274,13 +297,13 @@ function SelectableRenderer<T extends RowData>(props: SelectableTableProps<T>) {
             name={selectionName}
             checked={selected[row.id] === true}
             aria-label={props.selectionLabels.selectRow(row.id)}
-            disabled={props.readState !== 'ready' || !!props.refresh}
+            disabled={props.readState !== 'ready' || !!props.refresh || !row.getCanSelect()}
             onChange={() => table.setRowSelection({ [row.id]: true })}
           />
         ) : (
           <SelectionCheckbox
             selected={selected[row.id] === true}
-            disabled={props.readState !== 'ready' || !!props.refresh}
+            disabled={props.readState !== 'ready' || !!props.refresh || !row.getCanSelect()}
             label={props.selectionLabels.selectRow(row.id)}
             onChange={selected => row.toggleSelected(selected)}
           />

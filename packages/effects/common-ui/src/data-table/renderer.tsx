@@ -1,7 +1,7 @@
-import type { AdvancedTableOptions, CellSpan, ColumnFilterValues } from './advanced-types';
+import type { AdvancedTableOptions, CellSpan, ColumnFilterValue, MultiColumnFilterValues } from './advanced-types';
 import { ColumnFilterControl } from './ColumnFilterControl';
 import { resolveCellSpans } from './advanced-helpers';
-import { useOwnedState } from './advanced-state';
+import { useOwnedState, filterValues, hasFilterValue } from './advanced-state';
 import { useRowEditing, useRowReorder } from './advanced-interactions';
 import { TreeText } from './TreeText';
 import type { TreeLoad } from './useTreeChildren';
@@ -188,40 +188,50 @@ function HeaderView<T extends RowData>({
         column.getCanSort() ? (sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none') : undefined
       }
     >
-      {!header.isPlaceholder &&
-        (column.getCanSort() ? (
-          <Button
-            className={cn(
-              'h-auto w-full min-w-0 gap-1 p-0 text-[length:var(--control-font-size)] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
-              alignment === 'start'
-                ? 'justify-start pe-6 text-start'
-                : alignment === 'center'
-                  ? 'justify-center px-6 text-center'
-                  : 'justify-end px-6 text-end',
-            )}
-            variant="ghost"
-            type="button"
-            disabled={disabled}
-            aria-label={labels.sortColumn(name)}
-            title={name}
-            onClick={column.getToggleSortingHandler()}
-          >
-            <span className="min-w-0 truncate">{children}</span>
-            {sorted === 'asc' ? (
-              <ArrowUp aria-hidden="true" className="text-primary-text" />
-            ) : sorted === 'desc' ? (
-              <ArrowDown aria-hidden="true" className="text-primary-text" />
-            ) : (
-              <span aria-hidden="true" className="inline-flex text-disabled-foreground opacity-45 [&_svg]:size-[12px]">
-                <ArrowUp />
-                <ArrowDown />
-              </span>
-            )}
-          </Button>
-        ) : (
-          children
-        ))}
-      {filter}
+      <div
+        className={cn(
+          'flex min-w-0 items-center gap-1',
+          alignment === 'start' ? 'justify-start' : alignment === 'center' ? 'justify-center' : 'justify-end',
+        )}
+      >
+        {!header.isPlaceholder &&
+          (column.getCanSort() ? (
+            <Button
+              className={cn(
+                'h-auto w-full min-w-0 gap-1 p-0 text-[length:var(--control-font-size)] text-inherit [font-weight:inherit] [&_svg]:size-[12px]',
+                alignment === 'start'
+                  ? 'justify-start pe-6 text-start'
+                  : alignment === 'center'
+                    ? 'justify-center px-6 text-center'
+                    : 'justify-end px-6 text-end',
+              )}
+              variant="ghost"
+              type="button"
+              disabled={disabled}
+              aria-label={labels.sortColumn(name)}
+              title={name}
+              onClick={column.getToggleSortingHandler()}
+            >
+              <span className="min-w-0 truncate">{children}</span>
+              {sorted === 'asc' ? (
+                <ArrowUp aria-hidden="true" className="text-primary-text" />
+              ) : sorted === 'desc' ? (
+                <ArrowDown aria-hidden="true" className="text-primary-text" />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="inline-flex text-disabled-foreground opacity-45 [&_svg]:size-[12px]"
+                >
+                  <ArrowUp />
+                  <ArrowDown />
+                </span>
+              )}
+            </Button>
+          ) : (
+            children
+          ))}
+        {filter}
+      </div>
       {column.getCanResize() && (
         <Button
           variant="ghost"
@@ -428,8 +438,8 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
     ListSlices &
     AdvancedTableOptions<T> & {
       reorderAllowed?: boolean;
-      filterValues?: ColumnFilterValues;
-      onFilterChange?: (id: string, value: string) => void;
+      filterValues?: MultiColumnFilterValues;
+      onFilterChange?: (id: string, value: ColumnFilterValue) => void;
     };
   headerGroups: readonly { id: string; headers: readonly H[] }[];
   rows: readonly R[];
@@ -529,10 +539,10 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
         maximized={maximized}
         onMaximizeChange={setMaximized}
       />
-      {props.columnFilters && Object.values(props.filterValues ?? {}).some(Boolean) && (
+      {props.columnFilters && Object.values(props.filterValues ?? {}).some(hasFilterValue) && (
         <div className="flex flex-wrap gap-2 px-3 py-2" aria-label={props.columnFilters.activeLabel}>
           {Object.entries(props.filterValues ?? {})
-            .filter(([, value]) => !!value)
+            .filter(([, value]) => hasFilterValue(value))
             .map(([id, value]) => (
               <Button
                 key={id}
@@ -540,13 +550,32 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
                 variant="secondary"
                 size="sm"
                 disabled={!enabled}
-                onClick={() => props.onFilterChange?.(id, '')}
+                onClick={() => props.onFilterChange?.(id, props.columnFilters?.selection === 'multiple' ? [] : '')}
                 aria-label={`${props.columnFilters?.clearLabel}: ${props.columnFilters?.fields[id]?.label}`}
               >
                 {props.columnFilters?.fields[id]?.label}:{' '}
-                {props.columnFilters?.fields[id]?.options?.find(option => option.value === value)?.label ?? value} ×
+                {filterValues(value)
+                  .map(
+                    value =>
+                      props.columnFilters?.fields[id]?.options?.find(option => option.value === value)?.label ?? value,
+                  )
+                  .join(', ')}{' '}
+                ×
               </Button>
             ))}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={!enabled}
+            onClick={() =>
+              Object.keys(props.filterValues ?? {}).forEach(id =>
+                props.onFilterChange?.(id, props.columnFilters?.selection === 'multiple' ? [] : ''),
+              )
+            }
+          >
+            {props.columnFilters.clearLabel}
+          </Button>
         </div>
       )}
       {reorder.message && (
@@ -633,12 +662,14 @@ function ListLayout<T extends RowData, H extends { id: string }, R extends { id:
                       emptyAction: (
                         <>
                           {props.emptyAction}
-                          {props.columnFilters && Object.values(props.filterValues ?? {}).some(Boolean) && (
+                          {props.columnFilters && Object.values(props.filterValues ?? {}).some(hasFilterValue) && (
                             <Button
                               type="button"
                               variant="outline"
                               onClick={() =>
-                                Object.keys(props.filterValues ?? {}).forEach(id => props.onFilterChange?.(id, ''))
+                                Object.keys(props.filterValues ?? {}).forEach(id =>
+                                  props.onFilterChange?.(id, props.columnFilters?.selection === 'multiple' ? [] : ''),
+                                )
                               }
                             >
                               {props.columnFilters.clearLabel}
@@ -786,8 +817,8 @@ export function ListView<T extends RowData>({
     ListSlices &
     AdvancedTableOptions<T> & {
       reorderAllowed?: boolean;
-      filterValues?: ColumnFilterValues;
-      onFilterChange?: (id: string, value: string) => void;
+      filterValues?: MultiColumnFilterValues;
+      onFilterChange?: (id: string, value: ColumnFilterValue) => void;
     };
 }) {
   const [initialPageSize] = useState(() => table.state.pagination.pageSize);
@@ -814,6 +845,8 @@ export function ListView<T extends RowData>({
                 onChange={value => props.onFilterChange?.(header.column.id, value)}
                 clearLabel={props.columnFilters.clearLabel}
                 activeLabel={props.columnFilters.activeLabel}
+                applyLabel={props.columnFilters.applyLabel}
+                multiple={props.columnFilters.selection === 'multiple'}
                 disabled={props.readState !== 'ready' || !!props.refresh}
               />
             )
@@ -864,8 +897,8 @@ export function SelectableView<T extends RowData>({
     ListSlices &
     AdvancedTableOptions<T> & {
       reorderAllowed?: boolean;
-      filterValues?: ColumnFilterValues;
-      onFilterChange?: (id: string, value: string) => void;
+      filterValues?: MultiColumnFilterValues;
+      onFilterChange?: (id: string, value: ColumnFilterValue) => void;
     };
   selectionHeader?: ReactNode;
   selectionCell?: (row: Row<typeof selectableListFeatures, T>) => ReactNode;
@@ -901,6 +934,8 @@ export function SelectableView<T extends RowData>({
                 onChange={value => props.onFilterChange?.(header.column.id, value)}
                 clearLabel={props.columnFilters.clearLabel}
                 activeLabel={props.columnFilters.activeLabel}
+                applyLabel={props.columnFilters.applyLabel}
+                multiple={props.columnFilters.selection === 'multiple'}
                 disabled={props.readState !== 'ready' || !!props.refresh}
               />
             )

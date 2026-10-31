@@ -5,7 +5,7 @@
 }
 .native-data-table[data-striped] tbody tr:nth-child(even) { --table-row-background: var(--muted); }
 .native-data-table[data-striped] tbody tr:hover,
-.native-data-table tbody tr[data-merge-hover] { --table-row-background: var(--table-row-hover); }
+.native-data-table tbody tr[data-row-id][data-merge-hover] { --table-row-background: var(--table-row-hover); }
 .native-data-table[data-bordered] :is(td, th) { border-inline-end: 1px solid var(--border); }
 .native-data-table[data-wrap] .pattern-cell-content,
 .native-data-table .pattern-cell-content:has([data-wrap]),

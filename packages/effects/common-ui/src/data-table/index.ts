@@ -60,6 +60,8 @@ export type {
   TableLayoutOptions,
   TableColumnFilters,
   ColumnFilterValues,
+  ColumnFilterValue,
+  MultiColumnFilterValues,
   ColumnFilterField,
   TableDetails,
   TableEditing,

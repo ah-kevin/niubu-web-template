@@ -18,23 +18,31 @@ export function useRowEditing<T>(
   const [pending, setPending] = useState(false);
   const operation = useRef<AbortController | null>(null);
   const hasRow = !!row;
+  const editable = enabled && !!config && !!row && config.canEdit?.(row.original) !== false;
   const ownerKey = config?.ownerKey;
-  const [boundary, setBoundary] = useState({ id, hasRow, enabled, ownerKey });
+  const [boundary, setBoundary] = useState({ id, hasRow, enabled, ownerKey, editable });
   if (
     boundary.id !== id ||
     boundary.hasRow !== hasRow ||
     boundary.enabled !== enabled ||
-    boundary.ownerKey !== ownerKey
+    boundary.ownerKey !== ownerKey ||
+    boundary.editable !== editable
   ) {
-    setBoundary({ id, hasRow, enabled, ownerKey });
+    setBoundary({ id, hasRow, enabled, ownerKey, editable });
     setPending(false);
     setErrors({});
-    setDraft(row && enabled && config ? config.createDraft(row.original) : null);
+    if (
+      boundary.id !== id ||
+      boundary.ownerKey !== ownerKey ||
+      boundary.hasRow !== hasRow ||
+      boundary.enabled !== enabled
+    )
+      setDraft(row && enabled && config ? config.createDraft(row.original) : null);
   }
   useEffect(() => {
     operation.current = null;
     return () => operation.current?.abort();
-  }, [id, hasRow, enabled, ownerKey]);
+  }, [id, hasRow, enabled, ownerKey, editable]);
   const cancel = () => {
     operation.current?.abort();
     operation.current = null;
@@ -45,7 +53,7 @@ export function useRowEditing<T>(
     if (row) config?.onCancel?.(row.original);
   };
   const save = async () => {
-    if (!config || !row || draft === null || pending || !enabled) return;
+    if (!config || !row || draft === null || pending || !editable) return;
     const invalid = config.validate(draft);
     setErrors(invalid);
     if (Object.values(invalid).some(Boolean)) return;
@@ -77,9 +85,11 @@ export function useRowEditing<T>(
             columnId,
             row: original,
             draft,
-            setDraft,
+            setDraft: next => {
+              if (editable && !pending) setDraft(next);
+            },
             error: errors[columnId],
-            disabled: pending || !enabled,
+            disabled: pending || !editable,
           })
         : null,
     actions: (rowId: string, original: T) =>
@@ -90,7 +100,7 @@ export function useRowEditing<T>(
             type="button"
             variant="link"
             size="sm"
-            disabled={pending || !enabled || draft === null}
+            disabled={pending || !editable || draft === null}
             onClick={() => void save()}
           >
             {pending ? config.labels.saving : config.labels.save}
@@ -109,8 +119,10 @@ export function useRowEditing<T>(
           type="button"
           variant="link"
           size="sm"
-          disabled={!enabled || pending || config.canEdit?.(original) === false}
-          onClick={() => setId(rowId)}
+          disabled={!enabled || pending || id !== null || config.canEdit?.(original) === false}
+          onClick={() => {
+            if (id === null && enabled && config.canEdit?.(original) !== false) setId(rowId);
+          }}
         >
           {config.labels.edit}
         </Button>
@@ -130,9 +142,16 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const operation = useRef<AbortController | null>(null);
-  const [boundary, setBoundary] = useState({ key, enabled });
-  if (boundary.key !== key || boundary.enabled !== enabled) {
-    setBoundary({ key, enabled });
+  const ownerKey = config?.ownerKey;
+  const callback = config?.onReorder;
+  const [boundary, setBoundary] = useState({ key, enabled, ownerKey, callback });
+  if (
+    boundary.key !== key ||
+    boundary.enabled !== enabled ||
+    boundary.ownerKey !== ownerKey ||
+    boundary.callback !== callback
+  ) {
+    setBoundary({ key, enabled, ownerKey, callback });
     setPreview(null);
     setActive(null);
     setPending(false);
@@ -141,7 +160,7 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
   useEffect(() => {
     operation.current = null;
     return () => operation.current?.abort();
-  }, [key, enabled]);
+  }, [key, enabled, ownerKey, callback]);
   const cancel = () => {
     if (!operation.current) {
       setPreview(null);
@@ -162,9 +181,9 @@ export function useRowReorder<T, R extends { id: string; original: T }>(
     setPreview(next);
     try {
       await config.onReorder(next, { rows: rows.map(row => row.original), signal: controller.signal });
-      if (!controller.signal.aborted) setPreview(null);
+      if (!controller.signal.aborted && operation.current === controller) setPreview(null);
     } catch {
-      if (!controller.signal.aborted) {
+      if (!controller.signal.aborted && operation.current === controller) {
         setPreview(null);
         setError(true);
       }

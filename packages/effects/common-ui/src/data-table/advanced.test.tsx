@@ -14,23 +14,28 @@ const h = createListColumnHelper<Item>();
 const columns = h.columns([h.accessor('group', { id: 'group', header: 'Group' }), h.accessor('value', { id: 'value', header: 'Value' })]);
 const labels = { ...createDataTableLabels((key, params) => params?.name ? `${key}:${params.name}` : key), pending: 'Loading', error: 'Failed', sourceEmpty: 'Source empty', filteredEmpty: 'No matches' };
 const base = { columns, getRowId: (row: Item) => row.id, caption: 'Table', labels, readState: 'ready', resultCount: 3, sourceCount: 3 } as const;
-const filters: TableColumnFilters<Item> = { mode: 'local', fields: { group: { label: 'Filter group' } }, matches: (row, _, value) => row.group.includes(value), clearLabel: 'Clear filters', activeLabel: 'Filtered' };
+const filters: TableColumnFilters<Item> = { mode: 'local', fields: { group: { label: 'Filter group' } }, matches: (row, _, value) => row.group.includes(value), clearLabel: 'Clear filters', applyLabel: 'Apply filter', activeLabel: 'Filtered' };
+function applyFilter(value: string) {
+  fireEvent.click(screen.getByRole('button', { name: 'Filter group' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Filter group' }), { target: { value } });
+  fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
+}
 const ids = (container: HTMLElement) => [...container.querySelectorAll('tbody tr[data-row-id]')].map(row => row.getAttribute('data-row-id'));
 
 it('filters local rows, marks active filters and clears empty results with table headers retained', () => {
   const { container } = render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} columnFilters={filters} />);
-  fireEvent.change(screen.getByRole('textbox', { name: 'Filter group' }), { target: { value: 'missing' } });
+  applyFilter('missing');
   expect(ids(container)).toEqual([]);
   expect(screen.getByText('No matches')).toBeInTheDocument();
-  expect(screen.getByText('Filtered')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Filter group' })).toHaveAttribute('data-filtered', 'true');
   expect(screen.getByRole('columnheader', { name: /Group/ })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Clear filters' })[0]);
   expect(ids(container)).toEqual(['a', 'b', 'c']);
 });
 it('leaves manual filtered data with its owner and emits a controlled update', () => {
   const update = vi.fn();
   const { container } = render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} columnFilters={{ ...filters, mode: 'manual', state: { kind: 'controlled', value: {}, onChange: update } }} />);
-  fireEvent.change(screen.getByRole('textbox', { name: 'Filter group' }), { target: { value: 'B' } });
+  applyFilter('B');
   expect(update).toHaveBeenCalledOnce();
   expect(update.mock.calls[0][0]({})).toEqual({ group: 'B' });
   expect(ids(container)).toEqual(['a', 'b', 'c']);
@@ -39,7 +44,7 @@ it('renders true merged cells and page summary, recalculating when filtered or c
   const { container, rerender } = render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} columnFilters={filters} cellSpan={mergeConsecutiveRows('group', row => row.group)} summary={{ label: 'Page total', renderCell: (id, page) => id === 'group' ? 'Page total' : page.reduce((sum, row) => sum + row.value, 0) }} />);
   expect(container.querySelector<HTMLTableCellElement>('tbody td')?.rowSpan).toBe(2);
   expect(container.querySelector('tfoot')).toHaveTextContent('6');
-  fireEvent.change(screen.getByRole('textbox', { name: 'Filter group' }), { target: { value: 'B' } });
+  applyFilter('B');
   expect(container.querySelector<HTMLTableCellElement>('tbody td')?.rowSpan).toBe(1);
   expect(container.querySelector('tfoot')).toHaveTextContent('3');
   rerender(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} cellSpan={() => ({ colSpan: 2 })} columnVisibility={{ kind: 'controlled', value: { group: false }, onChange: vi.fn() }} />);
@@ -93,7 +98,7 @@ it('saves a draft through the owner and retires editing after async success', as
   expect(within(container.querySelector('tr[data-row-id="a"]') as HTMLElement).getByText('8')).toBeInTheDocument();
   expect(rows[0].value).toBe(1);
 });
-const reorder = (save: TableReorder<Item>['onReorder']): TableReorder<Item> => ({ onReorder: save, labels: { handle: row => `Move ${row.id}`, disabled: 'Reorder unavailable', pickedUp: 'Picked up', saving: 'Saving order', failed: 'Order failed' } });
+const reorder = (save: TableReorder<Item>['onReorder']): TableReorder<Item> => ({ ownerKey: 'test', onReorder: save, labels: { handle: row => `Move ${row.id}`, disabled: 'Reorder unavailable', pickedUp: 'Picked up', saving: 'Saving order', failed: 'Order failed' } });
 it('supports keyboard pickup/move/drop and rollback on failure without mutating rows', async () => {
   const save = vi.fn<TableReorder<Item>['onReorder']>(async () => { throw new Error('offline'); });
   const { container } = render(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} reorder={reorder(save)} />);
@@ -112,7 +117,7 @@ it('cancels a keyboard move and disables reordering while filtered, sorted or pa
   const handle = screen.getByRole('button', { name: 'Move a' });
   fireEvent.keyDown(handle, { key: ' ' }); fireEvent.keyDown(handle, { key: 'ArrowDown' }); fireEvent.keyDown(handle, { key: 'Escape' });
   expect(ids(container)).toEqual(['a', 'b', 'c']); expect(save).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByRole('textbox', { name: 'Filter group' }), { target: { value: 'A' } });
+  applyFilter('A');
   expect(screen.getByRole('button', { name: 'Move a' })).toBeDisabled();
   rerender(<DataTable {...base} profile="list" model={{ kind: 'client', rows }} reorder={reorder(save)} sorting={{ kind: 'controlled', value: [{ id: 'value', desc: true }], onChange: vi.fn() }} />);
   expect(screen.getByRole('button', { name: 'Move c' })).toBeDisabled();
