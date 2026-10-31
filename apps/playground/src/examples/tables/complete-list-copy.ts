@@ -1,4 +1,5 @@
 export const completeListCopy = {
+  'examples.completeList.followGlobal': 'Follow global',
   'examples.completeList.title': '牛只档案',
   'examples.completeList.synthetic': '本页使用合成数据，所有操作仅作用于当前页面。',
   'examples.completeList.appearance': '主体外观',

@@ -573,7 +573,7 @@
   "examples.forms.discardHelp": "Edit this synthetic record and cancel: continue editing, preserve a filtered draft, or explicitly discard the input.",
   "examples.forms.reopen": "Reopen example",
   "examples.components.galleryTitle": "16 basic controls",
-  "examples.components.galleryHelp": "Theme and density apply only here. Use the keyboard, hover and click to inspect real states.",
+  "examples.components.galleryHelp": "Follows global theme and density by default. Local previews keep the configured palette and radius.",
   "examples.components.previewTheme": "Preview theme",
   "examples.components.light": "Light",
   "examples.components.dark": "Dark",
@@ -658,7 +658,7 @@
   "examples.components.previous": "Previous",
   "examples.components.next": "Next",
   "examples.components.pageLabel": "Page {{page}}",
-  "examples.components.pageResult": "Page {{page}} of 5",
+  "examples.components.pageResult": "Page {{page}} of {{count}}",
   "examples.components.verticalScroll": "Vertical scroll example",
   "examples.components.horizontalScroll": "Horizontal scroll example",
   "examples.components.scrollItem": "Sample record {{number}}",
@@ -969,5 +969,8 @@
   "designSystem.basics": "Basic components",
   "designSystem.feedbackGroup": "Overlays and feedback",
   "designSystem.overviews": "Combined examples",
-  "designSystem.completeList": "Complete list page"
+  "designSystem.completeList": "Complete list page",
+  "examples.components.followGlobal": "Follow global",
+  "examples.components.simplePagination": "Simple pagination",
+  "examples.completeList.followGlobal": "Follow global"
 }

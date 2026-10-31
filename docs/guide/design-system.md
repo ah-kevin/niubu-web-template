@@ -1,6 +1,6 @@
 # 主体区设计系统组件
 
-组件沿用当前主题与密度 token；在 Playground 切换浅色/深色和标准/紧凑检查实际呈现，不复制设计预览 CSS。页面壳层沿用原实现。
+组件沿用当前主题与密度 token；Playground 默认跟随全局外观配置。基础组件和完整列表页可显式切换局部浅深色/密度用于对照，局部预览仍保留全局预设、主色、圆角和字号，并可切回“跟随全局”。页面壳层沿用原实现。
 
 ## 浮层与菜单
 
@@ -27,6 +27,10 @@ Popover 默认带箭头，`PopoverContent showArrow={false}` 可隐藏，`Popove
 - `ReadState`：沿用现有状态和动作语义；`compact` 用于表内，`title` 可覆盖标题。actions 未传保留默认动作，null 隐藏动作区。
 
 所有动画在 prefers-reduced-motion 下停止；这些组件不发起请求、不引入人工延迟。
+
+## 分页
+
+`@niubu/common-ui/pagination` 的受控 `Pagination` 供独立列表与 DataTable 共用。传入 `pageIndex`（从0开始）、`pageSize`、`pageCount`、`onPageChange`；`onPageSizeChange` 启用每页条数，`total` 显示总数。完整模式提供首末页、前后翻页、快速跳页、页码输入；输入的页码在提交时夹紧到有效范围。`simple` 显示简洁前后翻页，`disabled` 统一禁用交互。调用方在改变每页条数后决定定位策略，DataTable 沿用原首行定位，独立示例回到第一页。
 
 ## DataTable 表格能力
 

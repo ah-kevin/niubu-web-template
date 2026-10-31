@@ -11,7 +11,7 @@ it.each(Object.keys(controlGalleryTitles) as ControlGalleryKind[])('mounts only 
   const { container } = render(<BaseControlPage kind={kind} />);
   const sections = container.querySelectorAll('section.example-card');
   expect(sections).toHaveLength(1);
-  expect(within(sections[0] as HTMLElement).getByRole('heading')).toHaveTextContent(kind === 'Divider' ? 'Divider / Separator' : kind);
+  expect(within(sections[0] as HTMLElement).getByRole('heading', { level: 2 })).toHaveTextContent(kind === 'Divider' ? 'Divider / Separator' : kind);
   expect(screen.queryByRole('table')).not.toBeInTheDocument();
 });
 

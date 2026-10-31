@@ -41,7 +41,7 @@ it('preserves selection across pages and applies explicit all-results selection'
 
 it('changes only the local body through all four canonical theme/density combinations', async () => {
   const { container } = mount();
-  const root = container.querySelector('[data-theme]')!;
+  const root = container.querySelector('[data-preview-surface]')!;
   const bodyTheme = document.documentElement.getAttribute('data-theme');
   for (const [label, mode, rowHeight] of [
     ['深色 · 标准', 'dark', '42px'], ['深色 · 紧凑', 'dark', '36px'],
@@ -128,7 +128,7 @@ it.each(['edit', 'move', 'delete'] as const)('clamps a filtered last page after 
 
 it('keeps every popup in the local theme container, including fullscreen and nested select portals', async () => {
   const { container } = mount();
-  const root = container.querySelector('[data-theme]')!;
+  const root = container.querySelector('[data-preview-surface]')!;
   const documentTheme = document.documentElement.getAttribute('data-theme');
   for (const label of ['浅色 · 标准', '浅色 · 紧凑', '深色 · 标准', '深色 · 紧凑']) {
     await selectOption(screen.getByRole('combobox', { name: '主体外观' }), label);

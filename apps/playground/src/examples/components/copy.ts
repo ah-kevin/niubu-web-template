@@ -3,7 +3,9 @@ import type { TranslationParams } from '@niubu/locales';
 
 const componentsCopy = {
   galleryTitle: '16 basic controls',
-  galleryHelp: 'Theme and density apply only here. Use the keyboard, hover and click to inspect real states.',
+  galleryHelp: 'Follows global theme and density by default. Local previews keep the configured palette and radius.',
+  followGlobal: 'Follow global',
+  simplePagination: 'Simple pagination',
   previewTheme: 'Preview theme',
   light: 'Light',
   dark: 'Dark',
@@ -92,7 +94,7 @@ const componentsCopy = {
   previous: 'Previous',
   next: 'Next',
   pageLabel: 'Page {{page}}',
-  pageResult: 'Page {{page}} of 5',
+  pageResult: 'Page {{page}} of {{count}}',
   verticalScroll: 'Vertical scroll example',
   horizontalScroll: 'Horizontal scroll example',
   scrollItem: 'Sample record {{number}}',

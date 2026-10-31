@@ -1,14 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
 import {
   DataTable,
@@ -21,7 +11,7 @@ import {
 } from '@niubu/common-ui/data-table';
 import { useSchemaForm } from '@niubu/common-ui/form';
 import { FormFrame } from '@niubu/common-ui/form-frame';
-import { defaultThemeAppearance, densityTokens, resolvePresentationTheme } from '@niubu/core-design';
+import { usePreviewAppearance } from '../usePreviewAppearance';
 import { formatQuantity } from '@niubu/locales';
 import { useTranslation } from '@niubu/locales/react';
 import { Badge, type BadgeProps } from '@niubu/shadcn-ui/badge';
@@ -106,7 +96,7 @@ function AnimalActions({ row }: { row: Animal }) {
 export function CompleteListPage() {
   const { t, locale } = useTranslation('app', completeListCopy);
   const [rows, setRows] = useState(seedRows);
-  const [appearance, setAppearance] = useState('light-standard');
+  const [appearance, setAppearance] = useState('global');
   const [state, setState] = useState('ready');
   const [draft, setDraft] = useState({ tag: '', pen: 'all', status: 'all' });
   const [query, setQuery] = useState(draft);
@@ -128,17 +118,9 @@ export function CompleteListPage() {
     },
     [],
   );
-  const mode = appearance.startsWith('dark') ? 'dark' : 'light';
-  const density = appearance.endsWith('compact') ? 'compact' : 'standard';
-  const surfaceStyle = useMemo(
-    () =>
-      ({
-        ...resolvePresentationTheme(defaultThemeAppearance, mode),
-        ...densityTokens[density],
-        colorScheme: mode,
-      }) as CSSProperties,
-    [mode, density],
-  );
+  const mode = appearance === 'global' ? 'global' : appearance.startsWith('dark') ? 'dark' : 'light';
+  const density = appearance === 'global' ? 'global' : appearance.endsWith('compact') ? 'compact' : 'standard';
+  const preview = usePreviewAppearance(mode, density);
   const filtered = useMemo(() => filterAnimals(rows, query), [rows, query]);
   const number = useCallback(
     (value: number, precision: number) =>
@@ -284,9 +266,10 @@ export function CompleteListPage() {
   return (
     <div
       className="grid min-w-0 gap-[var(--workspace-section-gap)] bg-background p-[var(--workspace-card-padding)] text-foreground"
-      style={surfaceStyle}
-      data-theme={mode}
-      data-density={density}
+      style={preview.style}
+      data-preview-surface
+      data-theme={preview.theme}
+      data-density={preview.density}
     >
       <BusinessPortalBoundary locked={false}>
         <div className="flex flex-wrap items-end gap-3">
@@ -297,6 +280,7 @@ export function CompleteListPage() {
               value={appearance}
               onValueChange={setAppearance}
               options={[
+                { value: 'global', label: t('examples.completeList.followGlobal') },
                 { value: 'light-standard', label: t('examples.completeList.lightStandard') },
                 { value: 'light-compact', label: t('examples.completeList.lightCompact') },
                 { value: 'dark-standard', label: t('examples.completeList.darkStandard') },

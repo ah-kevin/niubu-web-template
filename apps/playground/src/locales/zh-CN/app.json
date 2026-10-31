@@ -573,7 +573,7 @@
   "examples.forms.discardHelp": "编辑这条合成记录后取消：继续编辑、保留过滤后的草稿，或明确放弃输入。",
   "examples.forms.reopen": "重新打开示例",
   "examples.components.galleryTitle": "16 个基础控件",
-  "examples.components.galleryHelp": "仅切换本区主题和密度；使用键盘、悬停和点击检查真实状态。",
+  "examples.components.galleryHelp": "默认跟随全局主题与密度；可在此临时预览浅深色或密度，主色与圆角沿用主题配置。",
   "examples.components.previewTheme": "预览主题",
   "examples.components.light": "浅色",
   "examples.components.dark": "深色",
@@ -658,7 +658,7 @@
   "examples.components.previous": "上一页",
   "examples.components.next": "下一页",
   "examples.components.pageLabel": "第 {{page}} 页",
-  "examples.components.pageResult": "当前第 {{page}} 页，共 5 页",
+  "examples.components.pageResult": "当前第 {{page}} 页，共 {{count}} 页",
   "examples.components.verticalScroll": "纵向滚动示例",
   "examples.components.horizontalScroll": "横向滚动示例",
   "examples.components.scrollItem": "示例记录 {{number}}",
@@ -969,5 +969,8 @@
   "designSystem.basics": "基础组件",
   "designSystem.feedbackGroup": "浮层与反馈",
   "designSystem.overviews": "综合示例",
-  "designSystem.completeList": "完整列表页"
+  "designSystem.completeList": "完整列表页",
+  "examples.components.followGlobal": "跟随全局",
+  "examples.components.simplePagination": "简洁分页",
+  "examples.completeList.followGlobal": "跟随全局"
 }

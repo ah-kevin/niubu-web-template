@@ -1,5 +1,5 @@
-import { useId, useState, type CSSProperties } from 'react';
-import { densityTokens, resolvePresentationTheme } from '@niubu/core-design';
+import { useId, useState } from 'react';
+import { usePreviewAppearance, type PreviewTheme, type PreviewDensity } from '../usePreviewAppearance';
 import { CircleHelp, Plus } from '@niubu/icons';
 import { Button } from '@niubu/shadcn-ui/button';
 import { Input } from '@niubu/shadcn-ui/input';
@@ -14,14 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@niubu/shadcn-ui/tabs'
 import { Badge } from '@niubu/shadcn-ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@niubu/shadcn-ui/card';
 import { Divider, Separator } from '@niubu/shadcn-ui/separator';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from '@niubu/shadcn-ui/pagination';
+import { Pagination } from '@niubu/common-ui/pagination';
 import { ScrollArea, ScrollBar } from '@niubu/shadcn-ui/scroll-area';
 import { Label } from '@niubu/shadcn-ui/label';
 import { Tooltip } from '@niubu/shadcn-ui/tooltip';
@@ -35,8 +28,8 @@ export type { ControlGalleryKind } from './control-kinds';
 export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
   const { t } = useComponentsText();
   const id = useId();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [density, setDensity] = useState<'standard' | 'compact'>('standard');
+  const [theme, setTheme] = useState<PreviewTheme>('global');
+  const [density, setDensity] = useState<PreviewDensity>('global');
   const [disabled, setDisabled] = useState(false);
   const [errors, setErrors] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,13 +44,10 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
   const [slider, setSlider] = useState([40]);
   const [count, setCount] = useState(98);
   const [selected, setSelected] = useState(false);
-  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const pages = Math.ceil(128 / pagination.pageSize);
   const [action, setAction] = useState('');
-  const style = {
-    ...resolvePresentationTheme({}, theme),
-    ...densityTokens[density],
-    colorScheme: theme,
-  } as CSSProperties;
+  const preview = usePreviewAppearance(theme, density);
   const fieldError = errors ? t('fieldError') : undefined;
   const errorText = (field: string) =>
     errors && (
@@ -69,17 +59,17 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
     <section
       aria-label={only ? t(controlGalleryTitles[only]) : t('galleryTitle')}
       data-control-gallery
-      data-theme={theme}
-      data-density={density}
+      data-theme={preview.theme}
+      data-density={preview.density}
       className={`${theme === 'dark' ? 'dark ' : ''}grid min-w-0 gap-4 rounded-[var(--control-radius-lg)] border border-border bg-background p-4 text-foreground`}
-      style={style}
+      style={preview.style}
     >
       <header className="grid gap-3">
         <h2 className="text-heading-2 font-semibold">{only ? t(controlGalleryTitles[only]) : t('galleryTitle')}</h2>
         <p className="text-muted-foreground">{t('galleryHelp')}</p>
         <div className="flex flex-wrap items-center gap-3">
           <div role="group" aria-label={t('previewTheme')} className="flex gap-2">
-            {(['light', 'dark'] as const).map(value => (
+            {(['global', 'light', 'dark'] as const).map(value => (
               <Button
                 key={value}
                 type="button"
@@ -87,12 +77,12 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 aria-pressed={theme === value}
                 onClick={() => setTheme(value)}
               >
-                {t(value)}
+                {t(value === 'global' ? 'followGlobal' : value)}
               </Button>
             ))}
           </div>
           <div role="group" aria-label={t('previewDensity')} className="flex gap-2">
-            {(['standard', 'compact'] as const).map(value => (
+            {(['global', 'standard', 'compact'] as const).map(value => (
               <Button
                 key={value}
                 type="button"
@@ -100,7 +90,7 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
                 aria-pressed={density === value}
                 onClick={() => setDensity(value)}
               >
-                {t(value)}
+                {t(value === 'global' ? 'followGlobal' : value)}
               </Button>
             ))}
           </div>
@@ -427,53 +417,27 @@ export function ControlGallery({ only }: { only?: ControlGalleryKind } = {}) {
           )}
           {(!only || only === 'Pagination') && (
             <ExampleSection title={t('paginationTitle')}>
-              <Pagination aria-label={t('paginationLabel')}>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      aria-label={t('previous')}
-                      disabled={disabled || page === 1}
-                      onClick={event => {
-                        event.preventDefault();
-                        setPage(value => value - 1);
-                      }}
-                    >
-                      {t('previous')}
-                    </PaginationPrevious>
-                  </PaginationItem>
-                  {[1, 2, 3, 4, 5].map(value => (
-                    <PaginationItem key={value}>
-                      <PaginationLink
-                        href="#"
-                        aria-label={t('pageLabel', { page: value })}
-                        isActive={page === value}
-                        disabled={disabled}
-                        onClick={event => {
-                          event.preventDefault();
-                          setPage(value);
-                        }}
-                      >
-                        {value}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      aria-label={t('next')}
-                      disabled={disabled || page === 5}
-                      onClick={event => {
-                        event.preventDefault();
-                        setPage(value => value + 1);
-                      }}
-                    >
-                      {t('next')}
-                    </PaginationNext>
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-              <output aria-live="polite">{t('pageResult', { page })}</output>
+              <Pagination
+                label={t('paginationLabel')}
+                total={128}
+                pageIndex={pagination.pageIndex}
+                pageSize={pagination.pageSize}
+                pageCount={pages}
+                disabled={disabled}
+                onPageChange={pageIndex => setPagination(current => ({ ...current, pageIndex }))}
+                onPageSizeChange={pageSize => setPagination({ pageIndex: 0, pageSize })}
+              />
+              <h3 className="mt-4 text-sm font-medium">{t('simplePagination')}</h3>
+              <Pagination
+                label={t('simplePagination')}
+                simple
+                pageIndex={pagination.pageIndex}
+                pageSize={pagination.pageSize}
+                pageCount={pages}
+                disabled={disabled}
+                onPageChange={pageIndex => setPagination(current => ({ ...current, pageIndex }))}
+              />
+              <output aria-live="polite">{t('pageResult', { page: pagination.pageIndex + 1, count: pages })}</output>
             </ExampleSection>
           )}
           {(!only || only === 'ScrollArea') && (

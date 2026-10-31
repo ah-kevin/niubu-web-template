@@ -21,7 +21,7 @@ it('exposes all sixteen controls with local theme/density/state switches and wor
  await userEvent.type(screen.getByRole('textbox',{name:'Example name'}),'Sample');
  expect(screen.getByRole('textbox',{name:'Example name'})).toHaveValue('Sample');
  await userEvent.click(screen.getByRole('button',{name:'Increase quantity'}));expect(screen.getByRole('spinbutton',{name:'Quantity'})).toHaveValue(3);
- await selectOption(screen.getByRole('combobox',{name:'Example option'}),'Option B');expect(screen.getByRole('combobox')).toHaveTextContent('Option B');
+ await selectOption(screen.getByRole('combobox',{name:'Example option'}),'Option B');expect(screen.getByRole('combobox',{name:'Example option'})).toHaveTextContent('Option B');
  await userEvent.click(screen.getByRole('checkbox',{name:'Subscribe to updates'}));expect(screen.getByRole('checkbox',{name:'Subscribe to updates'})).toBeChecked();
  await userEvent.click(screen.getByRole('radio',{name:'Detailed view'}));expect(screen.getByRole('radio',{name:'Detailed view'})).toBeChecked();
  await userEvent.click(screen.getByRole('switch',{name:'Enable reminders'}));expect(screen.getByRole('switch',{name:'Enable reminders'})).not.toBeChecked();
@@ -29,7 +29,7 @@ it('exposes all sixteen controls with local theme/density/state switches and wor
  const line=screen.getByRole('tablist',{name:'Line tabs'});await userEvent.click(within(line).getByRole('tab',{name:'Details'}));expect(within(line).getByRole('tab',{name:'Details'})).toHaveAttribute('aria-selected','true');
  await userEvent.click(screen.getByRole('button',{name:'Add notifications'}));await userEvent.click(screen.getByRole('button',{name:'Add notifications'}));expect(screen.getByText('99+')).toBeInTheDocument();
  await userEvent.click(screen.getByRole('button',{name:'Select card'}));expect(screen.getByRole('button',{name:'Clear card selection'}).closest('[data-slot=card]')).toHaveAttribute('data-state','selected');
- await userEvent.click(screen.getByRole('link',{name:'Next'}));expect(screen.getByText('Page 2 of 5')).toBeInTheDocument();
+ await userEvent.click(within(screen.getByRole('navigation',{name:'Example pagination'})).getByRole('button',{name:'下一页'}));expect(screen.getByText('Page 2 of 13')).toBeInTheDocument();
  await userEvent.click(screen.getByRole('switch',{name:'Show errors'}));expect(screen.getByRole('textbox',{name:'Example name'})).toHaveAttribute('aria-invalid','true');
  await userEvent.click(screen.getByRole('switch',{name:'Loading buttons'}));expect(screen.getByRole('button',{name:'Primary'})).toBeDisabled();expect(screen.getByRole('button',{name:'Primary'})).toHaveAttribute('aria-busy','true');
  await userEvent.click(screen.getByRole('switch',{name:'Disable controls'}));expect(screen.getByRole('spinbutton',{name:'Quantity'})).toBeDisabled();expect(slider).toHaveAttribute('data-disabled');
