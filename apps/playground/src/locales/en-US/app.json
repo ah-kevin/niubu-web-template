@@ -926,5 +926,18 @@
   "examples.treeCapabilities.edit": "Edit node",
   "examples.treeCapabilities.save": "Save node",
   "examples.treeCapabilities.cancel": "Cancel",
-  "examples.treeCapabilities.invalidNode": "Enter a node name and a valid nonnegative integer count."
+  "examples.treeCapabilities.invalidNode": "Enter a node name and a valid nonnegative integer count.",
+  "examples.components.formFieldTitle": "FormField",
+  "examples.components.formFieldHelp": "One schema form owns values, validation, disabled state and submission.",
+  "examples.components.formFieldName": "Name",
+  "examples.components.formFieldEmail": "Email",
+  "examples.components.formFieldRequired": "Enter a name",
+  "examples.components.formFieldInvalidEmail": "Enter a valid email address",
+  "examples.components.formFieldDescription": "Required fields validate on blur and submit.",
+  "examples.components.formFieldSave": "Submit example",
+  "examples.components.formFieldReset": "Reset fields",
+  "examples.components.formFieldSaved": "Submitted: {{name}}",
+  "examples.components.formFieldNoResult": "Nothing submitted",
+  "examples.feedback.singleHelp": "Interactive states for this component only; all data is synthetic.",
+  "examples.feedback.sourceEmpty": "Show empty source"
 }

@@ -926,5 +926,18 @@
   "examples.treeCapabilities.edit": "编辑节点",
   "examples.treeCapabilities.save": "保存节点",
   "examples.treeCapabilities.cancel": "取消",
-  "examples.treeCapabilities.invalidNode": "请输入节点名称和有效的非负整数数量。"
+  "examples.treeCapabilities.invalidNode": "请输入节点名称和有效的非负整数数量。",
+  "examples.components.formFieldTitle": "FormField",
+  "examples.components.formFieldHelp": "由一个 schema form 统一管理值、校验、禁用和提交。",
+  "examples.components.formFieldName": "姓名",
+  "examples.components.formFieldEmail": "邮箱",
+  "examples.components.formFieldRequired": "请输入姓名",
+  "examples.components.formFieldInvalidEmail": "请输入有效邮箱",
+  "examples.components.formFieldDescription": "必填字段在失焦和提交时校验。",
+  "examples.components.formFieldSave": "提交示例",
+  "examples.components.formFieldReset": "重置字段",
+  "examples.components.formFieldSaved": "已提交：{{name}}",
+  "examples.components.formFieldNoResult": "尚未提交",
+  "examples.feedback.singleHelp": "仅演示当前组件及其交互状态，数据均为合成示例。",
+  "examples.feedback.sourceEmpty": "显示空数据源"
 }

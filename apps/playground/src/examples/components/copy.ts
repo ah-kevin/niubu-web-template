@@ -136,6 +136,17 @@ const componentsCopy = {
   tooltipTitle: 'String tooltip',
   tooltip: 'A plain string tooltip',
   tooltipButton: 'Tooltip example',
+  formFieldTitle: 'FormField',
+  formFieldHelp: 'One schema form owns values, validation, disabled state and submission.',
+  formFieldName: 'Name',
+  formFieldEmail: 'Email',
+  formFieldRequired: 'Enter a name',
+  formFieldInvalidEmail: 'Enter a valid email address',
+  formFieldDescription: 'Required fields validate on blur and submit.',
+  formFieldSave: 'Submit example',
+  formFieldReset: 'Reset fields',
+  formFieldSaved: 'Submitted: {{name}}',
+  formFieldNoResult: 'Nothing submitted',
 } as const;
 const componentsFallback = Object.fromEntries(
   Object.entries(componentsCopy).map(([key, value]) => [`examples.components.${key}`, value]),
@@ -156,6 +167,8 @@ export function useComponentsText() {
 }
 
 const feedbackCopy = {
+  singleHelp: 'Interactive states for this component only; all data is synthetic.',
+  sourceEmpty: 'Show empty source',
   menuSamples: 'Menus and popovers',
   menuHelp: 'Use the keyboard or pointer; submenus and disabled items retain Radix behavior.',
   dropdownOpen: 'Open dropdown menu',
