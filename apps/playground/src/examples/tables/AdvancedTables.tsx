@@ -9,6 +9,8 @@ import {
   createSelectableColumnHelper,
   mergeConsecutiveRows,
   type TableColumnFilters,
+  type MultiColumnFilterValues,
+  type TableReorder,
   type TableReadMetadata,
   type RowSelectionState,
   type SortingState,
@@ -84,7 +86,7 @@ const seed: readonly DemoRow[] = [
     tag: 'NB-2026-0452',
     zone: 'B',
     pen: 'B-3',
-    status: 'normal',
+    status: 'reviewed',
     weight: 377.4,
     age: 730,
     note: 'longNote',
@@ -183,6 +185,7 @@ function useDemo() {
     mode: 'local',
     fields: filterFields,
     clearLabel: text('clearFilters'),
+    applyLabel: text('applyFilters'),
     activeLabel: text('filtered'),
     matches: (row, id, value) => (id === 'zone' ? row.zone === value : row.status === value),
   };
@@ -362,6 +365,22 @@ function SelectionExample({ mode }: { mode: 'selection' | 'single' }) {
   const [rows, setRows] = useState(seed);
   const [selected, setSelected] = useState<RowSelectionState>({});
   const [message, setMessage] = useState('');
+  const singleColumns = selectionHelper.columns([
+    ...selectable,
+    selectionHelper.display({
+      id: 'actions',
+      header: text('actions'),
+      cell: context => (
+        <Button
+          type="button"
+          variant="link"
+          onClick={() => setMessage(text('inspected', { id: context.row.original.tag }))}
+        >
+          {text('view')}
+        </Button>
+      ),
+    }),
+  ]);
   const count = Object.values(selected).filter(Boolean).length;
   return (
     <>
@@ -388,6 +407,7 @@ function SelectionExample({ mode }: { mode: 'selection' | 'single' }) {
             getRowId={getRowId}
             caption={text('selection')}
             selectionLabels={selectionLabels}
+            canSelectRow={row => row.status !== 'pending'}
             rowSelection={{ kind: 'controlled', value: selected, onChange: setSelected }}
             pagination={{ kind: 'internal', initial: { pageIndex: 0, pageSize: 2 } }}
           />
@@ -395,16 +415,18 @@ function SelectionExample({ mode }: { mode: 'selection' | 'single' }) {
       )}
       {mode === 'single' && (
         <Block id="single" title={text('single')} hint={text('singleHint')}>
+          {message && <p role="status">{message}</p>}
           <DataTable
             profile="selectable-list"
             model={{ kind: 'client', rows: seed }}
             {...ready(seed)}
-            columns={selectable}
+            columns={singleColumns}
             labels={labels}
             getRowId={getRowId}
             caption={text('single')}
             selectionMode="single"
             selectionLabels={selectionLabels}
+            canSelectRow={row => row.status !== 'pending'}
             rowSelection={{ kind: 'internal' }}
           />
         </Block>
@@ -503,14 +525,20 @@ function LayoutExample() {
 function HeaderExample() {
   const { text, columns, labels, filters } = useDemo();
   const [manual, setManual] = useState(false);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const rows = manual
-    ? seed.filter(row => (!values.zone || row.zone === values.zone) && (!values.status || row.status === values.status))
-    : seed;
+  const [values, setValues] = useState<MultiColumnFilterValues>({});
+  const matches = (value: string | readonly string[] | undefined, actual: string) =>
+    !value || (typeof value === 'string' ? value === actual : !value.length || value.includes(actual));
+  const rows = manual ? seed.filter(row => matches(values.zone, row.zone) && matches(values.status, row.status)) : seed;
   const config: TableColumnFilters<DemoRow> = manual
-    ? { ...filters, mode: 'manual', state: { kind: 'controlled', value: values, onChange: setValues } }
+    ? {
+        ...filters,
+        selection: 'multiple',
+        mode: 'manual',
+        state: { kind: 'controlled', value: values, onChange: setValues },
+      }
     : {
         ...filters,
+        selection: 'multiple',
         mode: 'local',
         matches: (row, id, value) => (id === 'zone' ? row.zone === value : row.status === value),
         state: { kind: 'controlled', value: values, onChange: setValues },
@@ -532,6 +560,7 @@ function HeaderExample() {
         getRowId={getRowId}
         caption={text('header')}
         columnFilters={config}
+        enableSortingRemoval
       />
     </Block>
   );
@@ -584,6 +613,7 @@ function EditExample() {
   const [rows, setRows] = useState(seed);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fail, setFail] = useState(false);
+  const [eligible, setEligible] = useState(true);
   const newIds = useRef(new Set<string>());
   const nextId = useRef(0);
   return (
@@ -601,6 +631,9 @@ function EditExample() {
         >
           {text('new')}
         </Button>
+        <Toggle checked={eligible} onChange={setEligible}>
+          {text('editingAllowed')}
+        </Toggle>
         <Toggle checked={fail} onChange={setFail}>
           {text('fail')}
         </Toggle>
@@ -615,6 +648,7 @@ function EditExample() {
         caption={text('edit')}
         editing={{
           ownerKey: 'synthetic-inline-edit',
+          canEdit: () => eligible,
           rowId: { kind: 'controlled', value: editingId, onChange: setEditingId },
           createDraft: row => ({ ...row }),
           labels: {
@@ -755,6 +789,15 @@ function DragExample() {
   const [fail, setFail] = useState(false),
     [paginate, setPaginate] = useState(false),
     [saved, setSaved] = useState(false);
+  const onReorder = useCallback<TableReorder<DemoRow>['onReorder']>(
+    async (ids, { signal }) => {
+      setSaved(false);
+      await saveDemo(signal, fail);
+      setRows(previous => ids.map(id => previous.find(row => row.id === id)!));
+      setSaved(true);
+    },
+    [fail],
+  );
   return (
     <Block id="drag" title={text('drag')} hint={text('dragHint')}>
       <div className="flex flex-wrap items-center gap-4">
@@ -781,6 +824,7 @@ function DragExample() {
         sorting={{ kind: 'controlled', value: sorting, onChange: setSorting }}
         pagination={{ kind: 'controlled', value: { pageIndex: 0, pageSize: paginate ? 2 : 25 }, onChange: () => {} }}
         reorder={{
+          ownerKey: 'synthetic-row-order',
           labels: {
             handle: row => text('move', { id: row.tag }),
             disabled: text('reorderDisabled'),
@@ -788,11 +832,7 @@ function DragExample() {
             saving: text('saving'),
             failed: text('orderFailed'),
           },
-          onReorder: async (ids, { signal }) => {
-            await saveDemo(signal, fail);
-            setRows(previous => ids.map(id => previous.find(row => row.id === id)!));
-            setSaved(true);
-          },
+          onReorder,
         }}
       />
     </Block>

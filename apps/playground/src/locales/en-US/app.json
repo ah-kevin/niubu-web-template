@@ -727,12 +727,12 @@
   "examples.advancedTables.tree": "TreeTable · Hierarchy",
   "examples.advancedTables.states": "TableStates · Read states",
   "examples.advancedTables.readHint": "Centered by default; numeric values align right and long notes truncate.",
-  "examples.advancedTables.selectionHint": "Selection persists across pages; the owner handles select-all and clear.",
-  "examples.advancedTables.singleHint": "Radio column without select-all; native arrow-key navigation.",
+  "examples.advancedTables.selectionHint": "Quarantine rows are ineligible. Select-all skips disabled rows and selection persists across pages.",
+  "examples.advancedTables.singleHint": "Click a row to select one; quarantine rows are disabled. Inner View actions do not select. The header has no select-all control.",
   "examples.advancedTables.layoutHint": "More than eight columns: sticky header, selection, identifier and actions. Edges react to scrolling. Toggle stripes, borders and wrapping.",
-  "examples.advancedTables.headerHint": "Removable column-filter tags. Local mode filters complete data; manual mode delegates to the page.",
+  "examples.advancedTables.headerHint": "Open the panel with the 20px filter icon. Choices in one column match by OR and take effect on Apply. Sorting cycles none → ascending → descending → none.",
   "examples.advancedTables.expandHint": "Details span visible columns with one nested table; the arrow controls expansion.",
-  "examples.advancedTables.editHint": "Independent drafts. Validate on save and retain failed edits. New rows open in edit mode; cancel removes an unsaved row.",
+  "examples.advancedTables.editHint": "Save or cancel before editing another row. Drafts stay isolated. Revoking eligibility disables inputs and saving and aborts pending work. Cancel removes an unsaved new row.",
   "examples.advancedTables.mergeHint": "Merge adjacent groups in displayed order. Recompute after filters, sorting and visibility changes. Summary is explicitly scoped to this page.",
   "examples.advancedTables.dragHint": "Space picks up, ↑/↓ moves, Space drops and Esc cancels; dragging also works. Failure rolls back. Disabled with filtering, column sorting or partial pages.",
   "examples.advancedTables.treeHint": "Up to four levels; see tree examples for cascade selection and lazy loading.",
@@ -917,5 +917,8 @@
   "designSystem.tree": "Cascading and lazy trees",
   "designSystem.group": "Table components and scenarios",
   "designSystem.description": "Interactive public component examples. Theme and density follow display preferences.",
-  "designSystem.actions": "Row actions"
+  "designSystem.actions": "Row actions",
+  "examples.advancedTables.applyFilters": "Apply filters",
+  "examples.advancedTables.editingAllowed": "Allow editing",
+  "examples.advancedTables.inspected": "Viewed {{id}}; selection unchanged"
 }

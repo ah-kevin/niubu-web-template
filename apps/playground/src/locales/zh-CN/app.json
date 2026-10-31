@@ -727,12 +727,12 @@
   "examples.advancedTables.tree": "TreeTable · 层级数据",
   "examples.advancedTables.states": "TableStates · 读取状态",
   "examples.advancedTables.readHint": "默认居中，数字右对齐，长备注左对齐并截断。",
-  "examples.advancedTables.selectionHint": "跨页保留选择；全选结果和清空均由 owner 持有。",
-  "examples.advancedTables.singleHint": "单选列，不显示表头全选或全选结果；原生键盘方向键切换。",
+  "examples.advancedTables.selectionHint": "待检疫记录不可选；全选跳过禁选行，跨页保留选择。",
+  "examples.advancedTables.singleHint": "单选整行点击可选，待检疫行不可选；内部查看按钮不会误选。表头不显示全选。",
   "examples.advancedTables.layoutHint": "超过 8 列：固定表头、选择列、标识列和操作列；滚动后显示固定边缘。可切换斑马纹、边框与换行。",
-  "examples.advancedTables.headerHint": "列筛选显示可清除标签；本地模式过滤完整数据，受控模式由页面返回结果。",
+  "examples.advancedTables.headerHint": "20px 筛选图标打开面板；同列多选按 OR 匹配，点击应用后生效。列排序循环：未排 → 升序 → 降序 → 未排。",
   "examples.advancedTables.expandHint": "详情横跨可见列，展示一层嵌套表格；箭头单独控制展开。",
-  "examples.advancedTables.editHint": "草稿独立；保存时校验，异步失败保留输入。新增行直接进入编辑，取消会移除未保存的新行。",
+  "examples.advancedTables.editHint": "先保存或取消当前编辑，再编辑另一行。草稿独立；资格撤销会禁用输入、保存并取消在途请求；取消新增行会移除未保存记录。",
   "examples.advancedTables.mergeHint": "按当前可见顺序合并相邻区域；筛选、排序、隐藏列后重新计算。本页汇总注明合计与平均口径。",
   "examples.advancedTables.dragHint": "空格拿起，↑/↓ 移动，空格放下，Esc 取消；也可拖动手柄。异步失败回滚。筛选、列排序、分页状态下禁用。",
   "examples.advancedTables.treeHint": "层级不超过 4 层；级联勾选和懒加载见树表示例。",
@@ -917,5 +917,8 @@
   "designSystem.tree": "树表级联与懒加载",
   "designSystem.group": "表格组件与场景",
   "designSystem.description": "基于公共组件的真实交互示例；浅深色与信息密度沿用显示偏好。",
-  "designSystem.actions": "行操作"
+  "designSystem.actions": "行操作",
+  "examples.advancedTables.applyFilters": "应用筛选",
+  "examples.advancedTables.editingAllowed": "允许编辑当前记录",
+  "examples.advancedTables.inspected": "已查看 {{id}}，选择未改变"
 }
