@@ -56,3 +56,11 @@ it('keeps the forwarded input ref current when toggling stepper controls', () =>
  view.rerender(<NumberInput ref={ref} aria-label="Quantity" value={1} onValueChange={()=>{}}/>);
  expect(ref.current).toBe(screen.getByRole('spinbutton'));
 });
+
+it('keeps a number input unit outside the submitted value and includes it in its description', () => {
+ const view=render(<form><NumberInput name="weight" aria-label="Weight" value={12.5} onValueChange={()=>{}} controls decreaseLabel="Less" increaseLabel="More" unit="kg"/></form>);
+ const input=screen.getByRole('spinbutton',{name:'Weight'});
+ const unit=screen.getByText('kg');
+ expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(unit.id);
+ expect(new FormData(view.container.querySelector('form')!).get('weight')).toBe('12.5');
+});

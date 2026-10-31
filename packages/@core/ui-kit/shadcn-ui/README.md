@@ -17,3 +17,5 @@ Import ./button, ./input, ./label, ./table, ./dialog, ./sheet, ./alert-dialog or
 - `PaginationLink` / `PaginationPrevious` / `PaginationNext` 接受 `disabled`，保留链接语义，阻断点击并退出 Tab 顺序。
 
 完整交互示例在 Playground `/examples/components`。示例中的主题与密度仅影响该示例容器。
+
+数字输入的步进模式支持 `unit` 文本后缀，后缀通过描述关联到输入，不进入提交值；普通输入模式保持不变。可交互 Card 由调用方提供按钮语义和键盘处理，Playground 展示点击、Enter 与空格切换。
